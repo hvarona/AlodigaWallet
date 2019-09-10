@@ -8,9 +8,11 @@ import javax.jws.WebParam;
 import javax.jws.WebService;
 import org.apache.log4j.Logger;
 import com.alodiga.wallet.bean.APIOperations;
+import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ProductResponse;
+import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -61,7 +63,10 @@ public class APIAlodigaWallet {
        return operations.getProductsByUserId(Long.valueOf(userId));         
     }
     
-    
+    @WebMethod
+    public CountryListResponse getCountries(){
+        return operations.getCountries();        
+    }
 
     
 }

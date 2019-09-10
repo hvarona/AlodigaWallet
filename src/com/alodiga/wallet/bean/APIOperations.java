@@ -1,12 +1,14 @@
 package com.alodiga.wallet.bean;
 
 import com.alodiga.wallet.model.Category;
+import com.alodiga.wallet.model.Country;
 import com.alodiga.wallet.model.Enterprise;
 import com.alodiga.wallet.model.Language;
 import com.alodiga.wallet.model.Product;
 import com.alodiga.wallet.model.ProductHasProvider;
 import com.alodiga.wallet.model.ProductIntegrationType;
 import com.alodiga.wallet.model.UserHasProduct;
+import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import java.sql.Connection;
 import java.text.DateFormat;
@@ -138,6 +140,17 @@ public class APIOperations {
        
 
         return new ProductListResponse(ResponseCode.EXITO, "", products);
+    }
+    
+    public CountryListResponse getCountries() {
+        List< Country> countries = null;
+        try {
+            countries = entityManager.createNamedQuery("Country.findAll", Country.class).getResultList();
+
+        } catch (Exception e) {
+            return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+        }
+        return new CountryListResponse(ResponseCode.EXITO, "", countries);
     }
 
 }
