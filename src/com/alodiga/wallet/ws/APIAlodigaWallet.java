@@ -26,7 +26,7 @@ public class APIAlodigaWallet {
     @EJB
     private APIOperations operations;
 
-   //coment
+   //coment 6
    @WebMethod
     public ProductResponse saveProduct(
         @WebParam(name = "enterprise") String enterpriseId,
