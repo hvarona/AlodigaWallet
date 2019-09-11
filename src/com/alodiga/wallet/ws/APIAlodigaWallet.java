@@ -43,7 +43,7 @@ public class APIAlodigaWallet {
        return operations.saveProduct(Long.valueOf(enterpriseId), Long.valueOf(categoryId), Long.valueOf(productIntegrationTypeId), name, taxInclude, status, referenceCode, rateUrl, accesNumberUrl, isFree, isAlocashproduct);         
     }
     
-    
+    //coment2
     @WebMethod
     public UserHasProductResponse saveUserHasProduct(
         @WebParam(name = "userId") String userId,
