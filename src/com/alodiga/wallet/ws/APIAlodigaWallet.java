@@ -44,7 +44,7 @@ public class APIAlodigaWallet {
     }
     
     //coment21
-    //cambio2
+    //cambio26
     @WebMethod
     public UserHasProductResponse saveUserHasProduct(
         @WebParam(name = "userId") String userId,
