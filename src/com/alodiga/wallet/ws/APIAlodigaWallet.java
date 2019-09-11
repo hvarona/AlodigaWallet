@@ -25,7 +25,7 @@ public class APIAlodigaWallet {
 
     @EJB
     private APIOperations operations;
-
+   //coment2
    //coment
    @WebMethod
     public ProductResponse saveProduct(
