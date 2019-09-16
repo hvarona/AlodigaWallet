@@ -1422,6 +1422,12 @@ CREATE TABLE `withdrawal_type` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--Se modificó el campo totalAmount para que no permita nulos
+--fecha de modificación: 16/09/2019, analista: Jesús Gómez
+
+ALTER TABLE `alodigaWallet`.`transaction` 
+CHANGE COLUMN `totalAmount` `totalAmount` FLOAT(20,2) NOT NULL ;
+
 --
 -- Dumping data for table `withdrawal_type`
 --
