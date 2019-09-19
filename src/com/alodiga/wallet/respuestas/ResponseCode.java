@@ -29,7 +29,11 @@ public enum ResponseCode {
 	USUARIO_PENDIENTE("96"),
 	USUARIO_NO_EXISTE("97"),
 	ERROR_CREDENCIALES("98"),
-	ERROR_INTERNO("99");
+	ERROR_INTERNO("99"),
+        //Mensajes Guardar Transaction
+        TRANSACTION_AMOUNT_LIMIT("30"),
+        TRANSACTION_MAX_NUMBER_BY_ACCOUNT("31"),
+        TRANSACTION_MAX_NUMBER_BY_CUSTOMER("32");
 	
 	private String codigo; 
 	

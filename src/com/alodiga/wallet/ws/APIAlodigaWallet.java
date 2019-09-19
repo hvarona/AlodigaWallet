@@ -14,6 +14,7 @@ import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ProductResponse;
 import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
+import com.alodiga.wallet.respuestas.TransactionResponse;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
@@ -67,6 +68,18 @@ public class APIAlodigaWallet {
     @WebMethod
     public CountryListResponse getCountries(){
         return operations.getCountries();        
+    }
+    
+    @WebMethod
+    public TransactionResponse saveTransaction(
+        @WebParam(name = "cryptogramaShop") String cryptogramShop,
+        @WebParam(name = "emailUser") String emailUser,
+        @WebParam(name = "productId") Long productId,
+        @WebParam(name = "amountPayment") Float amountPayment,
+        @WebParam(name = "conceptTransaction") String conceptTransaction ,
+        @WebParam(name = "cryptogramaUser") String cryptogramUser) {
+        
+        return operations.savePaymentShop(cryptogramShop, emailUser, Long.valueOf(productId), Float.valueOf(amountPayment), conceptTransaction, cryptogramUser);        
     }
 
     

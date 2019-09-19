@@ -107,7 +107,10 @@ public class Constante {
         
         public static final String sCLIENTE_RRP = "ProgramRRP";
         public static final String socialNetworkPassword = "Alo+123";
-        
+        public static final String sPreferenceTransaction = "transaction";
+        public static final String sValidatePreferenceTransaction1 = "MAX_TRANSACTION_AMOUNT_LIMIT";
+        public static final String sValidatePreferenceTransaction2 = "MAX_TRANSACTION_NUMBER_BY_ACCOUNT";
+        public static final String sValidatePreferenceTransaction3 = "MAX_TRANSACTION_NUMBER_BY_CUSTOMER";
 
 
 }

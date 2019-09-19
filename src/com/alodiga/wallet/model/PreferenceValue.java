@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name = "PreferenceValue.findAll", query = "SELECT p FROM PreferenceValue p"),
     @NamedQuery(name = "PreferenceValue.findById", query = "SELECT p FROM PreferenceValue p WHERE p.id = :id"),
+    @NamedQuery(name = "PreferenceValue.findByPreferenceFieldId", query = "SELECT p FROM PreferenceValue p WHERE p.preferenceFieldId.id = :preferenceFieldId and p.endingDate is null and p.enterpriseId.id = 1"),
     @NamedQuery(name = "PreferenceValue.findByValue", query = "SELECT p FROM PreferenceValue p WHERE p.value = :value"),
     @NamedQuery(name = "PreferenceValue.findByBeginningDate", query = "SELECT p FROM PreferenceValue p WHERE p.beginningDate = :beginningDate"),
     @NamedQuery(name = "PreferenceValue.findByEndingDate", query = "SELECT p FROM PreferenceValue p WHERE p.endingDate = :endingDate")})

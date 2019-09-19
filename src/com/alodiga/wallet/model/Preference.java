@@ -33,7 +33,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Preference.findAll", query = "SELECT p FROM Preference p"),
     @NamedQuery(name = "Preference.findById", query = "SELECT p FROM Preference p WHERE p.id = :id"),
     @NamedQuery(name = "Preference.findByName", query = "SELECT p FROM Preference p WHERE p.name = :name"),
-    @NamedQuery(name = "Preference.findByEnabled", query = "SELECT p FROM Preference p WHERE p.enabled = :enabled")})
+    @NamedQuery(name = "Preference.findByEnabled", query = "SELECT p FROM Preference p WHERE p.enabled = :enabled"),})
 public class Preference implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id

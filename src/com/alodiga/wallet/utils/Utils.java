@@ -2,6 +2,8 @@ package com.alodiga.wallet.utils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.Properties;
 import java.util.Random;
 import org.apache.log4j.Logger;
@@ -62,7 +64,24 @@ public class Utils {
             return "(El sistema no puede encontrar el archivo .properties)";
         }
     }
-
-
+    
+    public static Timestamp[] DateBeggining() {
+        Timestamp[ ] dates = new Timestamp[2];
+        Calendar calTodayBeggining = Calendar.getInstance();
+        calTodayBeggining.set(Calendar.HOUR_OF_DAY,0);
+        calTodayBeggining.set(Calendar.MINUTE,0);            
+        calTodayBeggining.set(Calendar.SECOND,0);            
+        calTodayBeggining.set(Calendar.MILLISECOND,0);
+        Timestamp begginingDateTime = new Timestamp(calTodayBeggining.getTimeInMillis());
+        dates[0] = begginingDateTime;
+        Calendar calTodayEnding = (Calendar) calTodayBeggining.clone();
+        calTodayEnding.set(Calendar.HOUR,23);
+        calTodayEnding.set(Calendar.MINUTE,59);            
+        calTodayEnding.set(Calendar.SECOND,59);            
+        calTodayEnding.set(Calendar.MILLISECOND,999);
+        Timestamp endingDateTime = new Timestamp(calTodayEnding.getTimeInMillis());
+        dates[1] = endingDateTime;
+        return dates;   
+    }
    
 }
