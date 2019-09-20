@@ -12,6 +12,10 @@ import com.alodiga.wallet.model.Transaction;
 import com.alodiga.wallet.model.Preference;
 import com.alodiga.wallet.model.PreferenceField;
 import com.alodiga.wallet.model.PreferenceValue;
+import com.alodiga.wallet.model.PaymentInfo;
+import com.alodiga.wallet.model.TransactionType;
+import com.alodiga.wallet.model.TransactionSource;
+import com.alodiga.wallet.model.TransactionStatus;
 import java.sql.Connection;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -167,16 +171,18 @@ public class APIOperations {
     }
     
     public TransactionResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
-                                               String conceptTransaction, String cryptogramUser) {
+                                               String conceptTransaction, String cryptogramUser, Long idUserDestination) {
         
         Long idTransaction                      = 12345678910L;
         Long idPreferenceField                  = 12345678910L;
         Long userId                             = 12345678910L;
         int totalTransactionsByUser             = 0;
+        Long totalTransactionsByProduct         = 12345678910L;
         Double totalAmountByUser                = 0.00D;
         List<Transaction> transactionsByUser    = new ArrayList<Transaction>();
         List<PreferenceField> preferencesField  = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue  = new ArrayList<PreferenceValue>();
+        List<PaymentInfo> paymentsInfo          = new ArrayList<PaymentInfo>();
         Timestamp begginingDateTime             = new Timestamp(0);   
         Timestamp endingDateTime                = new Timestamp(0);   
         try {
@@ -186,8 +192,8 @@ public class APIOperations {
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             //Validar preferencias
             //Obtiene las transacciones del día para el usuario
-            begginingDateTime = Utils.DateBeggining()[0];
-            endingDateTime = Utils.DateBeggining()[1];
+            begginingDateTime = Utils.DateTransaction()[0];
+            endingDateTime = Utils.DateTransaction()[1];
             StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3");
             Query query = entityManager.createNativeQuery(sqlBuilder.toString());
             query.setParameter("1", begginingDateTime);
@@ -203,6 +209,16 @@ public class APIOperations {
             query.setParameter("3", userId);
             result = (List) query.setHint("toplink.refresh", "true").getResultList();
             totalAmountByUser = result.get(0) != null ? (double) result.get(0) : 0f;
+            //Obtiene las transacciones del día para el producto que se está comprando
+            sqlBuilder = new StringBuilder("SELECT COUNT(t.productId) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3 AND t.productId = ?4");
+            query = entityManager.createNativeQuery(sqlBuilder.toString());
+            query.setParameter("1", begginingDateTime);
+            query.setParameter("2", endingDateTime);
+            query.setParameter("3", userId);
+            query.setParameter("4",productId);
+            result = (List) query.setHint("toplink.refresh", "true").getResultList();
+            totalTransactionsByProduct = result.get(0) != null ? (Long) result.get(0) : 0l;
+            //Cotejar las preferencias vs las transacciones del usuario
             List<Preference> preferences = getPreferences();
             for(Preference p: preferences){
                 if (p.getName().equals(Constante.sPreferenceTransaction)) {
@@ -226,7 +242,7 @@ public class APIOperations {
                         if (pf.getEnabled() == 1) {
                             preferencesValue = getPreferenceValuePayment(pf);                           
                             for(PreferenceValue pv: preferencesValue){
-                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
+                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
                                     return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
                                 }
                             }
@@ -244,16 +260,27 @@ public class APIOperations {
                     break;
                 }
             }
-            
             //Crear el objeto Transaction para registrar el pago al comercio
             Transaction paymentShop = new Transaction();
             paymentShop.setId(null);
             paymentShop.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+            paymentShop.setUserDestinationId(BigInteger.valueOf(idUserDestination));
             Product product = entityManager.find(Product.class, productId);
             paymentShop.setProductId(product);
             paymentShop.setAmount(amountPayment); 
-            
-            
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationType);
+            paymentShop.setTransactionTypeId(transactionType);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            paymentShop.setTransactionSourceId(transactionSource);
+            Date date= new Date();
+            Timestamp creationDate = new Timestamp(date.getTime());
+            paymentShop.setCreationDate(creationDate);
+            paymentShop.setConcept(Constante.sTransactionConcept);
+            paymentShop.setAmount(amountPayment);
+            paymentShop.setTransactionStatus(TransactionStatus.CREATED.name());
+            paymentShop.setTotalAmount(amountPayment);
+            entityManager.persist(paymentShop);
+            //return new TransactionResponse(ResponseCode.EXITO,"The transaction was successfully saved in the database",paymentShop);
             
         } catch (Exception e) {
             e.printStackTrace();

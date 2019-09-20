@@ -77,9 +77,11 @@ public class APIAlodigaWallet {
         @WebParam(name = "productId") Long productId,
         @WebParam(name = "amountPayment") Float amountPayment,
         @WebParam(name = "conceptTransaction") String conceptTransaction ,
-        @WebParam(name = "cryptogramaUser") String cryptogramUser) {
+        @WebParam(name = "cryptogramaUser") String cryptogramUser,
+        @WebParam(name = "idUserDestination") Long idUserDestination) {
         
-        return operations.savePaymentShop(cryptogramShop, emailUser, Long.valueOf(productId), Float.valueOf(amountPayment), conceptTransaction, cryptogramUser);        
+        return operations.savePaymentShop(cryptogramShop, emailUser, Long.valueOf(productId), Float.valueOf(amountPayment), 
+                                          conceptTransaction, cryptogramUser, Long.valueOf(idUserDestination));        
     }
 
     

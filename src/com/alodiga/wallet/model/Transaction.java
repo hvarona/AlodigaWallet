@@ -39,7 +39,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Transaction.findAll", query = "SELECT t FROM Transaction t"),
     @NamedQuery(name = "Transaction.findById", query = "SELECT t FROM Transaction t WHERE t.id = :id"),
     @NamedQuery(name = "Transaction.findByUserSourceId", query = "SELECT t FROM Transaction t WHERE t.userSourceId = :userSourceId"),
-    @NamedQuery(name = "Transaction.findByUserSourceId&CurrentDate", query = "SELECT t FROM Transaction t WHERE t.userSourceId = :userSourceId and t.creationDate = CURRENT_DATE"),
     @NamedQuery(name = "Transaction.findByUserDestinationId", query = "SELECT t FROM Transaction t WHERE t.userDestinationId = :userDestinationId"),
     @NamedQuery(name = "Transaction.findByCreationDate", query = "SELECT t FROM Transaction t WHERE t.creationDate = :creationDate"),
     @NamedQuery(name = "Transaction.findByAmount", query = "SELECT t FROM Transaction t WHERE t.amount = :amount"),
@@ -66,6 +65,9 @@ public class Transaction implements Serializable {
     private BigInteger userSourceId;
     @Column(name = "userDestinationId")
     private BigInteger userDestinationId;
+    @Basic(optional = false)
+    @Column(name = "concept")
+    private String concept;
     @Basic(optional = false)
     @Column(name = "creationDate")
     @Temporal(TemporalType.DATE)
@@ -167,6 +169,14 @@ public class Transaction implements Serializable {
 
     public void setCreationDate(Date creationDate) {
         this.creationDate = creationDate;
+    }
+    
+    public String getConcept() {
+        return concept;
+    }
+
+    public void setConcept(String concept) {
+        this.concept = concept;
     }
 
     public float getAmount() {

@@ -1428,6 +1428,12 @@ CREATE TABLE `withdrawal_type` (
 ALTER TABLE `alodigaWallet`.`transaction` 
 CHANGE COLUMN `totalAmount` `totalAmount` FLOAT(20,2) NOT NULL ;
 
+--Se agregó el campo concept a la tabla transaction
+--fecha de modificación: 20/09/2019, analista: Jesús Gómez
+
+ALTER TABLE `alodigaWallet`.`transaction` 
+ADD COLUMN `concept` VARCHAR(255) NOT NULL AFTER `creationDate`;
+
 --
 -- Dumping data for table `withdrawal_type`
 --

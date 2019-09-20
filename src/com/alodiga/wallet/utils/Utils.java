@@ -65,7 +65,7 @@ public class Utils {
         }
     }
     
-    public static Timestamp[] DateBeggining() {
+    public static Timestamp[] DateTransaction() {
         Timestamp[ ] dates = new Timestamp[2];
         Calendar calTodayBeggining = Calendar.getInstance();
         calTodayBeggining.set(Calendar.HOUR_OF_DAY,0);
