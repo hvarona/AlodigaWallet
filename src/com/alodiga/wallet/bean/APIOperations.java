@@ -1,5 +1,9 @@
 package com.alodiga.wallet.bean;
 
+import com.alodiga.transferto.integration.connection.RequestManager;
+import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
+import com.alodiga.transferto.integration.model.ReserveResponse;
+import com.alodiga.transferto.integration.model.TopUpResponse;
 import com.alodiga.wallet.model.Category;
 import com.alodiga.wallet.model.Country;
 import com.alodiga.wallet.model.Enterprise;
@@ -13,6 +17,8 @@ import com.alodiga.wallet.model.Preference;
 import com.alodiga.wallet.model.PreferenceField;
 import com.alodiga.wallet.model.PreferenceValue;
 import com.alodiga.wallet.model.PaymentInfo;
+import com.alodiga.wallet.model.Provider;
+import com.alodiga.wallet.model.TopUpResponseConstants;
 import com.alodiga.wallet.model.TransactionType;
 import com.alodiga.wallet.model.TransactionSource;
 import com.alodiga.wallet.model.TransactionStatus;
@@ -65,6 +71,8 @@ import com.ericsson.alodiga.ws.Usuario;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.sql.Timestamp;
 import com.alodiga.wallet.utils.Utils;
+import java.util.HashMap;
+import java.util.Map;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -310,4 +318,166 @@ public class APIOperations {
         return preferencesValue = entityManager.createNamedQuery("PreferenceValue.findByPreferenceFieldId", PreferenceValue.class).setParameter("preferenceFieldId",idPreferenceField).getResultList();
     }  
     
+    private Provider getProviderById(Long providerId) {
+        return entityManager.createNamedQuery("Provider.findById",Provider.class).setParameter("id", providerId)
+                .getSingleResult();
+    }
+    
+    public TopUpInfoListResponse getTopUpInfs(String receiverNumber, String phoneNumber) {
+
+        Provider provider = null;
+        try {
+            provider = getProviderById(1L);
+        } catch (Exception ex) {
+            return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error al buscar el proveedor");
+        }
+        Float percentAditional = provider.getAditionalPercent();
+      
+        MSIDN_INFOResponse inf = null;
+       
+        List<TopUpInfo> topUpInfos = new ArrayList<TopUpInfo>();
+        if (receiverNumber == null) {
+             return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error parametro receiver null");
+        }
+        try {
+            inf = RequestManager.getMsisdn_ingo(receiverNumber);
+            String[] productIds = null;
+            String skuid = null;        
+            String[] skuids = null;
+            String[] productRetailsPrices = null;
+            String[] denominationsReceiver = null;
+            String[] productWholesalePrices = null;
+
+
+            skuid = inf.getSkuid();
+            if (skuid != null) {
+                TopUpInfo topUpInfo = new TopUpInfo();
+                topUpInfo.setCountry(inf.getCountry());
+                topUpInfo.setCoutryId(inf.getCountryId());
+                topUpInfo.setOpertador(inf.getOperator());
+                topUpInfo.setOperatorid(inf.getOperatorId());
+                topUpInfo.setDestinationCurrency(inf.getDestinationCurrency());
+                topUpInfo.setIsOpenRange(true);
+                topUpInfo.setSkuid(inf.getSkuid());
+                topUpInfo.setMinimumAmount(Float.parseFloat(inf.getOpen_range_minimum_amount_local_currency()));
+                topUpInfo.setMaximumAmount(Float.parseFloat(inf.getOpen_range_maximum_amount_local_currency()));
+                topUpInfo.setIncrement(Float.parseFloat(inf.getOpen_range_increment_local_currency()));
+                Float amount = Float.parseFloat(inf.getOpen_range_minimum_amount_local_currency()) +Float.parseFloat(inf.getOpen_range_increment_local_currency());            
+                TopUpResponse topUpResponse = RequestManager.simulationDoTopUp(phoneNumber,receiverNumber , inf.getOpen_range_minimum_amount_requested_currency(), inf.getSkuid());
+                Float wholesalePrice = Float.parseFloat(topUpResponse.getWholesalePrice());
+                topUpInfo.setWholesalePrice(wholesalePrice);
+                Float realRetailPrice;
+                Float commissionPercent;
+                //solo se adiciona si es cuba
+                if (inf.getCountry().equals("Cuba")){
+                     realRetailPrice = Float.parseFloat(inf.getOpen_range_minimum_amount_local_currency()) + (Float.parseFloat(inf.getOpen_range_minimum_amount_local_currency())*percentAditional/100);
+                }else{
+                      realRetailPrice =  Float.parseFloat(inf.getOpen_range_minimum_amount_local_currency());
+                }
+                commissionPercent = ((realRetailPrice- wholesalePrice)/realRetailPrice)*100;
+                topUpInfo.setCommissionPercent(commissionPercent);
+                topUpInfos.add(topUpInfo);
+            } else {
+                productIds = inf.getProduct_list().split(",");
+                skuids = inf.getSkuid_list().split(",");
+                productRetailsPrices = inf.getRetail_price_list().split(",");
+                productWholesalePrices = inf.getWholesale_price_list().split(",");
+                denominationsReceiver = inf.getLocal_info_amount_list().split(",");
+               
+                List<Float> denominationsReceivers = new ArrayList<Float>();
+                for (int i = 0; i < productIds.length; i++) {
+                    TopUpInfo topUpInfo = new TopUpInfo();
+                    topUpInfo.setCountry(inf.getCountry());
+                    topUpInfo.setCoutryId(inf.getCountryId());
+                    topUpInfo.setOpertador(inf.getOperator());
+                    topUpInfo.setOperatorid(inf.getOperatorId());
+                    topUpInfo.setDestinationCurrency(inf.getLocal_info_currency());
+                    topUpInfo.setIsOpenRange(false);
+                    topUpInfo.setSkuid(skuids[i]);
+                    Float retailPrice = Float.parseFloat(productRetailsPrices[i]);
+                    Float wholesalePrice = Float.parseFloat(productWholesalePrices[i]);
+                    topUpInfo.setWholesalePrice(wholesalePrice);
+                    Float realRetailPrice;
+                    Float commissionPercent;
+                    //solo se adiciona si es cuba
+                    if (inf.getCountry().equals("Cuba")) {
+                       realRetailPrice = (retailPrice) +  ((retailPrice * percentAditional)/100);
+                    } else {
+                        realRetailPrice = retailPrice;
+                    }
+                    commissionPercent = ((realRetailPrice - wholesalePrice) / realRetailPrice) * 100;
+                    topUpInfo.setCommissionPercent(commissionPercent);
+                    topUpInfo.setDenominationSale(realRetailPrice);
+                    topUpInfo.setDenomination(retailPrice);
+                    topUpInfo.setDenominationReceiver(Float.parseFloat(denominationsReceiver[i]));
+                    topUpInfos.add(topUpInfo);
+                }
+               
+            }
+
+        } catch (Exception ex) {
+            return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error en el metodo getTopUpInfs");
+        }
+        return new TopUpInfoListResponse(ResponseCode.EXITO, "", topUpInfos);
+    }
+    
+    
+    private Map<String, String> executeTopUp(TopUpInfo topUpInfo, String destinationNumber, String externalId, String senderNumber) {
+        Map<String, String> response_01 = new HashMap<String, String>();
+        String error = "";
+        Float amount = topUpInfo.getDenomination();
+        String phoneNumber = destinationNumber;
+         try {
+             response_01.put(TopUpResponseConstants.AMOUNT, topUpInfo.getDenomination().toString());
+             MSIDN_INFOResponse response1 = RequestManager.getMsisdn_ingo(phoneNumber);
+             String skuidId = response1.getSkuid();
+             if (response1.getSkuid() == null) {
+                String[] Skuids = response1.getSkuid_list().split(",");
+                String[] products = response1.getProduct_list().split(",");
+                for (int o = 0; o < products.length; o++) {
+                  if (Float.parseFloat(products[o])==amount) {
+                    skuidId = Skuids[o];
+                  }
+                }
+             }
+             ReserveResponse response2 = RequestManager.getReserve();
+//             TopUpResponse topUpResponseSimulation = RequestManager.simulationDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId);
+             TopUpResponse topUpResponseExecute = RequestManager.newDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId, response2.getReserved_id());
+             String code = topUpResponseExecute.getErrorCode(); 
+             if (!code.equals("0")) {//Cuando es 0 esta bien...
+                StringBuilder errorBuilder = new StringBuilder(TopUpResponseConstants.TRANSFER_TO_CODES.get(code));
+                errorBuilder.append("Integrator = ").append("TransferTo").append("ProductId = ").append(topUpInfo.getOperatorid()).append("phoneNumber = ").append(destinationNumber);
+                error = errorBuilder.toString();
+                if (code.equals("301") || topUpResponseExecute.getErrorText().equals("Denomination not available")) {
+//                    return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Denomination not available");
+                } else if (code.equals("101") || topUpResponseExecute.getErrorText().equals("Destination MSISDN out of range")) {
+//                    return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Destination MSISDN out of range");
+                } else if (code.equals("204")) {
+//                    return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Destination Not Prepaid");
+                }
+//                    else
+//                return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error en transaccion de TopUp");
+             } else {
+                 response_01.put(TopUpResponseConstants.MESSAGE, "TRANSACTION SUCCESSFUL");
+                 response_01.put(TopUpResponseConstants.EXTERNAL_ID, externalId);
+                 response_01.put(TopUpResponseConstants.AMOUNT, amount.toString());
+                 response_01.put(TopUpResponseConstants.DESTINATION_NUMBER, phoneNumber);
+                 response_01.put(TopUpResponseConstants.PIN_CODE, topUpResponseExecute.getPinCode());
+                 response_01.put(TopUpResponseConstants.PIN_SERIAL, topUpResponseExecute.getPinSerial());
+                 response_01.put(TopUpResponseConstants.PIN_IVR, topUpResponseExecute.getPinIvr());
+                 response_01.put(TopUpResponseConstants.SENDER_NUMBER, senderNumber);
+                 response_01.put(TopUpResponseConstants.TRANSACTION_MESSAGE, "TRANSACTION SUCCESSFUL");
+                 response_01.put(TopUpResponseConstants.SMS_SENDER, senderNumber);
+                 response_01.put(TopUpResponseConstants.SMS_DESTINATION, phoneNumber);
+                 response_01.put(TopUpResponseConstants.COMPLETE_RESPONSE, "EXITO");
+                 response_01.put(TopUpResponseConstants.TOP_UP, topUpInfo.getOperatorid().toString());
+                 response_01.put(TopUpResponseConstants.TUP_UP_AMOUNT, amount.toString());
+             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+//            throw new GeneralException(ex.getMessage() + error);
+        }
+   
+        return response_01;
+    }
 }
