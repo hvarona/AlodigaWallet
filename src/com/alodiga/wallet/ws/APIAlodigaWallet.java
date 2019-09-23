@@ -13,6 +13,7 @@ import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ProductResponse;
 import com.alodiga.wallet.respuestas.ResponseCode;
+import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.TransactionResponse;
 import java.sql.Timestamp;
@@ -84,5 +85,10 @@ public class APIAlodigaWallet {
                                           conceptTransaction, cryptogramUser, Long.valueOf(idUserDestination));        
     }
 
-    
+    @WebMethod
+    public TopUpInfoListResponse topUpList(
+        @WebParam(name = "receiverNumber") String receiverNumber,
+        @WebParam(name = "phoneNumber") String phoneNumber){
+    return operations.getTopUpInfs(receiverNumber, phoneNumber);         
+    }
 }
