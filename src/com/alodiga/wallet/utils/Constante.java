@@ -116,6 +116,6 @@ public class Constante {
         public static final Long sTransationType = 2l;
         public static final Long sTransactionSource = 2l;
         public static final String sTransactionConcept = "Payment Shop";
-
+        public static final String sUserHasNotBalance = "USER_HAS_NOT_BALANCE";
 
 }

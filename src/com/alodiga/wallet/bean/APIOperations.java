@@ -16,6 +16,9 @@ import com.alodiga.wallet.model.PaymentInfo;
 import com.alodiga.wallet.model.TransactionType;
 import com.alodiga.wallet.model.TransactionSource;
 import com.alodiga.wallet.model.TransactionStatus;
+import com.alodiga.wallet.model.Commission;
+import com.alodiga.wallet.model.CommissionItem;
+import com.alodiga.wallet.model.BalanceHistory;
 import java.sql.Connection;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -173,23 +176,31 @@ public class APIOperations {
     public TransactionResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
                                                String conceptTransaction, String cryptogramUser, Long idUserDestination) {
         
-        Long idTransaction                      = 12345678910L;
-        Long idPreferenceField                  = 12345678910L;
-        Long userId                             = 12345678910L;
+        Long idTransaction                      = 0L;
+        Long idPreferenceField                  = 0L;
+        Long userId                             = 0L;
         int totalTransactionsByUser             = 0;
-        Long totalTransactionsByProduct         = 12345678910L;
+        Long totalTransactionsByProduct         = 0L;
         Double totalAmountByUser                = 0.00D;
         List<Transaction> transactionsByUser    = new ArrayList<Transaction>();
         List<PreferenceField> preferencesField  = new ArrayList<PreferenceField>();
         List<PreferenceValue> preferencesValue  = new ArrayList<PreferenceValue>();
-        List<PaymentInfo> paymentsInfo          = new ArrayList<PaymentInfo>();
+        List<Commission> commissions            = new ArrayList<Commission>();
         Timestamp begginingDateTime             = new Timestamp(0);   
-        Timestamp endingDateTime                = new Timestamp(0);   
-        try {
+        Timestamp endingDateTime                = new Timestamp(0); 
+        Float amountCommission                  = 0.00F;
+        short isPercentCommission               = 0;
+        
+        try {    
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
+            BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId);
+            if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountPayment) {
+                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has not balance");
+            }
             //Validar preferencias
             //Obtiene las transacciones del día para el usuario
             begginingDateTime = Utils.DateTransaction()[0];
@@ -272,7 +283,7 @@ public class APIOperations {
             paymentShop.setTransactionTypeId(transactionType);
             TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
             paymentShop.setTransactionSourceId(transactionSource);
-            Date date= new Date();
+            Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             paymentShop.setCreationDate(creationDate);
             paymentShop.setConcept(Constante.sTransactionConcept);
@@ -280,7 +291,70 @@ public class APIOperations {
             paymentShop.setTransactionStatus(TransactionStatus.CREATED.name());
             paymentShop.setTotalAmount(amountPayment);
             entityManager.persist(paymentShop);
-            //return new TransactionResponse(ResponseCode.EXITO,"The transaction was successfully saved in the database",paymentShop);
+            
+            //Revisar si la transacción está sujeta a comisiones
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationType).getResultList();
+                for (Commission c: commissions) {
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (amountPayment * amountCommission)/100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                    //Se crea el objeto commissionItem y se persiste en BD
+                    CommissionItem commissionItem = new CommissionItem();
+                    commissionItem.setCommissionId(c);
+                    commissionItem.setAmount(amountCommission);
+                    Date commissionDate = new Date();
+                    Timestamp processedDate = new Timestamp(commissionDate.getTime());
+                    commissionItem.setProcessedDate(processedDate);
+                    commissionItem.setTransactionId(paymentShop);
+                    entityManager.persist(commissionItem);
+                }
+            } catch (NoResultException e) {
+                
+            }
+            
+            
+            //Se actualizan los saldos del cliente y del comercio en la BD
+            //Balance History del cliente
+            balanceUserSource = loadLastBalanceHistoryByAccount(userId);
+            BalanceHistory balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setUserId(userId);
+            balanceHistory.setOldAmount(balanceUserSource.getCurrentAmount());
+            Float currentAmountUserSource = balanceUserSource.getCurrentAmount() - amountPayment;
+            balanceHistory.setCurrentAmount(currentAmountUserSource);
+            balanceHistory.setProductId(product);
+            balanceHistory.setTransactionId(paymentShop);
+            Date balanceDate = new Date();
+            Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(balanceUserSource.getId());
+            entityManager.persist(balanceHistory);
+            
+            //Balance History de la Tienda
+            BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination);
+            balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setUserId(idUserDestination);
+            balanceHistory.setOldAmount(balanceUserDestination.getCurrentAmount());
+            Float currentAmountUserDestination = balanceUserDestination.getCurrentAmount() - amountCommission;
+            balanceHistory.setCurrentAmount(currentAmountUserDestination);
+            balanceHistory.setProductId(product);
+            balanceHistory.setTransactionId(paymentShop);
+            balanceDate = new Date();
+            balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(balanceUserDestination.getId());
+            entityManager.persist(balanceHistory);            
+            
+            //guardas transaccion
+            //Envias notificaciones
+            //envias sms
+            
+
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -306,5 +380,12 @@ public class APIOperations {
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         Long idPreferenceField = pf.getId();                            
         return preferencesValue = entityManager.createNamedQuery("PreferenceValue.findByPreferenceFieldId", PreferenceValue.class).setParameter("preferenceFieldId",idPreferenceField).getResultList();
+    }
+    
+    public BalanceHistory loadLastBalanceHistoryByAccount(Long userId) {
+        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " ORDER BY b.id desc");
+        query.setMaxResults(1);
+        BalanceHistory result = (BalanceHistory) query.setHint("toplink.refresh", "true").getSingleResult();
+        return result;
     }
 }
