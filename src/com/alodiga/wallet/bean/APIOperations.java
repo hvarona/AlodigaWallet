@@ -1,5 +1,9 @@
 package com.alodiga.wallet.bean;
 
+import com.alodiga.transferto.integration.connection.RequestManager;
+import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
+import com.alodiga.transferto.integration.model.ReserveResponse;
+import com.alodiga.transferto.integration.model.TopUpResponse;
 import com.alodiga.wallet.model.Category;
 import com.alodiga.wallet.model.Country;
 import com.alodiga.wallet.model.Enterprise;
@@ -13,6 +17,8 @@ import com.alodiga.wallet.model.Preference;
 import com.alodiga.wallet.model.PreferenceField;
 import com.alodiga.wallet.model.PreferenceValue;
 import com.alodiga.wallet.model.PaymentInfo;
+import com.alodiga.wallet.model.Provider;
+import com.alodiga.wallet.model.TopUpResponseConstants;
 import com.alodiga.wallet.model.TransactionType;
 import com.alodiga.wallet.model.TransactionSource;
 import com.alodiga.wallet.model.TransactionStatus;
@@ -55,6 +61,8 @@ import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.PreferenceListResponse;
+import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
+import com.alodiga.wallet.topup.TopUpInfo;
 import com.alodiga.wallet.utils.Constante;
 import com.alodiga.wallet.utils.Encryptor;
 import com.alodiga.wallet.utils.SendCallRegister;
@@ -66,6 +74,8 @@ import com.ericsson.alodiga.ws.Usuario;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.sql.Timestamp;
 import com.alodiga.wallet.utils.Utils;
+import java.util.HashMap;
+import java.util.Map;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -380,8 +390,9 @@ public class APIOperations {
         List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
         Long idPreferenceField = pf.getId();                            
         return preferencesValue = entityManager.createNamedQuery("PreferenceValue.findByPreferenceFieldId", PreferenceValue.class).setParameter("preferenceFieldId",idPreferenceField).getResultList();
-    }
+    }  
     
+
     public BalanceHistory loadLastBalanceHistoryByAccount(Long userId) {
         Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " ORDER BY b.id desc");
         query.setMaxResults(1);
@@ -389,3 +400,4 @@ public class APIOperations {
         return result;
     }
 }
+
