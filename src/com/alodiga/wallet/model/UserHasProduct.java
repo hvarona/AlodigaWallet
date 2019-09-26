@@ -6,6 +6,7 @@
 package com.alodiga.wallet.model;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -40,6 +41,9 @@ public class UserHasProduct implements Serializable {
     @Basic(optional = false)
     @Column(name = "id")
     private Long id;
+    private Timestamp beginningDate;
+    
+    private Timestamp endingDate;
     @Basic(optional = false)
     @NotNull
     @Column(name = "productId")
@@ -109,6 +113,22 @@ public class UserHasProduct implements Serializable {
     @Override
     public String toString() {
         return "com.alodiga.wallet.model.UserHasProduct[ id=" + id + " ]";
+    }
+    
+    public Timestamp getBeginningDate() {
+        return beginningDate;
+}
+
+    public void setBeginningDate(Timestamp beginningDate) {
+        this.beginningDate = beginningDate;
+    }
+
+    public Timestamp getEndingDate() {
+        return endingDate;
+    }
+
+    public void setEndingDate(Timestamp endingDate) {
+        this.endingDate = endingDate;
     }
     
 }

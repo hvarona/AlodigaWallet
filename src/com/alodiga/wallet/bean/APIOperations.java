@@ -4,6 +4,7 @@ import com.alodiga.transferto.integration.connection.RequestManager;
 import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
 import com.alodiga.transferto.integration.model.ReserveResponse;
 import com.alodiga.transferto.integration.model.TopUpResponse;
+import com.alodiga.wallet.model.Bank;
 import com.alodiga.wallet.model.Category;
 import com.alodiga.wallet.model.Country;
 import com.alodiga.wallet.model.Enterprise;
@@ -22,6 +23,7 @@ import com.alodiga.wallet.model.TopUpResponseConstants;
 import com.alodiga.wallet.model.TransactionType;
 import com.alodiga.wallet.model.TransactionSource;
 import com.alodiga.wallet.model.TransactionStatus;
+import com.alodiga.wallet.respuestas.BankListResponse;
 import java.sql.Connection;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -53,12 +55,13 @@ import org.apache.log4j.Logger;
 import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ProductResponse;
-import com.alodiga.wallet.respuestas.TransactionResponse;
+import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.PreferenceListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
+import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.topup.TopUpInfo;
 import com.alodiga.wallet.utils.Constante;
 import com.alodiga.wallet.utils.Encryptor;
@@ -126,16 +129,19 @@ public class APIOperations {
             UserHasProduct userHasProduct = new UserHasProduct();
             userHasProduct.setProductId(Product.ALOCOIN_PRODUCT);
             userHasProduct.setUserSourceId(userId);
+            userHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
             entityManager.persist(userHasProduct);
 
             UserHasProduct userHasProduct1 = new UserHasProduct();
             userHasProduct1.setProductId(Product.ALODIGA_BALANCE);
             userHasProduct1.setUserSourceId(userId);
+            userHasProduct1.setBeginningDate(new Timestamp(new Date().getTime()));
             entityManager.persist(userHasProduct1);
 
             UserHasProduct userHasProduct2 = new UserHasProduct();
             userHasProduct2.setProductId(Product.PREPAID_CARD);
             userHasProduct2.setUserSourceId(userId);
+            userHasProduct2.setBeginningDate(new Timestamp(new Date().getTime()));
             entityManager.persist(userHasProduct2);
 
         } catch (Exception e) {
@@ -159,6 +165,7 @@ public class APIOperations {
                 Product product = new Product();
                 product = entityManager.find(Product.class, uhp.getProductId());
                 products.add(product);
+                
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -180,7 +187,20 @@ public class APIOperations {
         return new CountryListResponse(ResponseCode.EXITO, "", countries);
     }
     
-    public TransactionResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
+    
+    
+    public BankListResponse getBank() {
+        List<Bank> bank = null;
+        try {
+            bank = entityManager.createNamedQuery("Bank.findAll", Bank.class).getResultList();
+
+        } catch (Exception e) {
+            return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
+        }
+        return new BankListResponse(ResponseCode.EXITO, "", bank);
+    }
+    
+    public TransactionListResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
                                                String conceptTransaction, String cryptogramUser, Long idUserDestination) {
         
         Long idTransaction                      = 12345678910L;
@@ -243,7 +263,7 @@ public class APIOperations {
                             preferencesValue = getPreferenceValuePayment(pf); 
                             for(PreferenceValue pv: preferencesValue){
                                 if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per day");
+                                    return new TransactionListResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per day");
                                 }
                             }
                         }
@@ -253,7 +273,7 @@ public class APIOperations {
                             preferencesValue = getPreferenceValuePayment(pf);                           
                             for(PreferenceValue pv: preferencesValue){
                                 if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
+                                    return new TransactionListResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
                                 }
                             }
                         }
@@ -263,7 +283,7 @@ public class APIOperations {
                             preferencesValue = getPreferenceValuePayment(pf); 
                             for(PreferenceValue pv: preferencesValue){
                                 if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER,"The user exceeded the maximum number of transactions per day");
+                                    return new TransactionListResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER,"The user exceeded the maximum number of transactions per day");
                                 }
                             }
                         }
@@ -294,9 +314,9 @@ public class APIOperations {
             
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
+            return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
         } 
-        return new TransactionResponse(ResponseCode.EXITO);
+        return new TransactionListResponse(ResponseCode.EXITO);
     }
     
     private List<Preference> getPreferences() {
@@ -323,7 +343,7 @@ public class APIOperations {
                 .getSingleResult();
     }
     
-    public TopUpInfoListResponse getTopUpInfs(String receiverNumber, String phoneNumber) {
+    public TopUpInfoListResponse getTopUpInfo(String receiverNumber, String phoneNumber) {
 
         Provider provider = null;
         try {
@@ -332,6 +352,7 @@ public class APIOperations {
             return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error al buscar el proveedor");
         }
         Float percentAditional = provider.getAditionalPercent();
+        
       
         MSIDN_INFOResponse inf = null;
        
@@ -480,4 +501,29 @@ public class APIOperations {
    
         return response_01;
     }
+    
+    
+    
+    public TransactionListResponse getTransactionsByUserId(Long userId) {
+        List<Transaction> transactions = new ArrayList<Transaction>();
+        try {
+            entityManager.flush();
+            transactions = (List<Transaction>) entityManager.createNamedQuery("Transaction.findByUserSourceId", Transaction.class).setParameter("userSourceId", userId).getResultList();
+            if (transactions.size() < 1) {
+                throw new NoResultException(ResponseCode.TRANSACTION_LIST_NOT_FOUND_EXCEPTION.toString());
+            }
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new TransactionListResponse(ResponseCode.TRANSACTION_LIST_NOT_FOUND_EXCEPTION, "El usuario no tiene transacciones asociadas");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "error interno");
+        }
+        
+        
+        return new TransactionListResponse(ResponseCode.EXITO, "", transactions);
+    }
+
 }
+
+

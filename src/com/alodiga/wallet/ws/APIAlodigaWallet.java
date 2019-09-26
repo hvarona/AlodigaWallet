@@ -8,6 +8,7 @@ import javax.jws.WebParam;
 import javax.jws.WebService;
 import org.apache.log4j.Logger;
 import com.alodiga.wallet.bean.APIOperations;
+import com.alodiga.wallet.respuestas.BankListResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.Response;
@@ -15,7 +16,7 @@ import com.alodiga.wallet.respuestas.ProductResponse;
 import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
-import com.alodiga.wallet.respuestas.TransactionResponse;
+import com.alodiga.wallet.respuestas.TransactionListResponse;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
@@ -72,7 +73,12 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
-    public TransactionResponse saveTransaction(
+    public BankListResponse getBank(){
+        return operations.getBank();        
+    }
+    
+    @WebMethod
+    public TransactionListResponse saveTransaction(
         @WebParam(name = "cryptogramaShop") String cryptogramShop,
         @WebParam(name = "emailUser") String emailUser,
         @WebParam(name = "productId") Long productId,
@@ -89,6 +95,13 @@ public class APIAlodigaWallet {
     public TopUpInfoListResponse topUpList(
         @WebParam(name = "receiverNumber") String receiverNumber,
         @WebParam(name = "phoneNumber") String phoneNumber){
-    return operations.getTopUpInfs(receiverNumber, phoneNumber);         
+    return operations.getTopUpInfo(receiverNumber, phoneNumber);         
+    }
+    
+    
+       @WebMethod
+    public TransactionListResponse getTransactionsByUserId(
+        @WebParam(name = "userId") String userId){
+       return operations.getTransactionsByUserId(Long.valueOf(userId.trim()));         
     }
 }
