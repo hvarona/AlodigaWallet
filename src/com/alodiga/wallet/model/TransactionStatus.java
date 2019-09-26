@@ -3,7 +3,7 @@ package com.alodiga.wallet.model;
 public enum TransactionStatus {
     CREATED("CREATED"),
     IN_PROCESS("IN_PROCESS"),
-    COMPLETE("COMPLETE");
+    COMPLETED("COMPLETED");
     
     private String codigo;
     

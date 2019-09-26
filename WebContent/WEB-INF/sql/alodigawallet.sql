@@ -1434,6 +1434,51 @@ CHANGE COLUMN `totalAmount` `totalAmount` FLOAT(20,2) NOT NULL ;
 ALTER TABLE `alodigaWallet`.`transaction` 
 ADD COLUMN `concept` VARCHAR(255) NOT NULL AFTER `creationDate`;
 
+
+--Se agregaron las tablas exchange_rate y exchange-detail a la BD
+--fecha de modificación: 26/09/2019, analista: Jesús Gómez
+
+CREATE TABLE IF NOT EXISTS `alodigaWallet`.`exchange_rate` (
+  `id` BIGINT(10) NOT NULL AUTO_INCREMENT,
+  `productId` BIGINT(3) NOT NULL,
+  `value` FLOAT NOT NULL,
+  `beginningDate` DATETIME NULL,
+  `endingDate` DATETIME NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_exchange_rate_product1_idx` (`productId` ASC),
+  CONSTRAINT `fk_exchange_rate_product1`
+    FOREIGN KEY (`productId`)
+    REFERENCES `alodigaWallet`.`product` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+
+CREATE TABLE IF NOT EXISTS `alodigaWallet`.`exchange_detail` (
+  `id` BIGINT(10) NOT NULL AUTO_INCREMENT,
+  `productId` BIGINT(3) NOT NULL,
+  `exchangeRateId` BIGINT(10) NOT NULL,
+  `transactionId` BIGINT(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_exchange_detail_product1_idx` (`productId` ASC),
+  INDEX `fk_exchange_detail_exchange_rate1_idx` (`exchangeRateId` ASC),
+  INDEX `fk_exchange_detail_transaction1_idx` (`transactionId` ASC),
+  CONSTRAINT `fk_exchange_detail_product1`
+    FOREIGN KEY (`productId`)
+    REFERENCES `alodigaWallet`.`product` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_exchange_detail_exchange_rate1`
+    FOREIGN KEY (`exchangeRateId`)
+    REFERENCES `alodigaWallet`.`exchange_rate` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_exchange_detail_transaction1`
+    FOREIGN KEY (`transactionId`)
+    REFERENCES `alodigaWallet`.`transaction` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+
 --
 -- Dumping data for table `withdrawal_type`
 --
