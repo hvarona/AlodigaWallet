@@ -20,6 +20,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -97,6 +98,8 @@ public class Product implements Serializable {
     private Enterprise enterpriseId;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
     private Collection<BalanceHistory> balanceHistoryCollection;
+    @Transient
+    private Float currentBalance;
 
     public Product() {
     }
@@ -255,6 +258,7 @@ public class Product implements Serializable {
     public void setBalanceHistoryCollection(Collection<BalanceHistory> balanceHistoryCollection) {
         this.balanceHistoryCollection = balanceHistoryCollection;
     }
+    
 
     @Override
     public int hashCode() {
@@ -290,5 +294,16 @@ public class Product implements Serializable {
     public void setWithdrawalCollection(Collection<Withdrawal> withdrawalCollection) {
         this.withdrawalCollection = withdrawalCollection;
     }
+    
+    public void setCurrentBalance(Float currentBalance) {
+        this.currentBalance = currentBalance;
+}
+
+    public Float getCurrentBalance() {
+        return currentBalance;
+    }
+
+   
+    
     
 }

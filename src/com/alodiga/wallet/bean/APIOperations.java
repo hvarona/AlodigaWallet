@@ -23,6 +23,7 @@ import com.alodiga.wallet.model.TopUpResponseConstants;
 import com.alodiga.wallet.model.TransactionType;
 import com.alodiga.wallet.model.TransactionSource;
 import com.alodiga.wallet.model.TransactionStatus;
+import com.alodiga.wallet.response.generic.BankGeneric;
 import com.alodiga.wallet.respuestas.BankListResponse;
 import java.sql.Connection;
 import java.text.DateFormat;
@@ -63,7 +64,7 @@ import com.alodiga.wallet.respuestas.PreferenceListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.topup.TopUpInfo;
-import com.alodiga.wallet.utils.Constante;
+import com.alodiga.wallet.utils.Constants;
 import com.alodiga.wallet.utils.Encryptor;
 import com.alodiga.wallet.utils.SendCallRegister;
 import java.rmi.RemoteException;
@@ -189,16 +190,40 @@ public class APIOperations {
     
     
     
-    public BankListResponse getBank() {
-        List<Bank> bank = null;
+    public BankListResponse getBankApp() {
+        List<Bank> banks = null;
         try {
-            bank = entityManager.createNamedQuery("Bank.findAll", Bank.class).getResultList();
-
+            banks = entityManager.createNamedQuery("Bank.findAll", Bank.class).getResultList();            
         } catch (Exception e) {
             return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
         }
-        return new BankListResponse(ResponseCode.EXITO, "", bank);
+        ArrayList<BankGeneric> bankGenerics = new ArrayList<BankGeneric>();
+        for(Bank b : banks){
+            BankGeneric bankGeneric = new BankGeneric(b.getId().toString(),b.getName(),b.getAba());
+            bankGenerics.add(bankGeneric);
+        }
+
+        return new BankListResponse(ResponseCode.EXITO, "", bankGenerics);
+       
     }
+    
+     public BankListResponse getBankByCountryApp() {
+        List<Bank> banks = null;
+        try {
+            banks = entityManager.createNamedQuery("Bank.findAll", Bank.class).getResultList();            
+        } catch (Exception e) {
+            return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
+        }
+        ArrayList<BankGeneric> bankGenerics = new ArrayList<BankGeneric>();
+        for(Bank b : banks){
+            BankGeneric bankGeneric = new BankGeneric(b.getId().toString(),b.getName(),b.getAba());
+            bankGenerics.add(bankGeneric);
+        }
+
+        return new BankListResponse(ResponseCode.EXITO, "", bankGenerics);
+       
+    }
+    
     
     public TransactionListResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
                                                String conceptTransaction, String cryptogramUser, Long idUserDestination) {
@@ -251,14 +276,14 @@ public class APIOperations {
             //Cotejar las preferencias vs las transacciones del usuario
             List<Preference> preferences = getPreferences();
             for(Preference p: preferences){
-                if (p.getName().equals(Constante.sPreferenceTransaction)) {
+                if (p.getName().equals(Constants.sPreferenceTransaction)) {
                     idTransaction = p.getId();
                 }
             }
             preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
             for(PreferenceField pf: preferencesField){
                 switch(pf.getName()) {
-                    case Constante.sValidatePreferenceTransaction1:
+                    case Constants.sValidatePreferenceTransaction1:
                         if (pf.getEnabled() == 1) {
                             preferencesValue = getPreferenceValuePayment(pf); 
                             for(PreferenceValue pv: preferencesValue){
@@ -268,7 +293,7 @@ public class APIOperations {
                             }
                         }
                     break;
-                    case Constante.sValidatePreferenceTransaction2:
+                    case Constants.sValidatePreferenceTransaction2:
                         if (pf.getEnabled() == 1) {
                             preferencesValue = getPreferenceValuePayment(pf);                           
                             for(PreferenceValue pv: preferencesValue){
@@ -278,7 +303,7 @@ public class APIOperations {
                             }
                         }
                     break;
-                    case Constante.sValidatePreferenceTransaction3:
+                    case Constants.sValidatePreferenceTransaction3:
                         if (pf.getEnabled() == 1) {
                             preferencesValue = getPreferenceValuePayment(pf); 
                             for(PreferenceValue pv: preferencesValue){
@@ -298,14 +323,14 @@ public class APIOperations {
             Product product = entityManager.find(Product.class, productId);
             paymentShop.setProductId(product);
             paymentShop.setAmount(amountPayment); 
-            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationType);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constants.sTransationType);
             paymentShop.setTransactionTypeId(transactionType);
-            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constants.sTransactionSource);
             paymentShop.setTransactionSourceId(transactionSource);
             Date date= new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             paymentShop.setCreationDate(creationDate);
-            paymentShop.setConcept(Constante.sTransactionConcept);
+            paymentShop.setConcept(Constants.sTransactionConcept);
             paymentShop.setAmount(amountPayment);
             paymentShop.setTransactionStatus(TransactionStatus.CREATED.name());
             paymentShop.setTotalAmount(amountPayment);
@@ -504,11 +529,12 @@ public class APIOperations {
     
     
     
-    public TransactionListResponse getTransactionsByUserId(Long userId) {
+    public TransactionListResponse getTransactionsByUserIdApp(Long userId, Integer maxResult) {
         List<Transaction> transactions = new ArrayList<Transaction>();
         try {
             entityManager.flush();
-            transactions = (List<Transaction>) entityManager.createNamedQuery("Transaction.findByUserSourceId", Transaction.class).setParameter("userSourceId", userId).getResultList();
+            
+            transactions = (List<Transaction>) entityManager.createNamedQuery("Transaction.findByUserSourceId", Transaction.class).setParameter("userSourceId", userId).setMaxResults(maxResult).getResultList();
             if (transactions.size() < 1) {
                 throw new NoResultException(ResponseCode.TRANSACTION_LIST_NOT_FOUND_EXCEPTION.toString());
             }
@@ -520,7 +546,20 @@ public class APIOperations {
             return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "error interno");
         }
         
+        APIRegistroUnificadoProxy api = new APIRegistroUnificadoProxy();
         
+        for(Transaction t :transactions) {
+            t.setPaymentInfoId(null);
+            t.setProductId(null);
+            t.setTransactionType(t.getTransactionTypeId().getId().toString());
+            RespuestaUsuario usuarioRespuesta = new RespuestaUsuario();
+            try {
+                usuarioRespuesta = api.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, t.getUserDestinationId().toString());
+                t.setDestinationUser(usuarioRespuesta.getDatosRespuesta().getEmail() +" / "+ usuarioRespuesta.getDatosRespuesta().getMovil() + " / "+ usuarioRespuesta.getDatosRespuesta().getNombre());
+            } catch (RemoteException ex) {
+                return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "No se logro comunicacion entre alodiga wallet y RU");
+            }
+        }
         return new TransactionListResponse(ResponseCode.EXITO, "", transactions);
     }
 

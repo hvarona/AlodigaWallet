@@ -52,7 +52,8 @@
                 <class>com.alodiga.wallet.model.WithdrawalType</class>
                 <class>com.alodiga.wallet.model.UserHasProduct</class>
                 <class>com.alodiga.wallet.model.UserHasBank</class>
-               
+                <class>com.alodiga.wallet.model.BankHasProduct</class>
+                               
 		<properties>
 			<property name="eclipselink.logging.level" value="ALL" />
 			<property name="eclipselink.logging.parameters" value="true" />

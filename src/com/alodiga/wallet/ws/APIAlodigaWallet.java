@@ -73,8 +73,8 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
-    public BankListResponse getBank(){
-        return operations.getBank();        
+    public BankListResponse getBankApp(){
+        return operations.getBankApp();        
     }
     
     @WebMethod
@@ -100,8 +100,11 @@ public class APIAlodigaWallet {
     
     
        @WebMethod
-    public TransactionListResponse getTransactionsByUserId(
-        @WebParam(name = "userId") String userId){
-       return operations.getTransactionsByUserId(Long.valueOf(userId.trim()));         
+    public TransactionListResponse getTransactionsByUserIdApp(
+        @WebParam(name = "userId") String userId, 
+        @WebParam(name = "maxResult") String maxResult)
+    
+    {
+       return operations.getTransactionsByUserIdApp(Long.valueOf(userId), Integer.valueOf(maxResult));
     }
 }

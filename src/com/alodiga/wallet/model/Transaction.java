@@ -24,6 +24,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -121,6 +122,17 @@ public class Transaction implements Serializable {
     private Collection<CommissionItem> commissionItemCollection;
     @OneToMany(mappedBy = "transactionId")
     private Collection<BalanceHistory> balanceHistoryCollection;
+    
+    //Only by result transaction list by APP
+    @Transient
+    private String commisionAmount;
+    @Transient
+    private String destinationUser;
+    @Transient
+    private String transactionType;
+    
+
+    
 
     public Transaction() {
     }
@@ -368,5 +380,34 @@ public class Transaction implements Serializable {
     public void setWithdrawalCollection(Collection<Withdrawal> withdrawalCollection) {
         this.withdrawalCollection = withdrawalCollection;
     }
+    
+    
+    //Only response APP
+
+    public String getCommisionAmount() {
+        return commisionAmount;
+    }
+
+    public void setCommisionAmount(String commisionAmount) {
+        this.commisionAmount = commisionAmount;
+    }
+
+    public String getDestinationUser() {
+        return destinationUser;
+    }
+
+    public void setDestinationUser(String destinationUser) {
+        this.destinationUser = destinationUser;
+    }
+
+    public String getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(String transactionType) {
+        this.transactionType = transactionType;
+    }
+    
+    
     
 }
