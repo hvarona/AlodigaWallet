@@ -9,17 +9,17 @@ import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
-@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-20T14:12:20")
+@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-30T15:02:10")
 @StaticMetamodel(Language.class)
 public class Language_ { 
 
-    public static volatile SingularAttribute<Language, Long> id;
-    public static volatile SingularAttribute<Language, Boolean> enabled;
-    public static volatile CollectionAttribute<Language, PromotionData> promotionDataCollection;
     public static volatile CollectionAttribute<Language, PromotionNotification> promotionNotificationCollection;
     public static volatile SingularAttribute<Language, String> iso;
-    public static volatile CollectionAttribute<Language, CategoryData> categoryDataCollection;
     public static volatile SingularAttribute<Language, String> description;
     public static volatile CollectionAttribute<Language, ProductData> productDataCollection;
+    public static volatile SingularAttribute<Language, Long> id;
+    public static volatile CollectionAttribute<Language, CategoryData> categoryDataCollection;
+    public static volatile SingularAttribute<Language, Boolean> enabled;
+    public static volatile CollectionAttribute<Language, PromotionData> promotionDataCollection;
 
 }

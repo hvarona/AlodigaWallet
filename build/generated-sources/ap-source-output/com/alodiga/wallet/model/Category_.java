@@ -7,14 +7,14 @@ import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
-@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-20T14:12:20")
+@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-30T15:02:10")
 @StaticMetamodel(Category.class)
 public class Category_ { 
 
-    public static volatile SingularAttribute<Category, Long> id;
-    public static volatile SingularAttribute<Category, Boolean> enabled;
-    public static volatile CollectionAttribute<Category, CategoryData> categoryDataCollection;
-    public static volatile SingularAttribute<Category, String> name;
     public static volatile CollectionAttribute<Category, Product> productCollection;
+    public static volatile SingularAttribute<Category, String> name;
+    public static volatile SingularAttribute<Category, Long> id;
+    public static volatile CollectionAttribute<Category, CategoryData> categoryDataCollection;
+    public static volatile SingularAttribute<Category, Boolean> enabled;
 
 }

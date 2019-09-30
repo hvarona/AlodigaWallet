@@ -28,6 +28,8 @@ import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
+import com.alodiga.wallet.response.generic.BankGeneric;
+import com.alodiga.wallet.respuestas.BankListResponse;
 import java.sql.Connection;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -66,7 +68,9 @@ import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.PreferenceListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
+import com.alodiga.wallet.respuestas.TransactionResponse;
 import com.alodiga.wallet.topup.TopUpInfo;
+import com.alodiga.wallet.utils.Constante;
 import com.alodiga.wallet.utils.Constants;
 import com.alodiga.wallet.utils.Encryptor;
 import com.alodiga.wallet.utils.SendCallRegister;
@@ -210,25 +214,8 @@ public class APIOperations {
        
     }
     
-     public BankListResponse getBankByCountryApp() {
-        List<Bank> banks = null;
-        try {
-            banks = entityManager.createNamedQuery("Bank.findAll", Bank.class).getResultList();            
-        } catch (Exception e) {
-            return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
-        }
-        ArrayList<BankGeneric> bankGenerics = new ArrayList<BankGeneric>();
-        for(Bank b : banks){
-            BankGeneric bankGeneric = new BankGeneric(b.getId().toString(),b.getName(),b.getAba());
-            bankGenerics.add(bankGeneric);
-        }
-
-        return new BankListResponse(ResponseCode.EXITO, "", bankGenerics);
-       
-    }
     
-    
-    public TransactionListResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
+    public TransactionResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
                                                String conceptTransaction, String cryptogramUser, Long idUserDestination) {
         
         Long idTransaction                      = 0L;
@@ -286,7 +273,7 @@ public class APIOperations {
                             preferencesValue = getPreferenceValuePayment(pf); 
                             for(PreferenceValue pv: preferencesValue){
                                 if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
-                                    return new TransactionListResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per day");
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per day");
                                 }
                             }
                         }
@@ -296,7 +283,7 @@ public class APIOperations {
                             preferencesValue = getPreferenceValuePayment(pf);                           
                             for(PreferenceValue pv: preferencesValue){
                                 if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionListResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
                                 }
                             }
                         }
@@ -306,7 +293,7 @@ public class APIOperations {
                             preferencesValue = getPreferenceValuePayment(pf); 
                             for(PreferenceValue pv: preferencesValue){
                                 if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
-                                    return new TransactionListResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER,"The user exceeded the maximum number of transactions per day");
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER,"The user exceeded the maximum number of transactions per day");
                                 }
                             }
                         }

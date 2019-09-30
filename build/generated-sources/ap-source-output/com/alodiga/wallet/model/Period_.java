@@ -6,14 +6,14 @@ import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
-@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-20T14:12:20")
+@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-30T15:02:10")
 @StaticMetamodel(Period.class)
 public class Period_ { 
 
-    public static volatile SingularAttribute<Period, Long> id;
-    public static volatile SingularAttribute<Period, Integer> days;
-    public static volatile SingularAttribute<Period, String> description;
-    public static volatile SingularAttribute<Period, String> name;
     public static volatile CollectionAttribute<Period, Promotion> promotionCollection;
+    public static volatile SingularAttribute<Period, String> name;
+    public static volatile SingularAttribute<Period, String> description;
+    public static volatile SingularAttribute<Period, Integer> days;
+    public static volatile SingularAttribute<Period, Long> id;
 
 }

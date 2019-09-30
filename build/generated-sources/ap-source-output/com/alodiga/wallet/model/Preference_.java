@@ -6,14 +6,14 @@ import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
-@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-20T14:12:20")
+@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-30T15:02:10")
 @StaticMetamodel(Preference.class)
 public class Preference_ { 
 
-    public static volatile SingularAttribute<Preference, Long> id;
-    public static volatile SingularAttribute<Preference, Boolean> enabled;
+    public static volatile SingularAttribute<Preference, String> name;
     public static volatile SingularAttribute<Preference, String> description;
     public static volatile CollectionAttribute<Preference, PreferenceField> preferenceFieldCollection;
-    public static volatile SingularAttribute<Preference, String> name;
+    public static volatile SingularAttribute<Preference, Long> id;
+    public static volatile SingularAttribute<Preference, Boolean> enabled;
 
 }

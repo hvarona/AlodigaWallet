@@ -17,6 +17,7 @@ import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
+import com.alodiga.wallet.respuestas.TransactionResponse;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
@@ -78,7 +79,7 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
-    public TransactionListResponse saveTransaction(
+    public TransactionResponse savePaymentShop(
         @WebParam(name = "cryptogramaShop") String cryptogramShop,
         @WebParam(name = "emailUser") String emailUser,
         @WebParam(name = "productId") Long productId,
