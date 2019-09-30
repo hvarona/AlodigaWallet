@@ -113,9 +113,17 @@ public class Constante {
         public static final String sValidatePreferenceTransaction1 = "MAX_TRANSACTION_AMOUNT_LIMIT";
         public static final String sValidatePreferenceTransaction2 = "MAX_TRANSACTION_NUMBER_BY_ACCOUNT";
         public static final String sValidatePreferenceTransaction3 = "MAX_TRANSACTION_NUMBER_BY_CUSTOMER";
-        public static final Long sTransationType = 2l;
+        public static final Long sTransationTypePS = 2l;
         public static final Long sTransactionSource = 2l;
-        public static final String sTransactionConcept = "Payment Shop";
-
-
+        public static final String sTransactionConceptPaymentShop = "Payment Shop";
+        public static final String sUserHasNotBalance = "USER_HAS_NOT_BALANCE";
+        
+        //Transferencias entre cuentas
+        public static final Long sTransationTypeTA = 3l;
+        public static final String sTransactionConceptTranferAccounts = "Transfer between Accounts";
+        
+        //Intercambio de productos
+        public static final Long sTransationTypeEP = 4l;
+        public static final String sTransactionConceptExchangeProducts = "Exchange Products";
+        
 }

@@ -72,7 +72,7 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
-    public TransactionResponse saveTransaction(
+    public TransactionResponse savePaymentShop(
         @WebParam(name = "cryptogramaShop") String cryptogramShop,
         @WebParam(name = "emailUser") String emailUser,
         @WebParam(name = "productId") Long productId,
@@ -81,8 +81,33 @@ public class APIAlodigaWallet {
         @WebParam(name = "cryptogramaUser") String cryptogramUser,
         @WebParam(name = "idUserDestination") Long idUserDestination) {
         
-        return operations.savePaymentShop(cryptogramShop, emailUser, Long.valueOf(productId), Float.valueOf(amountPayment), 
-                                          conceptTransaction, cryptogramUser, Long.valueOf(idUserDestination));        
+        return operations.savePaymentShop(cryptogramShop, emailUser, productId, amountPayment, 
+                                          conceptTransaction, cryptogramUser, idUserDestination);        
+    }
+
+    @WebMethod
+    public TransactionResponse SaveTransferBetweenAccount (
+        @WebParam(name = "cryptogramUserSource") String cryptogramUserSource, 
+        @WebParam(name = "emailUser") String emailUser, 
+        @WebParam(name = "productId") Long productId, 
+        @WebParam(name = "amountTransfer") Float amountTransfer,
+        @WebParam(name = "conceptTransaction") String conceptTransaction, 
+        @WebParam(name = "cryptogramUserDestination") String cryptogramUserDestination, 
+        @WebParam(name = "idUserDestination") Long idUserDestination) {
+        
+        return operations.SaveTransferBetweenAccount(cryptogramUserSource, emailUser, productId, amountTransfer,
+                                                     conceptTransaction, cryptogramUserSource, idUserDestination) ;
+    }
+    
+      @WebMethod
+    public TransactionResponse ExchangeProduct ( 
+        @WebParam(name = "emailUser") String emailUser, 
+        @WebParam(name = "productSourceId") Long productSourceId, 
+        @WebParam(name = "productDestinationId") Long productDestinationId,
+        @WebParam(name = "amountExchange") Float amountExchange,
+        @WebParam(name = "conceptTransaction") String conceptTransaction) {
+        
+        return operations.ExchangeProduct(emailUser, productSourceId, productDestinationId, amountExchange, conceptTransaction);
     }
 
     @WebMethod

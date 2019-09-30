@@ -6,6 +6,7 @@
        <jta-data-source>jdbc/AlodigaWallet</jta-data-source>
              	<class>com.alodiga.wallet.model.Address</class>
                 <class>com.alodiga.wallet.model.BalanceHistory</class>
+                <class>com.alodiga.wallet.model.Bank</class>
                 <class>ccom.alodiga.wallet.model.Category</class>
                 <class>com.alodiga.wallet.model.CategoryData</class>
                 <class>com.alodiga.wallet.model.City</class>
@@ -17,6 +18,8 @@
                 <class>com.alodiga.wallet.model.CreditcardType</class>
                 <class>com.alodiga.wallet.model.Currency</class>
                 <class>com.alodiga.wallet.model.Enterprise</class>
+                <class>com.alodiga.wallet.model.ExchangeDetail</class>
+                <class>com.alodiga.wallet.model.ExchangeRate</class>
                 <class>com.alodiga.wallet.model.Key</class>
                 <class>com.alodiga.wallet.model.Language</class>
                 <class>com.alodiga.wallet.model.ParameterType</class>
@@ -47,8 +50,9 @@
                 <class>com.alodiga.wallet.model.Transaction</class>
                 <class>com.alodiga.wallet.model.TransactionSource</class>
                 <class>com.alodiga.wallet.model.TransactionType</class>
+                <class>com.alodiga.wallet.model.UserHasBank</class>
+                <class>com.alodiga.wallet.model.UserHasProduct</class>
                 <class>com.alodiga.wallet.model.Withdrawal</class>
-                <class>com.alodiga.wallet.model.Bank</class>
                 <class>com.alodiga.wallet.model.WithdrawalType</class>
                 <class>com.alodiga.wallet.model.UserHasProduct</class>
                 <class>com.alodiga.wallet.model.UserHasBank</class>
