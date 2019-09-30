@@ -36,7 +36,8 @@ public enum ResponseCode {
         //Mensajes Guardar Transaction
         TRANSACTION_AMOUNT_LIMIT("30"),
         TRANSACTION_MAX_NUMBER_BY_ACCOUNT("31"),
-        TRANSACTION_MAX_NUMBER_BY_CUSTOMER("32");
+        TRANSACTION_MAX_NUMBER_BY_CUSTOMER("32"),
+        USER_HAS_NOT_BALANCE("33");
 	
 	private String codigo; 
 	

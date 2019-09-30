@@ -45,6 +45,11 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Product.findByIsAlocashProduct", query = "SELECT p FROM Product p WHERE p.isAlocashProduct = :isAlocashProduct")})
 public class Product implements Serializable {
     
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
+    private Collection<ExchangeDetail> exchangeDetailCollection;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
+    private Collection<ExchangeRate> exchangeRateCollection;
+    
     public static final Long ALOCOIN_PRODUCT = 1L ;
     public static final Long ALODIGA_BALANCE = 2L ;
     public static final Long PREPAID_CARD = 3L ;
@@ -295,6 +300,25 @@ public class Product implements Serializable {
         this.withdrawalCollection = withdrawalCollection;
     }
     
+    @XmlTransient
+    @JsonIgnore
+    public Collection<ExchangeDetail> getExchangeDetailCollection() {
+        return exchangeDetailCollection;
+    }
+
+    public void setExchangeDetailCollection(Collection<ExchangeDetail> exchangeDetailCollection) {
+        this.exchangeDetailCollection = exchangeDetailCollection;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<ExchangeRate> getExchangeRateCollection() {
+        return exchangeRateCollection;
+    }
+
+    public void setExchangeRateCollection(Collection<ExchangeRate> exchangeRateCollection) {
+        this.exchangeRateCollection = exchangeRateCollection;
+    }
     public void setCurrentBalance(Float currentBalance) {
         this.currentBalance = currentBalance;
 }

@@ -37,6 +37,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "BalanceHistory.findByCurrentAmount", query = "SELECT b FROM BalanceHistory b WHERE b.currentAmount = :currentAmount"),
     @NamedQuery(name = "BalanceHistory.findByDate", query = "SELECT b FROM BalanceHistory b WHERE b.date = :date"),
     @NamedQuery(name = "BalanceHistory.findByVersion", query = "SELECT b FROM BalanceHistory b WHERE b.version = :version"),
+    @NamedQuery(name = "BalanceHistory.lastDateByUser", query = "SELECT MAX(b.date) FROM BalanceHistory b WHERE b.userId = :userId"),
     @NamedQuery(name = "BalanceHistory.findByAdjusmentInfo", query = "SELECT b FROM BalanceHistory b WHERE b.adjusmentInfo = :adjusmentInfo")})
 public class BalanceHistory implements Serializable {
     private static final long serialVersionUID = 1L;
