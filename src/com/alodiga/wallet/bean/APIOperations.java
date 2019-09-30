@@ -28,8 +28,6 @@ import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
-import com.alodiga.wallet.response.generic.BankGeneric;
-import com.alodiga.wallet.respuestas.BankListResponse;
 import java.sql.Connection;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -406,9 +404,9 @@ public class APIOperations {
             
         } catch (Exception e) {
             e.printStackTrace();
-            return new TransactionListResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
         } 
-        return new TransactionListResponse(ResponseCode.EXITO);
+        return new TransactionResponse(ResponseCode.EXITO);
     }
     
 /*
