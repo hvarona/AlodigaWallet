@@ -7,15 +7,15 @@ import javax.annotation.Generated;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
-@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-23T14:03:36")
+@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-27T13:34:56")
 @StaticMetamodel(PromotionItem.class)
 public class PromotionItem_ { 
 
-    public static volatile SingularAttribute<PromotionItem, Long> id;
-    public static volatile SingularAttribute<PromotionItem, Promotion> promotionId;
-    public static volatile SingularAttribute<PromotionItem, Date> promotionApplicationDate;
-    public static volatile SingularAttribute<PromotionItem, Transaction> transactionId;
     public static volatile SingularAttribute<PromotionItem, Float> promotionalAmount;
     public static volatile SingularAttribute<PromotionItem, String> comments;
+    public static volatile SingularAttribute<PromotionItem, Date> promotionApplicationDate;
+    public static volatile SingularAttribute<PromotionItem, Long> id;
+    public static volatile SingularAttribute<PromotionItem, Transaction> transactionId;
+    public static volatile SingularAttribute<PromotionItem, Promotion> promotionId;
 
 }

@@ -6,13 +6,13 @@ import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
-@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-23T14:03:36")
+@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-27T13:34:56")
 @StaticMetamodel(ReportType.class)
 public class ReportType_ { 
 
-    public static volatile SingularAttribute<ReportType, Long> id;
-    public static volatile SingularAttribute<ReportType, String> description;
-    public static volatile SingularAttribute<ReportType, String> name;
     public static volatile CollectionAttribute<ReportType, Report> reportCollection;
+    public static volatile SingularAttribute<ReportType, String> name;
+    public static volatile SingularAttribute<ReportType, String> description;
+    public static volatile SingularAttribute<ReportType, Long> id;
 
 }

@@ -12,22 +12,22 @@ import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
-@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-23T14:03:36")
+@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-27T13:34:56")
 @StaticMetamodel(PaymentInfo.class)
 public class PaymentInfo_ { 
 
-    public static volatile SingularAttribute<PaymentInfo, String> creditCardCVV;
-    public static volatile SingularAttribute<PaymentInfo, PaymentType> paymentTypeId;
+    public static volatile CollectionAttribute<PaymentInfo, Transaction> transactionCollection;
     public static volatile SingularAttribute<PaymentInfo, CreditcardType> creditCardTypeId;
+    public static volatile SingularAttribute<PaymentInfo, BigInteger> userId;
+    public static volatile SingularAttribute<PaymentInfo, String> creditCardName;
+    public static volatile SingularAttribute<PaymentInfo, Date> beginningDate;
+    public static volatile SingularAttribute<PaymentInfo, String> creditCardCVV;
+    public static volatile SingularAttribute<PaymentInfo, Date> endingDate;
+    public static volatile SingularAttribute<PaymentInfo, PaymentType> paymentTypeId;
+    public static volatile SingularAttribute<PaymentInfo, byte[]> creditCardNumber;
     public static volatile SingularAttribute<PaymentInfo, PaymentPatner> paymentPatnerId;
     public static volatile SingularAttribute<PaymentInfo, Date> creditCardDate;
-    public static volatile SingularAttribute<PaymentInfo, Long> id;
-    public static volatile SingularAttribute<PaymentInfo, Date> beginningDate;
-    public static volatile SingularAttribute<PaymentInfo, String> creditCardName;
-    public static volatile SingularAttribute<PaymentInfo, BigInteger> userId;
-    public static volatile SingularAttribute<PaymentInfo, byte[]> creditCardNumber;
     public static volatile SingularAttribute<PaymentInfo, Address> billingAddressId;
-    public static volatile CollectionAttribute<PaymentInfo, Transaction> transactionCollection;
-    public static volatile SingularAttribute<PaymentInfo, Date> endingDate;
+    public static volatile SingularAttribute<PaymentInfo, Long> id;
 
 }
