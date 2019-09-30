@@ -104,9 +104,10 @@ public class APIAlodigaWallet {
         @WebParam(name = "emailUser") String emailUser, 
         @WebParam(name = "productSourceId") Long productSourceId, 
         @WebParam(name = "productDestinationId") Long productDestinationId,
-        @WebParam(name = "amountExchange") Float amountExchange) {
+        @WebParam(name = "amountExchange") Float amountExchange,
+        @WebParam(name = "conceptTransaction") String conceptTransaction) {
         
-        return operations.ExchangeProduct(emailUser, productSourceId, productDestinationId, amountExchange);
+        return operations.ExchangeProduct(emailUser, productSourceId, productDestinationId, amountExchange, conceptTransaction);
     }
 
    

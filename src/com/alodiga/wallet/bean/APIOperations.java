@@ -213,7 +213,7 @@ public class APIOperations {
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             
             // Validar que el balance history del cliente disponga de saldo para hacer la operacion
-            BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId);
+            BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountPayment) {
                 return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
             }
@@ -325,7 +325,7 @@ public class APIOperations {
             
             //Se actualizan los saldos del cliente y de la tienda en la BD
             //Balance History del cliente
-            balanceUserSource = loadLastBalanceHistoryByAccount(userId);
+            balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
             BalanceHistory balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
             balanceHistory.setUserId(userId);
@@ -341,7 +341,7 @@ public class APIOperations {
             entityManager.persist(balanceHistory);
             
             //Balance History de la Tienda
-            BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination);
+            BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination,productId);
             balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
             balanceHistory.setUserId(idUserDestination);
@@ -399,7 +399,7 @@ public class APIOperations {
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             
             // Validar que el balance history del cliente disponga de saldo para hacer la operacion
-            BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId);
+            BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeTA).getResultList();
                 for (Commission c: commissions) {
@@ -512,7 +512,7 @@ public class APIOperations {
             
             //Se actualizan los saldos de los usuarios involucrados en la transferencia
             //Balance History del usuario que transfiere el saldo
-            balanceUserSource = loadLastBalanceHistoryByAccount(userId);
+            balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
             BalanceHistory balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
             balanceHistory.setUserId(userId);
@@ -528,7 +528,7 @@ public class APIOperations {
             entityManager.persist(balanceHistory);
             
             //Balance History del usuario que recibe la transferencia
-            BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination);
+            BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination,productId);
             balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
             balanceHistory.setUserId(idUserDestination);
@@ -561,7 +561,7 @@ public class APIOperations {
      *
      */
     public TransactionResponse ExchangeProduct(String emailUser, Long productSourceId, Long productDestinationId,
-                                                Float amountExchange) {
+                                                Float amountExchange, String conceptTransaction) {
         
         Long idTransaction                      = 0L;
         Long idPreferenceField                  = 0L;
@@ -649,8 +649,8 @@ public class APIOperations {
             Transaction exchange = new Transaction();
             exchange.setId(null);
             exchange.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
-            Product product = entityManager.find(Product.class, productSourceId);
-            exchange.setProductId(product);
+            Product productSource = entityManager.find(Product.class, productSourceId);
+            exchange.setProductId(productSource);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeEP);
             exchange.setTransactionTypeId(transactionType);
             TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
@@ -688,16 +688,57 @@ public class APIOperations {
             } catch (NoResultException e) {
                 
             }
+            
+            //Se actualiza el estatus de la transacción a IN_PROCESS
+            exchange.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(exchange);
                 
             //Guardar los detalles del intercambio (producto destino)
             ExchangeDetail detailProductDestination = new ExchangeDetail();
             detailProductDestination.setId(null);
             detailProductDestination.setExchangeRateId(RateByProductDestination);
-            detailProductDestination.setProductId(product);
+            Product productDestination = entityManager.find(Product.class, productDestinationId);
+            detailProductDestination.setProductId(productDestination);
             detailProductDestination.setTransactionId(exchange);
             entityManager.persist(detailProductDestination);
             
-            //Se actualiza el saldo de los productos
+            //Se actualiza el saldo del usuario para el producto de origen
+            BalanceHistory balanceProductSource = loadLastBalanceHistoryByAccount(userId,productSourceId);
+            BalanceHistory balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setUserId(userId);
+            balanceHistory.setOldAmount(balanceProductSource.getCurrentAmount());
+            Float currentAmountProductSource = balanceProductSource.getCurrentAmount() - amountExchange;
+            balanceHistory.setCurrentAmount(currentAmountProductSource);
+            balanceHistory.setProductId(productSource);
+            balanceHistory.setTransactionId(exchange);
+            Date balanceDate = new Date();
+            Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(balanceProductSource.getId());
+            entityManager.persist(balanceHistory);
+            
+            //Se actualiza el saldo del usuario para el producto de destino
+            BalanceHistory balanceProductDestination = loadLastBalanceHistoryByAccount(userId,productDestinationId);
+            balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setUserId(userId);
+            balanceHistory.setOldAmount(balanceProductDestination.getCurrentAmount());
+            Float currentAmountProductDestination = balanceProductDestination.getCurrentAmount() + amountConversion;
+            balanceHistory.setCurrentAmount(currentAmountProductDestination);
+            balanceHistory.setProductId(productDestination);
+            balanceHistory.setTransactionId(exchange);
+            balanceDate = new Date();
+            balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(balanceProductDestination.getId());
+            entityManager.persist(balanceHistory);
+            
+            //Se actualiza el estado de la transacción a COMPLETED
+            exchange.setTransactionStatus(TransactionStatus.COMPLETED.name());
+            entityManager.merge(exchange);
+            //Envias notificaciones
+            //envias sms
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -705,6 +746,19 @@ public class APIOperations {
         } 
         
         return new TransactionResponse(ResponseCode.EXITO); 
+    }
+    
+    /*
+     *
+     */
+    public TransactionResponse ManualWithdrawals() {
+        try {
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
+        } 
+        return new TransactionResponse(ResponseCode.EXITO);
     }
     
     /*
@@ -721,8 +775,8 @@ public class APIOperations {
     }  
     
 
-    public BalanceHistory loadLastBalanceHistoryByAccount(Long userId) {
-        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " ORDER BY b.id desc");
+    public BalanceHistory loadLastBalanceHistoryByAccount(Long userId, Long productId) {
+        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
         query.setMaxResults(1);
         BalanceHistory result = (BalanceHistory) query.setHint("toplink.refresh", "true").getSingleResult();
         return result;

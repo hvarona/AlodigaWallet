@@ -6,6 +6,7 @@
 package com.alodiga.wallet.model;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
@@ -44,10 +45,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "ExchangeRate.findByEndingDate", query = "SELECT e FROM ExchangeRate e WHERE e.endingDate = :endingDate")})
 public class ExchangeRate implements Serializable {
 
-    @JoinColumn(name = "productId", referencedColumnName = "id")
-    @ManyToOne(optional = false)
-    private Product productId;
-
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,6 +61,9 @@ public class ExchangeRate implements Serializable {
     @Column(name = "endingDate")
     @Temporal(TemporalType.TIMESTAMP)
     private Date endingDate;
+    @JoinColumn(name = "productId", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    private Product productId;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "exchangeRateId")
     private Collection<ExchangeDetail> exchangeDetailCollection;
 
@@ -110,6 +110,14 @@ public class ExchangeRate implements Serializable {
     public void setEndingDate(Date endingDate) {
         this.endingDate = endingDate;
     }
+    
+     public Product getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Product productId) {
+        this.productId = productId;
+    }
 
     @XmlTransient
     @JsonIgnore
@@ -144,14 +152,6 @@ public class ExchangeRate implements Serializable {
     @Override
     public String toString() {
         return "com.alodiga.wallet.model.ExchangeRate[ id=" + id + " ]";
-    }
-
-    public Product getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Product productId) {
-        this.productId = productId;
     }
     
 }
