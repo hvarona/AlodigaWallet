@@ -79,6 +79,12 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
+    public CountryListResponse getBankByCountryApp(
+        @WebParam(name = "countryId") String countryId){
+       return operations.getBankByCountryApp(Long.valueOf(countryId));         
+    }
+    
+    @WebMethod
     public TransactionResponse savePaymentShop(
         @WebParam(name = "cryptogramaShop") String cryptogramShop,
         @WebParam(name = "emailUser") String emailUser,

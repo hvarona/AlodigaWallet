@@ -215,6 +215,32 @@ public class APIOperations {
     }
     
     
+        public CountryListResponse getBankByCountryApp(Long countryId) {
+        List<Bank> banks = new ArrayList<Bank>();
+        List<Country> countrys = new ArrayList<Country>();
+        try {
+            banks = (List<Bank>) entityManager.createNamedQuery("Bank.findByCountry", Bank.class).setParameter("countryId", countryId).getResultList();
+            
+            if (banks.size() <= 0) {
+                return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Lista de banco vacia");
+            }
+            
+            for (Bank b : banks) {
+                Country country = new Country();
+                country = entityManager.find(Country.class, b.getCountryId());
+                countrys.add(country);
+                
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
+        }
+       
+
+        return new CountryListResponse(ResponseCode.EXITO, "", countrys);
+    }
+    
+    
     public TransactionResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
                                                String conceptTransaction, String cryptogramUser, Long idUserDestination) {
         
