@@ -752,6 +752,10 @@ public class APIOperations {
      *
      */
     public TransactionResponse ManualWithdrawals() {
+        Long idTransaction                      = 0L;
+        Long idPreferenceField                  = 0L;
+        Long userId                             = 0L;
+        
         try {
             
         } catch (Exception e) {
