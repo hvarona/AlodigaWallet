@@ -1479,6 +1479,23 @@ CREATE TABLE IF NOT EXISTS `alodigaWallet`.`exchange_detail` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 
+--Se modificó la tabla withdrawal
+--fecha de modificación: 30/09/2019, analista: Jesús Gómez
+ALTER TABLE `alodigaWallet`.`withdrawal` 
+DROP COLUMN `userHasBankId`,
+ADD COLUMN `bankId` BIGINT(3) NOT NULL AFTER `transactionId`,
+ADD COLUMN `accountBank` VARCHAR(40) AFTER `bankId`,
+ADD INDEX `fk_withdrawal_bank1_idx` (`bankId` ASC),
+ADD CONSTRAINT `fk_withdrawal_bank1`
+  FOREIGN KEY (`bankId`)
+  REFERENCES `alodigaWallet`.`bank` (`id`)
+  ON DELETE RESTRICT
+  ON UPDATE RESTRICT;
+
+
+
+
+
 --
 -- Dumping data for table `withdrawal_type`
 --

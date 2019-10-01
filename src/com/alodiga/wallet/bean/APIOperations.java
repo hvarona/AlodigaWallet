@@ -752,10 +752,18 @@ public class APIOperations {
      *
      */
     public TransactionResponse ManualWithdrawals() {
-        Long idTransaction                      = 0L;
-        Long idPreferenceField                  = 0L;
-        Long userId                             = 0L;
         
+        int totalTransactionsByUser             = 0;
+        Long totalTransactionsByProduct         = 0L;
+        Double totalAmountByUser                = 0.00D;
+        List<Transaction> transactionsByUser    = new ArrayList<Transaction>();
+        List<PreferenceField> preferencesField  = new ArrayList<PreferenceField>();
+        List<PreferenceValue> preferencesValue  = new ArrayList<PreferenceValue>();
+        List<Commission> commissions            = new ArrayList<Commission>();
+        Timestamp begginingDateTime             = new Timestamp(0);   
+        Timestamp endingDateTime                = new Timestamp(0); 
+        Float amountCommission                  = 0.00F;
+        short isPercentCommission               = 0;
         try {
             
         } catch (Exception e) {
