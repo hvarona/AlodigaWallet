@@ -281,7 +281,7 @@ public class APIOperations {
             paymentShop.setUserDestinationId(BigInteger.valueOf(idUserDestination));
             Product product = entityManager.find(Product.class, productId);
             paymentShop.setProductId(product);
-            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypePS);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypePaymentShop);
             paymentShop.setTransactionTypeId(transactionType);
             TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
             paymentShop.setTransactionSourceId(transactionSource);
@@ -297,7 +297,7 @@ public class APIOperations {
             
             //Revisar si la transacción está sujeta a comisiones
             try {
-                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypePS).getResultList();
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypePaymentShop).getResultList();
                 for (Commission c: commissions) {
                     amountCommission = c.getValue();
                     isPercentCommission = c.getIsPercentCommision();
@@ -401,7 +401,7 @@ public class APIOperations {
             // Validar que el balance history del cliente disponga de saldo para hacer la operacion
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
             try {
-                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeTA).getResultList();
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeTransferAccount).getResultList();
                 for (Commission c: commissions) {
                     commissionTransfer = (Commission) c;
                     amountCommission = c.getValue();
@@ -482,7 +482,7 @@ public class APIOperations {
             transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
             Product product = entityManager.find(Product.class, productId);
             transfer.setProductId(product);
-            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTA);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTransferAccount);
             transfer.setTransactionTypeId(transactionType);
             TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
             transfer.setTransactionSourceId(transactionSource);
@@ -651,7 +651,7 @@ public class APIOperations {
             exchange.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             Product productSource = entityManager.find(Product.class, productSourceId);
             exchange.setProductId(productSource);
-            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeEP);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeExchangeProducts);
             exchange.setTransactionTypeId(transactionType);
             TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
             exchange.setTransactionSourceId(transactionSource);
@@ -667,7 +667,7 @@ public class APIOperations {
             
             //Se calcula la comisión asociada al producto de origen
             try {
-                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productSourceId).setParameter("transactionTypeId",Constante.sTransationTypeEP).getResultList();
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productSourceId).setParameter("transactionTypeId",Constante.sTransationTypeExchangeProducts).getResultList();
                 for (Commission c: commissions) {
                     amountCommission = c.getValue();
                     isPercentCommission = c.getIsPercentCommision();
@@ -752,8 +752,9 @@ public class APIOperations {
      *
      */
     public TransactionResponse ManualWithdrawals(Long bankId, String emailUser, String accountBank, 
-                                                 Float amountWithdrawal, Long productId) {
+                                                 Float amountWithdrawal, Long productId, String concepttransaction) {
         
+        Long userId                             = 0L;
         int totalTransactionsByUser             = 0;
         Long totalTransactionsByProduct         = 0L;
         Double totalAmountByUser                = 0.00D;
@@ -765,7 +766,47 @@ public class APIOperations {
         Timestamp endingDateTime                = new Timestamp(0); 
         Float amountCommission                  = 0.00F;
         short isPercentCommission               = 0;
+        Commission commissionWithdrawal         = new Commission();
+        
         try {
+            //Se obtiene el usuario de la API de Registro Unificado
+            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+            RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            
+            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
+            BalanceHistory balanceUser = loadLastBalanceHistoryByAccount(userId,productId);
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualWithdrawal).getResultList();
+                for (Commission c: commissions) {
+                    commissionWithdrawal = (Commission) c;
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (amountWithdrawal * amountCommission)/100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                }    
+            } catch (NoResultException e) {
+                
+            }
+            Float amountWithdrawalTotal = amountWithdrawal + amountCommission;
+            if (balanceUser == null || balanceUser.getCurrentAmount() < amountWithdrawalTotal) {
+                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
+            }
+
+            //Validar preferencias
+            begginingDateTime = Utils.DateTransaction()[0];
+            endingDateTime = Utils.DateTransaction()[1];
+
+            //Obtiene las transacciones del día para el usuario
+            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+            
+            //Obtiene la sumatoria de los montos de las transacciones del usuario
+            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+
+            //Obtiene las transacciones del día para el producto que se está comprando
+            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
             
         } catch (Exception e) {
             e.printStackTrace();
