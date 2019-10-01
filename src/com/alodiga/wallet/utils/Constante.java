@@ -128,5 +128,6 @@ public class Constante {
         
         //Retiro Manual
         public static final Long sTransationTypeManualWithdrawal = 5l;
+        public static final Long sWithdrawalTypeManual = 1L;
       
 }

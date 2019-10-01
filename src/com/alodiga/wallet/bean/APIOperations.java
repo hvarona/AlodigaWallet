@@ -27,6 +27,9 @@ import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
+import com.alodiga.wallet.model.Withdrawal;
+import com.alodiga.wallet.model.WithdrawalType;
+import com.alodiga.wallet.model.Bank;
 import java.sql.Connection;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -752,8 +755,9 @@ public class APIOperations {
      *
      */
     public TransactionResponse ManualWithdrawals(Long bankId, String emailUser, String accountBank, 
-                                                 Float amountWithdrawal, Long productId, String concepttransaction) {
+                                                 Float amountWithdrawal, Long productId, String conceptTransaction) {
         
+        Long idTransaction                      = 0L;
         Long userId                             = 0L;
         int totalTransactionsByUser             = 0;
         Long totalTransactionsByProduct         = 0L;
@@ -807,6 +811,87 @@ public class APIOperations {
 
             //Obtiene las transacciones del día para el producto que se está comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
+            
+            //Cotejar las preferencias vs las transacciones del usuario
+            List<Preference> preferences = getPreferences();
+            for(Preference p: preferences){
+                if (p.getName().equals(Constante.sPreferenceTransaction)) {
+                    idTransaction = p.getId();
+                }
+            }
+            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+            for(PreferenceField pf: preferencesField){
+                switch(pf.getName()) {
+                    case Constante.sValidatePreferenceTransaction1:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per day");
+                                }
+                            }
+                        }
+                    break;
+                    case Constante.sValidatePreferenceTransaction2:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);                           
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
+                                }
+                            }
+                        }
+                    break;
+                    case Constante.sValidatePreferenceTransaction3:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER,"The user exceeded the maximum number of transactions per day");
+                                }
+                            }
+                        }
+                    break;
+                }
+            }
+            
+            //Registrar la transacción
+            Transaction withdrawal = new Transaction();
+            withdrawal.setId(null);
+            withdrawal.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+            Product product = entityManager.find(Product.class, productId);
+            withdrawal.setProductId(product);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualWithdrawal);
+            withdrawal.setTransactionTypeId(transactionType);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            withdrawal.setTransactionSourceId(transactionSource);
+            Date date = new Date();
+            Timestamp creationDate = new Timestamp(date.getTime());
+            withdrawal.setCreationDate(creationDate);
+            //cambiar por valor de parámetro
+            withdrawal.setConcept(conceptTransaction);
+            withdrawal.setAmount(amountWithdrawal);
+            withdrawal.setTransactionStatus(TransactionStatus.CREATED.name());
+            withdrawal.setTotalAmount(amountWithdrawal);
+            entityManager.persist(withdrawal);
+            
+            //Guardar los datos del retiro
+            Withdrawal manualWithdrawal = new Withdrawal();
+            manualWithdrawal.setId(null);
+            manualWithdrawal.setUserSourceId(BigInteger.valueOf(userId));
+            manualWithdrawal.setProductId(product);
+            manualWithdrawal.setTransactionId(withdrawal);
+            manualWithdrawal.setCommisionId(commissionWithdrawal);
+            WithdrawalType withdrawalType = entityManager.find(WithdrawalType.class, Constante.sWithdrawalTypeManual);
+            manualWithdrawal.setTypeWithdrawalId(withdrawalType);
+            Bank bank = entityManager.find(Bank.class, bankId);
+            manualWithdrawal.setbankId(bank);
+            manualWithdrawal.setAccountBank(accountBank);
+            entityManager.persist(manualWithdrawal);
+            
+            //Se actualiza el estatus de la transacción a IN_PROCESS
+            withdrawal.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(withdrawal);
             
         } catch (Exception e) {
             e.printStackTrace();

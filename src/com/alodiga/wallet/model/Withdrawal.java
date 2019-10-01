@@ -32,7 +32,6 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Withdrawal.findAll", query = "SELECT w FROM Withdrawal w"),
     @NamedQuery(name = "Withdrawal.findById", query = "SELECT w FROM Withdrawal w WHERE w.id = :id"),
     @NamedQuery(name = "Withdrawal.findByUserSourceId", query = "SELECT w FROM Withdrawal w WHERE w.userSourceId = :userSourceId"),
-    @NamedQuery(name = "Withdrawal.findByUserHasBankId", query = "SELECT w FROM Withdrawal w WHERE w.userHasBankId = :userHasBankId"),
     @NamedQuery(name = "Withdrawal.findByAdditional", query = "SELECT w FROM Withdrawal w WHERE w.additional = :additional"),
     @NamedQuery(name = "Withdrawal.findByAdditional2", query = "SELECT w FROM Withdrawal w WHERE w.additional2 = :additional2")})
 public class Withdrawal implements Serializable {
@@ -44,14 +43,17 @@ public class Withdrawal implements Serializable {
     private Long id;
     @Column(name = "userSourceId")
     private BigInteger userSourceId;
-    @Column(name = "userHasBankId")
-    private BigInteger userHasBankId;
+    @Column(name = "accountBank")
+    private String accountBank;
     @Size(max = 500)
     @Column(name = "additional")
     private String additional;
     @Size(max = 500)
     @Column(name = "additional2")
     private String additional2;
+    @JoinColumn(name = "bankId", referencedColumnName = "id")
+    @ManyToOne
+    private Bank bankId;
     @JoinColumn(name = "transactionId", referencedColumnName = "id")
     @ManyToOne
     private Transaction transactionId;
@@ -88,12 +90,20 @@ public class Withdrawal implements Serializable {
         this.userSourceId = userSourceId;
     }
 
-    public BigInteger getUserHasBankId() {
-        return userHasBankId;
+    public Bank getBankId() {
+        return bankId;
     }
-
-    public void setUserHasBankId(BigInteger userHasBankId) {
-        this.userHasBankId = userHasBankId;
+    
+    public void setbankId(Bank bankId) {
+        this.bankId = bankId;
+    }
+    
+    public String getAccountBank() {
+        return accountBank;
+    }
+    
+    public void setAccountBank(String accountBank) {
+        this.accountBank = accountBank;
     }
 
     public String getAdditional() {
