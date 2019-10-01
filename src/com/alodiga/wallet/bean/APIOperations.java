@@ -751,7 +751,8 @@ public class APIOperations {
     /*
      *
      */
-    public TransactionResponse ManualWithdrawals() {
+    public TransactionResponse ManualWithdrawals(Long bankId, String emailUser, String accountBank, 
+                                                 Float amountWithdrawal, Long productId) {
         
         int totalTransactionsByUser             = 0;
         Long totalTransactionsByProduct         = 0L;
