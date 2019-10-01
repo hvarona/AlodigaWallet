@@ -875,6 +875,16 @@ public class APIOperations {
             withdrawal.setTotalAmount(amountWithdrawal);
             entityManager.persist(withdrawal);
             
+            //Se crea el objeto commissionItem y se persiste en BD
+            CommissionItem commissionItem = new CommissionItem();
+            commissionItem.setCommissionId(commissionWithdrawal);           
+            commissionItem.setAmount(amountCommission);
+            Date commissionDate = new Date();
+            Timestamp processedDate = new Timestamp(commissionDate.getTime());
+            commissionItem.setProcessedDate(processedDate);
+            commissionItem.setTransactionId(withdrawal);
+            entityManager.persist(commissionItem);
+            
             //Guardar los datos del retiro
             Withdrawal manualWithdrawal = new Withdrawal();
             manualWithdrawal.setId(null);
