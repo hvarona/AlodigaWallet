@@ -52,6 +52,9 @@ public class Withdrawal implements Serializable {
     @Size(max = 500)
     @Column(name = "additional2")
     private String additional2;
+    @JoinColumn(name = "bankId", referencedColumnName = "id")
+    @ManyToOne
+    private Bank bankId;
     @JoinColumn(name = "transactionId", referencedColumnName = "id")
     @ManyToOne
     private Transaction transactionId;
@@ -86,6 +89,14 @@ public class Withdrawal implements Serializable {
 
     public void setUserSourceId(BigInteger userSourceId) {
         this.userSourceId = userSourceId;
+    }
+    
+    public Bank getBankId() {
+        return bankId;
+    }
+    
+    public void setbankId(Bank bankId) {
+        this.bankId = bankId;
     }
 
     public String getAccountBank() {
