@@ -69,8 +69,8 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
-    public CountryListResponse getCountries(){
-        return operations.getCountries();        
+    public CountryListResponse getCountriesHasBank(){
+        return operations.getCountriesHasBank();        
     }
     
     @WebMethod
@@ -79,9 +79,16 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
-    public CountryListResponse getBankByCountryApp(
+    public BankListResponse getBankByCountryApp(
         @WebParam(name = "countryId") String countryId){
        return operations.getBankByCountryApp(Long.valueOf(countryId));         
+    }
+    
+    
+    @WebMethod
+    public ProductListResponse getProductsByBankId(
+        @WebParam(name = "BankId") String bankId){
+       return operations.getProductsByBankId(Long.valueOf(bankId));         
     }
     
     @WebMethod

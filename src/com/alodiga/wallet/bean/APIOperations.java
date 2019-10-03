@@ -26,6 +26,7 @@ import com.alodiga.wallet.model.TransactionStatus;
 import com.alodiga.wallet.model.Commission;
 import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
+import com.alodiga.wallet.model.BankHasProduct;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
 import com.alodiga.wallet.response.generic.BankGeneric;
@@ -184,15 +185,22 @@ public class APIOperations {
         return new ProductListResponse(ResponseCode.EXITO, "", products);
     }
     
-    public CountryListResponse getCountries() {
-        List< Country> countries = null;
+    public CountryListResponse getCountriesHasBank() {
+        List<Bank> banks = null;
+        List<Country> countrys = new ArrayList<Country>();
         try {
-            countries = entityManager.createNamedQuery("Country.findAll", Country.class).getResultList();
-
-        } catch (Exception e) {
-            return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+            banks = entityManager.createNamedQuery("Bank.findGroupByCountry", Bank.class).getResultList();
+            for(Bank b:banks) {
+                countrys.add(b.getCountryId());
+            }
+        }  catch (NoResultException e) {
+            e.printStackTrace();
+            return new CountryListResponse(ResponseCode.EMPTY_LIST_COUNTRY, "Empty Countries List");
+        }catch (Exception e) {
+            e.printStackTrace();
+            return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading Countries");
         }
-        return new CountryListResponse(ResponseCode.EXITO, "", countries);
+        return new CountryListResponse(ResponseCode.EXITO, "", countrys);
     }
     
     
@@ -201,6 +209,7 @@ public class APIOperations {
         List<Bank> banks = null;
         try {
             banks = entityManager.createNamedQuery("Bank.findAll", Bank.class).getResultList();            
+            
         } catch (Exception e) {
             return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
         }
@@ -215,29 +224,52 @@ public class APIOperations {
     }
     
     
-        public CountryListResponse getBankByCountryApp(Long countryId) {
+     public BankListResponse getBankByCountryApp(Long countryId) {
         List<Bank> banks = new ArrayList<Bank>();
-        List<Country> countrys = new ArrayList<Country>();
         try {
-            banks = (List<Bank>) entityManager.createNamedQuery("Bank.findByCountry", Bank.class).setParameter("countryId", countryId).getResultList();
-            
-            if (banks.size() <= 0) {
-                return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Lista de banco vacia");
+            banks = (List<Bank>) entityManager.createNamedQuery("Bank.findByCountryId", Bank.class).setParameter("countryId", countryId).getResultList();
+        if (banks.size() <= 0) {
+                return new BankListResponse(ResponseCode.EMPTY_LIST_HAS_BANK, "They are not country asociated");
             }
+        
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new BankListResponse(ResponseCode.EMPTY_LIST_HAS_BANK, "Empty Bank List");
+        }catch (Exception e) {
+            e.printStackTrace();
+            return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
+        }
+        
+         ArrayList<BankGeneric> bankGenerics = new ArrayList<BankGeneric>();
+        for(Bank b : banks){
+            BankGeneric bankGeneric = new BankGeneric(b.getId().toString(),b.getName(),b.getAba());
+            bankGenerics.add(bankGeneric);
+        }
+        return new BankListResponse(ResponseCode.EXITO, "", bankGenerics);
+    }
+    
+    public ProductListResponse getProductsByBankId(Long bankId) {
+        List<BankHasProduct> bankHasProducts = new ArrayList<BankHasProduct>();
+        List<Product> products = new ArrayList<Product>();
+        try {
+            bankHasProducts = (List<BankHasProduct>) entityManager.createNamedQuery("BankHasProduct.findByBankId", BankHasProduct.class).setParameter("bankId", bankId).getResultList();
             
-            for (Bank b : banks) {
-                Country country = new Country();
-                country = entityManager.find(Country.class, b.getCountryId());
-                countrys.add(country);
-                
+            if (bankHasProducts.size() <= 0) {
+                return new ProductListResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
+            }
+           
+           for (BankHasProduct bhp : bankHasProducts) {
+                Product product = new Product();
+                product = entityManager.find(Product.class, bhp.getProductId());
+                products.add(product);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
+            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
         }
        
 
-        return new CountryListResponse(ResponseCode.EXITO, "", countrys);
+        return new ProductListResponse(ResponseCode.EXITO, "", products);
     }
     
     
