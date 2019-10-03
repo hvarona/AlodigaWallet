@@ -74,6 +74,7 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
+<<<<<<< HEAD
     public BankListResponse getBankApp(){
         return operations.getBankApp();        
     }
@@ -85,6 +86,8 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
+=======
+>>>>>>> JesusMerge
     public TransactionResponse savePaymentShop(
         @WebParam(name = "cryptogramaShop") String cryptogramShop,
         @WebParam(name = "emailUser") String emailUser,
@@ -112,7 +115,11 @@ public class APIAlodigaWallet {
                                                      conceptTransaction, cryptogramUserSource, idUserDestination) ;
     }
     
+<<<<<<< HEAD
       @WebMethod
+=======
+    @WebMethod
+>>>>>>> JesusMerge
     public TransactionResponse ExchangeProduct ( 
         @WebParam(name = "emailUser") String emailUser, 
         @WebParam(name = "productSourceId") Long productSourceId, 
@@ -124,6 +131,7 @@ public class APIAlodigaWallet {
     }
 
     @WebMethod
+<<<<<<< HEAD
     public TopUpInfoListResponse topUpList(
         @WebParam(name = "receiverNumber") String receiverNumber,
         @WebParam(name = "phoneNumber") String phoneNumber){
@@ -138,5 +146,16 @@ public class APIAlodigaWallet {
     
     {
        return operations.getTransactionsByUserIdApp(Long.valueOf(userId), Integer.valueOf(maxResult));
+=======
+    public TransactionResponse ManualWithdrawals ( 
+        @WebParam(name = "bankId") Long bankId,
+        @WebParam(name = "emailUser") String emailUser,
+        @WebParam(name = "accountBank") String accountBank,
+        @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
+        @WebParam(name = "productId") Long productId, 
+        @WebParam(name = "conceptTransaction") String conceptTransaction) {
+        
+        return operations.ManualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction);
+>>>>>>> JesusMerge
     }
 }

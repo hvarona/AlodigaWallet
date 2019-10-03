@@ -4,7 +4,10 @@ import com.alodiga.transferto.integration.connection.RequestManager;
 import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
 import com.alodiga.transferto.integration.model.ReserveResponse;
 import com.alodiga.transferto.integration.model.TopUpResponse;
+<<<<<<< HEAD
 import com.alodiga.wallet.model.Bank;
+=======
+>>>>>>> JesusMerge
 import com.alodiga.wallet.model.Category;
 import com.alodiga.wallet.model.Country;
 import com.alodiga.wallet.model.Enterprise;
@@ -28,8 +31,14 @@ import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
+<<<<<<< HEAD
 import com.alodiga.wallet.response.generic.BankGeneric;
 import com.alodiga.wallet.respuestas.BankListResponse;
+=======
+import com.alodiga.wallet.model.Withdrawal;
+import com.alodiga.wallet.model.WithdrawalType;
+import com.alodiga.wallet.model.Bank;
+>>>>>>> JesusMerge
 import java.sql.Connection;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -67,8 +76,11 @@ import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.PreferenceListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
+<<<<<<< HEAD
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.TransactionResponse;
+=======
+>>>>>>> JesusMerge
 import com.alodiga.wallet.topup.TopUpInfo;
 import com.alodiga.wallet.utils.Constante;
 import com.alodiga.wallet.utils.Constants;
@@ -195,6 +207,7 @@ public class APIOperations {
         return new CountryListResponse(ResponseCode.EXITO, "", countries);
     }
     
+<<<<<<< HEAD
     
     
     public BankListResponse getBankApp() {
@@ -241,6 +254,11 @@ public class APIOperations {
     }
     
     
+=======
+    /*
+     *
+     */
+>>>>>>> JesusMerge
     public TransactionResponse savePaymentShop(String cryptogramShop, String emailUser, Long productId, Float amountPayment,
                                                String conceptTransaction, String cryptogramUser, Long idUserDestination) {
         
@@ -275,13 +293,21 @@ public class APIOperations {
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
             
+<<<<<<< HEAD
             //Obtiene las transacciones del dÃ­a para el usuario
+=======
+            //Obtiene las transacciones del día para el usuario
+>>>>>>> JesusMerge
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
             //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
+<<<<<<< HEAD
             //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
+=======
+            //Obtiene las transacciones del día para el producto que se está comprando
+>>>>>>> JesusMerge
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
             
             //Cotejar las preferencias vs las transacciones del usuario
@@ -334,23 +360,37 @@ public class APIOperations {
             paymentShop.setUserDestinationId(BigInteger.valueOf(idUserDestination));
             Product product = entityManager.find(Product.class, productId);
             paymentShop.setProductId(product);
+<<<<<<< HEAD
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypePS);
+=======
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypePaymentShop);
+>>>>>>> JesusMerge
             paymentShop.setTransactionTypeId(transactionType);
             TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constants.sTransactionSource);
             paymentShop.setTransactionSourceId(transactionSource);
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             paymentShop.setCreationDate(creationDate);
+<<<<<<< HEAD
             //cambiar por valor de parÃ¡metro
+=======
+            //cambiar por valor de parámetro
+>>>>>>> JesusMerge
             paymentShop.setConcept(Constante.sTransactionConceptPaymentShop);
             paymentShop.setAmount(amountPayment);
             paymentShop.setTransactionStatus(TransactionStatus.CREATED.name());
             paymentShop.setTotalAmount(amountPayment);
             entityManager.persist(paymentShop);
             
+<<<<<<< HEAD
             //Revisar si la transacciÃ³n estÃ¡ sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypePS).getResultList();
+=======
+            //Revisar si la transacción está sujeta a comisiones
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypePaymentShop).getResultList();
+>>>>>>> JesusMerge
                 for (Commission c: commissions) {
                     amountCommission = c.getValue();
                     isPercentCommission = c.getIsPercentCommision();
@@ -372,7 +412,11 @@ public class APIOperations {
                 
             }
             
+<<<<<<< HEAD
             //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
+=======
+            //Se actualiza el estatus de la transacción a IN_PROCESS
+>>>>>>> JesusMerge
             paymentShop.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(paymentShop);
             
@@ -409,7 +453,11 @@ public class APIOperations {
             balanceHistory.setVersion(balanceUserDestination.getId());
             entityManager.persist(balanceHistory);            
             
+<<<<<<< HEAD
             //Se actualiza el estado de la transacciÃ³n a COMPLETED
+=======
+            //Se actualiza el estado de la transacción a COMPLETED
+>>>>>>> JesusMerge
             paymentShop.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(paymentShop);
             //Envias notificaciones
@@ -422,7 +470,11 @@ public class APIOperations {
         return new TransactionResponse(ResponseCode.EXITO);
     }
     
+<<<<<<< HEAD
 /*
+=======
+    /*
+>>>>>>> JesusMerge
      *
      */
     public TransactionResponse SaveTransferBetweenAccount(String cryptograUserSource, String emailUser, Long productId, Float amountTransfer,
@@ -454,7 +506,11 @@ public class APIOperations {
             // Validar que el balance history del cliente disponga de saldo para hacer la operacion
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
             try {
+<<<<<<< HEAD
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeTA).getResultList();
+=======
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeTransferAccount).getResultList();
+>>>>>>> JesusMerge
                 for (Commission c: commissions) {
                     commissionTransfer = (Commission) c;
                     amountCommission = c.getValue();
@@ -476,13 +532,21 @@ public class APIOperations {
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
             
+<<<<<<< HEAD
             //Obtiene las transacciones del dÃ­a para el usuario
+=======
+            //Obtiene las transacciones del día para el usuario
+>>>>>>> JesusMerge
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
             //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
+<<<<<<< HEAD
             //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
+=======
+            //Obtiene las transacciones del día para el producto que se está comprando
+>>>>>>> JesusMerge
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
             
             //Cotejar las preferencias vs las transacciones del usuario
@@ -535,14 +599,22 @@ public class APIOperations {
             transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
             Product product = entityManager.find(Product.class, productId);
             transfer.setProductId(product);
+<<<<<<< HEAD
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTA);
+=======
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTransferAccount);
+>>>>>>> JesusMerge
             transfer.setTransactionTypeId(transactionType);
             TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
             transfer.setTransactionSourceId(transactionSource);
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             transfer.setCreationDate(creationDate);
+<<<<<<< HEAD
             //cambiar por valor de parÃ¡metro
+=======
+            //cambiar por valor de parámetro
+>>>>>>> JesusMerge
             transfer.setConcept(Constante.sTransactionConceptTranferAccounts);
             transfer.setAmount(amountTransfer);
             transfer.setTransactionStatus(TransactionStatus.CREATED.name());
@@ -559,7 +631,11 @@ public class APIOperations {
             commissionItem.setTransactionId(transfer);
             entityManager.persist(commissionItem);
             
+<<<<<<< HEAD
             //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
+=======
+            //Se actualiza el estatus de la transacción a IN_PROCESS
+>>>>>>> JesusMerge
             transfer.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(transfer);
             
@@ -596,7 +672,11 @@ public class APIOperations {
             balanceHistory.setVersion(balanceUserDestination.getId());
             entityManager.persist(balanceHistory);  
             
+<<<<<<< HEAD
             //Se actualiza el estado de la transacciÃ³n a COMPLETED
+=======
+            //Se actualiza el estado de la transacción a COMPLETED
+>>>>>>> JesusMerge
             transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(transfer);
             //Envias notificaciones
@@ -607,6 +687,7 @@ public class APIOperations {
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
         } 
         return new TransactionResponse(ResponseCode.EXITO); 
+<<<<<<< HEAD
     }
     
     
@@ -823,15 +904,366 @@ public class APIOperations {
      */
     private List<Preference> getPreferences() {
         return entityManager.createNamedQuery("Preference.findAll",Preference.class).getResultList();
+=======
+>>>>>>> JesusMerge
     }
     
-    private List<Transaction> getTransactions() {
-        return entityManager.createNamedQuery("Transaction.findAll",Transaction.class).getResultList();
+    
+    /*
+     *
+     */
+    public TransactionResponse ExchangeProduct(String emailUser, Long productSourceId, Long productDestinationId,
+                                                Float amountExchange, String conceptTransaction) {
+        
+        Long idTransaction                      = 0L;
+        Long idPreferenceField                  = 0L;
+        Long userId                             = 0L;
+        int totalTransactionsByUser             = 0;
+        Long totalTransactionsByProduct         = 0L;
+        Double totalAmountByUser                = 0.00D;
+        List<Transaction> transactionsByUser    = new ArrayList<Transaction>();
+        List<PreferenceField> preferencesField  = new ArrayList<PreferenceField>();
+        List<PreferenceValue> preferencesValue  = new ArrayList<PreferenceValue>();
+        List<Commission> commissions            = new ArrayList<Commission>();
+        Timestamp begginingDateTime             = new Timestamp(0);   
+        Timestamp endingDateTime                = new Timestamp(0); 
+        Float amountCommission                  = 0.00F;
+        short isPercentCommission               = 0;
+                
+        try {
+            //Se obtiene el usuario de la API de Registro Unificado
+            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+            RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+
+            //Validar preferencias
+            begginingDateTime = Utils.DateTransaction()[0];
+            endingDateTime = Utils.DateTransaction()[1];
+
+            //Obtiene las transacciones del día para el usuario
+            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+            
+            //Obtiene la sumatoria de los montos de las transacciones del usuario
+            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+
+            //Obtiene las transacciones del día para el producto que se está comprando
+            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productSourceId, userId, begginingDateTime, endingDateTime);
+
+            //Cotejar las preferencias vs las transacciones del usuario
+            List<Preference> preferences = getPreferences();
+            for(Preference p: preferences){
+                if (p.getName().equals(Constante.sPreferenceTransaction)) {
+                    idTransaction = p.getId();
+                }
+            }
+            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+            for(PreferenceField pf: preferencesField){
+                switch(pf.getName()) {
+                    case Constante.sValidatePreferenceTransaction1:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per day");
+                                }
+                            }
+                        }
+                    break;
+                    case Constante.sValidatePreferenceTransaction2:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);                           
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
+                                }
+                            }
+                        }
+                    break;
+                    case Constante.sValidatePreferenceTransaction3:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER,"The user exceeded the maximum number of transactions per day");
+                                }
+                            }
+                        }
+                    break;
+                }
+            }
+
+            //Se calcula el monto de la conversión entre los productos
+            ExchangeRate RateByProductSource = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productSourceId).getSingleResult();
+            ExchangeRate RateByProductDestination = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productDestinationId).getSingleResult();
+            Float amountConversion = (amountExchange * RateByProductSource.getValue()) / RateByProductDestination.getValue();
+            
+            //Registrar el intercambio de los productos (producto de origen)
+            Transaction exchange = new Transaction();
+            exchange.setId(null);
+            exchange.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+            Product productSource = entityManager.find(Product.class, productSourceId);
+            exchange.setProductId(productSource);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeExchangeProducts);
+            exchange.setTransactionTypeId(transactionType);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            exchange.setTransactionSourceId(transactionSource);
+            Date date = new Date();
+            Timestamp creationDate = new Timestamp(date.getTime());
+            exchange.setCreationDate(creationDate);
+            //cambiar por valor de parámetro
+            exchange.setConcept(Constante.sTransactionConceptExchangeProducts);
+            exchange.setAmount(amountExchange);
+            exchange.setTransactionStatus(TransactionStatus.CREATED.name());
+            exchange.setTotalAmount(amountExchange);
+            entityManager.persist(exchange);
+            
+            //Se calcula la comisión asociada al producto de origen
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productSourceId).setParameter("transactionTypeId",Constante.sTransationTypeExchangeProducts).getResultList();
+                for (Commission c: commissions) {
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (amountExchange * amountCommission)/100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                    //Se crea el objeto commissionItem y se persiste en BD
+                    CommissionItem commissionItem = new CommissionItem();
+                    commissionItem.setCommissionId(c);           
+                    commissionItem.setAmount(amountCommission);
+                    Date commissionDate = new Date();
+                    Timestamp processedDate = new Timestamp(commissionDate.getTime());
+                    commissionItem.setProcessedDate(processedDate);
+                    commissionItem.setTransactionId(exchange);
+                    entityManager.persist(commissionItem);
+                }    
+            } catch (NoResultException e) {
+                
+            }
+            
+            //Se actualiza el estatus de la transacción a IN_PROCESS
+            exchange.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(exchange);
+                
+            //Guardar los detalles del intercambio (producto destino)
+            ExchangeDetail detailProductDestination = new ExchangeDetail();
+            detailProductDestination.setId(null);
+            detailProductDestination.setExchangeRateId(RateByProductDestination);
+            Product productDestination = entityManager.find(Product.class, productDestinationId);
+            detailProductDestination.setProductId(productDestination);
+            detailProductDestination.setTransactionId(exchange);
+            entityManager.persist(detailProductDestination);
+            
+            //Se actualiza el saldo del usuario para el producto de origen
+            BalanceHistory balanceProductSource = loadLastBalanceHistoryByAccount(userId,productSourceId);
+            BalanceHistory balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setUserId(userId);
+            balanceHistory.setOldAmount(balanceProductSource.getCurrentAmount());
+            Float currentAmountProductSource = balanceProductSource.getCurrentAmount() - amountExchange;
+            balanceHistory.setCurrentAmount(currentAmountProductSource);
+            balanceHistory.setProductId(productSource);
+            balanceHistory.setTransactionId(exchange);
+            Date balanceDate = new Date();
+            Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(balanceProductSource.getId());
+            entityManager.persist(balanceHistory);
+            
+            //Se actualiza el saldo del usuario para el producto de destino
+            BalanceHistory balanceProductDestination = loadLastBalanceHistoryByAccount(userId,productDestinationId);
+            balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setUserId(userId);
+            balanceHistory.setOldAmount(balanceProductDestination.getCurrentAmount());
+            Float currentAmountProductDestination = balanceProductDestination.getCurrentAmount() + amountConversion;
+            balanceHistory.setCurrentAmount(currentAmountProductDestination);
+            balanceHistory.setProductId(productDestination);
+            balanceHistory.setTransactionId(exchange);
+            balanceDate = new Date();
+            balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(balanceProductDestination.getId());
+            entityManager.persist(balanceHistory);
+            
+            //Se actualiza el estado de la transacción a COMPLETED
+            exchange.setTransactionStatus(TransactionStatus.COMPLETED.name());
+            entityManager.merge(exchange);
+            //Envias notificaciones
+            //envias sms
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
+        } 
+        
+        return new TransactionResponse(ResponseCode.EXITO); 
     }
     
-    private List<Transaction> getTransactionsByUser(Long userId) {
-	return entityManager.createNamedQuery("Transaction.findByUserSourceId",Transaction.class)
-			    .setParameter("userSourceId", userId).getResultList();
+    /*
+     *
+     */
+    public TransactionResponse ManualWithdrawals(Long bankId, String emailUser, String accountBank, 
+                                                 Float amountWithdrawal, Long productId, String conceptTransaction) {
+        
+        Long idTransaction                      = 0L;
+        Long userId                             = 0L;
+        int totalTransactionsByUser             = 0;
+        Long totalTransactionsByProduct         = 0L;
+        Double totalAmountByUser                = 0.00D;
+        List<Transaction> transactionsByUser    = new ArrayList<Transaction>();
+        List<PreferenceField> preferencesField  = new ArrayList<PreferenceField>();
+        List<PreferenceValue> preferencesValue  = new ArrayList<PreferenceValue>();
+        List<Commission> commissions            = new ArrayList<Commission>();
+        Timestamp begginingDateTime             = new Timestamp(0);   
+        Timestamp endingDateTime                = new Timestamp(0); 
+        Float amountCommission                  = 0.00F;
+        short isPercentCommission               = 0;
+        Commission commissionWithdrawal         = new Commission();
+        
+        try {
+            //Se obtiene el usuario de la API de Registro Unificado
+            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+            RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            
+            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
+            BalanceHistory balanceUser = loadLastBalanceHistoryByAccount(userId,productId);
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualWithdrawal).getResultList();
+                for (Commission c: commissions) {
+                    commissionWithdrawal = (Commission) c;
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (amountWithdrawal * amountCommission)/100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                }    
+            } catch (NoResultException e) {
+                
+            }
+            Float amountWithdrawalTotal = amountWithdrawal + amountCommission;
+            if (balanceUser == null || balanceUser.getCurrentAmount() < amountWithdrawalTotal) {
+                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
+            }
+
+            //Validar preferencias
+            begginingDateTime = Utils.DateTransaction()[0];
+            endingDateTime = Utils.DateTransaction()[1];
+
+            //Obtiene las transacciones del día para el usuario
+            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+            
+            //Obtiene la sumatoria de los montos de las transacciones del usuario
+            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+
+            //Obtiene las transacciones del día para el producto que se está comprando
+            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
+            
+            //Cotejar las preferencias vs las transacciones del usuario
+            List<Preference> preferences = getPreferences();
+            for(Preference p: preferences){
+                if (p.getName().equals(Constante.sPreferenceTransaction)) {
+                    idTransaction = p.getId();
+                }
+            }
+            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+            for(PreferenceField pf: preferencesField){
+                switch(pf.getName()) {
+                    case Constante.sValidatePreferenceTransaction1:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per day");
+                                }
+                            }
+                        }
+                    break;
+                    case Constante.sValidatePreferenceTransaction2:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);                           
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
+                                }
+                            }
+                        }
+                    break;
+                    case Constante.sValidatePreferenceTransaction3:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER,"The user exceeded the maximum number of transactions per day");
+                                }
+                            }
+                        }
+                    break;
+                }
+            }
+            
+            //Registrar la transacción
+            Transaction withdrawal = new Transaction();
+            withdrawal.setId(null);
+            withdrawal.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+            Product product = entityManager.find(Product.class, productId);
+            withdrawal.setProductId(product);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualWithdrawal);
+            withdrawal.setTransactionTypeId(transactionType);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            withdrawal.setTransactionSourceId(transactionSource);
+            Date date = new Date();
+            Timestamp creationDate = new Timestamp(date.getTime());
+            withdrawal.setCreationDate(creationDate);
+            //cambiar por valor de parámetro
+            withdrawal.setConcept(conceptTransaction);
+            withdrawal.setAmount(amountWithdrawal);
+            withdrawal.setTransactionStatus(TransactionStatus.CREATED.name());
+            withdrawal.setTotalAmount(amountWithdrawal);
+            entityManager.persist(withdrawal);
+            
+            //Se crea el objeto commissionItem y se persiste en BD
+            CommissionItem commissionItem = new CommissionItem();
+            commissionItem.setCommissionId(commissionWithdrawal);           
+            commissionItem.setAmount(amountCommission);
+            Date commissionDate = new Date();
+            Timestamp processedDate = new Timestamp(commissionDate.getTime());
+            commissionItem.setProcessedDate(processedDate);
+            commissionItem.setTransactionId(withdrawal);
+            entityManager.persist(commissionItem);
+            
+            //Guardar los datos del retiro
+            Withdrawal manualWithdrawal = new Withdrawal();
+            manualWithdrawal.setId(null);
+            manualWithdrawal.setUserSourceId(BigInteger.valueOf(userId));
+            manualWithdrawal.setProductId(product);
+            manualWithdrawal.setTransactionId(withdrawal);
+            manualWithdrawal.setCommisionId(commissionWithdrawal);
+            WithdrawalType withdrawalType = entityManager.find(WithdrawalType.class, Constante.sWithdrawalTypeManual);
+            manualWithdrawal.setTypeWithdrawalId(withdrawalType);
+            Bank bank = entityManager.find(Bank.class, bankId);
+            manualWithdrawal.setbankId(bank);
+            manualWithdrawal.setAccountBank(accountBank);
+            entityManager.persist(manualWithdrawal);
+            
+            //Se actualiza el estatus de la transacción a IN_PROCESS
+            withdrawal.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(withdrawal);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
+        } 
+        return new TransactionResponse(ResponseCode.EXITO);
+    }
+    
+    /*
+     *
+     */
+    private List<Preference> getPreferences() {
+        return entityManager.createNamedQuery("Preference.findAll",Preference.class).getResultList();
     }
     
     private List<PreferenceValue> getPreferenceValuePayment(PreferenceField pf) {
@@ -840,6 +1272,7 @@ public class APIOperations {
         return preferencesValue = entityManager.createNamedQuery("PreferenceValue.findByPreferenceFieldId", PreferenceValue.class).setParameter("preferenceFieldId",idPreferenceField).getResultList();
     }  
     
+<<<<<<< HEAD
      public BalanceHistory loadLastBalanceHistoryByAccount(Long userId, Long productId) {
         Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
         query.setMaxResults(1);
@@ -1082,3 +1515,46 @@ public class APIOperations {
 }
 
 
+=======
+
+    public BalanceHistory loadLastBalanceHistoryByAccount(Long userId, Long productId) {
+        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
+        query.setMaxResults(1);
+        BalanceHistory result = (BalanceHistory) query.setHint("toplink.refresh", "true").getSingleResult();
+        return result;
+    }
+    
+    public int TransactionsByUserCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
+        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3");
+        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
+        query.setParameter("1", begginingDateTime);
+        query.setParameter("2", endingDateTime);
+        query.setParameter("3", userId);
+        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
+        return result.size();
+    }
+    
+    public Double AmountMaxByUserCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
+        StringBuilder sqlBuilder = new StringBuilder("SELECT SUM(t.totalAmount) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3");
+        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
+        query.setParameter("1", begginingDateTime);
+        query.setParameter("2", endingDateTime);
+        query.setParameter("3", userId);
+        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
+        return result.get(0) != null ? (double) result.get(0) : 0f;
+    }
+    
+    public Long TransactionsByProductByUserCurrentDate(Long productId, Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
+        StringBuilder sqlBuilder = new StringBuilder("SELECT COUNT(t.productId) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3 AND t.productId = ?4");
+        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
+        query.setParameter("1", begginingDateTime);
+        query.setParameter("2", endingDateTime);
+        query.setParameter("3", userId);
+        query.setParameter("4",productId);
+        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
+        return result.get(0) != null ? (Long) result.get(0) : 0l;
+    }
+    
+}
+
+>>>>>>> JesusMerge

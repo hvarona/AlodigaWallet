@@ -1436,7 +1436,7 @@ ADD COLUMN `concept` VARCHAR(255) NOT NULL AFTER `creationDate`;
 
 
 --Se agregaron las tablas exchange_rate y exchange-detail a la BD
---fecha de modificaciÃ³n: 26/09/2019, analista: JesÃºs GÃ³mez
+--fecha de modificación: 26/09/2019, analista: Jesús Gómez
 
 CREATE TABLE IF NOT EXISTS `alodigaWallet`.`exchange_rate` (
   `id` BIGINT(10) NOT NULL AUTO_INCREMENT,
@@ -1451,7 +1451,7 @@ CREATE TABLE IF NOT EXISTS `alodigaWallet`.`exchange_rate` (
     REFERENCES `alodigaWallet`.`product` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
 
 CREATE TABLE IF NOT EXISTS `alodigaWallet`.`exchange_detail` (
   `id` BIGINT(10) NOT NULL AUTO_INCREMENT,
@@ -1477,7 +1477,25 @@ CREATE TABLE IF NOT EXISTS `alodigaWallet`.`exchange_detail` (
     REFERENCES `alodigaWallet`.`transaction` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+
+--Se modificó la tabla withdrawal
+--fecha de modificación: 30/09/2019, analista: Jesús Gómez
+ALTER TABLE `alodigaWallet`.`withdrawal` 
+DROP COLUMN `userHasBankId`,
+ADD COLUMN `bankId` BIGINT(3) NOT NULL AFTER `transactionId`,
+ADD COLUMN `accountBank` VARCHAR(40) AFTER `bankId`,
+ADD INDEX `fk_withdrawal_bank1_idx` (`bankId` ASC),
+ADD CONSTRAINT `fk_withdrawal_bank1`
+  FOREIGN KEY (`bankId`)
+  REFERENCES `alodigaWallet`.`bank` (`id`)
+  ON DELETE RESTRICT
+  ON UPDATE RESTRICT;
+
+
+
+
+
 --
 -- Dumping data for table `withdrawal_type`
 --

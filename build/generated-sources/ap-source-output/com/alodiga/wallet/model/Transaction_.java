@@ -3,6 +3,7 @@ package com.alodiga.wallet.model;
 import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.Close;
 import com.alodiga.wallet.model.CommissionItem;
+import com.alodiga.wallet.model.ExchangeDetail;
 import com.alodiga.wallet.model.PaymentInfo;
 import com.alodiga.wallet.model.Product;
 import com.alodiga.wallet.model.PromotionItem;
@@ -16,18 +17,31 @@ import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
+<<<<<<< HEAD
 @Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-30T15:02:10")
+=======
+@Generated(value="EclipseLink-2.5.2.v20140319-rNA", date="2019-09-30T13:29:06")
+>>>>>>> JesusMerge
 @StaticMetamodel(Transaction.class)
 public class Transaction_ { 
 
     public static volatile SingularAttribute<Transaction, String> concept;
     public static volatile SingularAttribute<Transaction, String> additional;
+<<<<<<< HEAD
     public static volatile SingularAttribute<Transaction, BigInteger> userSourceId;
     public static volatile SingularAttribute<Transaction, Float> totalTax;
+=======
+    public static volatile SingularAttribute<Transaction, Float> totalTax;
+    public static volatile SingularAttribute<Transaction, BigInteger> userSourceId;
+>>>>>>> JesusMerge
     public static volatile SingularAttribute<Transaction, String> topUpDescription;
     public static volatile SingularAttribute<Transaction, String> additional2;
     public static volatile SingularAttribute<Transaction, Close> closeId;
     public static volatile CollectionAttribute<Transaction, PromotionItem> promotionItemCollection;
+<<<<<<< HEAD
+=======
+    public static volatile CollectionAttribute<Transaction, ExchangeDetail> exchangeDetailCollection;
+>>>>>>> JesusMerge
     public static volatile SingularAttribute<Transaction, Long> id;
     public static volatile SingularAttribute<Transaction, BigInteger> userDestinationId;
     public static volatile CollectionAttribute<Transaction, Withdrawal> withdrawalCollection;

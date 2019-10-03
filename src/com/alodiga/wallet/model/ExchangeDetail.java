@@ -20,6 +20,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+<<<<<<< HEAD
+=======
+import javax.persistence.OneToMany;
+>>>>>>> JesusMerge
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -41,7 +45,10 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 
 public class ExchangeDetail implements Serializable {
 
+<<<<<<< HEAD
     private Collection<Withdrawal> withdrawalCollection;
+=======
+>>>>>>> JesusMerge
     private static final long serialVersionUID = 1L;   
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -122,6 +129,7 @@ public class ExchangeDetail implements Serializable {
         return "com.alodiga.wallet.model.ExchangeDetail[ id=" + id + " ]";
     }
     
+<<<<<<< HEAD
     @XmlTransient
     @JsonIgnore
     public Collection<Withdrawal> getWithdrawalCollection() {
@@ -132,4 +140,6 @@ public class ExchangeDetail implements Serializable {
         this.withdrawalCollection = withdrawalCollection;
     }
     
+=======
+>>>>>>> JesusMerge
 }

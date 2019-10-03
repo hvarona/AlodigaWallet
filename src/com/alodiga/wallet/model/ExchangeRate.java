@@ -6,6 +6,10 @@
 package com.alodiga.wallet.model;
 
 import java.io.Serializable;
+<<<<<<< HEAD
+=======
+import java.math.BigInteger;
+>>>>>>> JesusMerge
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
@@ -44,10 +48,13 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "ExchangeRate.findByEndingDate", query = "SELECT e FROM ExchangeRate e WHERE e.endingDate = :endingDate")})
 public class ExchangeRate implements Serializable {
 
+<<<<<<< HEAD
     @JoinColumn(name = "productId", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private Product productId;
 
+=======
+>>>>>>> JesusMerge
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,6 +71,12 @@ public class ExchangeRate implements Serializable {
     @Column(name = "endingDate")
     @Temporal(TemporalType.TIMESTAMP)
     private Date endingDate;
+<<<<<<< HEAD
+=======
+    @JoinColumn(name = "productId", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    private Product productId;
+>>>>>>> JesusMerge
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "exchangeRateId")
     private Collection<ExchangeDetail> exchangeDetailCollection;
 
@@ -110,6 +123,17 @@ public class ExchangeRate implements Serializable {
     public void setEndingDate(Date endingDate) {
         this.endingDate = endingDate;
     }
+<<<<<<< HEAD
+=======
+    
+     public Product getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Product productId) {
+        this.productId = productId;
+    }
+>>>>>>> JesusMerge
 
     @XmlTransient
     @JsonIgnore
@@ -145,6 +169,7 @@ public class ExchangeRate implements Serializable {
     public String toString() {
         return "com.alodiga.wallet.model.ExchangeRate[ id=" + id + " ]";
     }
+<<<<<<< HEAD
 
     public Product getProductId() {
         return productId;
@@ -153,5 +178,7 @@ public class ExchangeRate implements Serializable {
     public void setProductId(Product productId) {
         this.productId = productId;
     }
+=======
+>>>>>>> JesusMerge
     
 }
