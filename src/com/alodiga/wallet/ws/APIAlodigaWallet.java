@@ -139,4 +139,18 @@ public class APIAlodigaWallet {
     {
        return operations.getTransactionsByUserIdApp(Long.valueOf(userId), Integer.valueOf(maxResult));
     }
+    
+     public TransactionResponse ManualWithdrawals ( 
+        @WebParam(name = "bankId") Long bankId,
+        @WebParam(name = "emailUser") String emailUser,
+        @WebParam(name = "accountBank") String accountBank,
+        @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
+        @WebParam(name = "productId") Long productId, 
+        @WebParam(name = "conceptTransaction") String conceptTransaction) {
+        return operations.ManualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction);
+    }
+    
+    
+    
+    
 }
