@@ -44,14 +44,17 @@ public class Withdrawal implements Serializable {
     private Long id;
     @Column(name = "userSourceId")
     private BigInteger userSourceId;
-    @Column(name = "userHasBankId")
-    private BigInteger userHasBankId;
+    @Column(name = "accountBank")
+    private String accountBank;
     @Size(max = 500)
     @Column(name = "additional")
     private String additional;
     @Size(max = 500)
     @Column(name = "additional2")
     private String additional2;
+    @JoinColumn(name = "bankId", referencedColumnName = "id")
+    @ManyToOne
+    private Bank bankId;
     @JoinColumn(name = "transactionId", referencedColumnName = "id")
     @ManyToOne
     private Transaction transactionId;
@@ -87,13 +90,21 @@ public class Withdrawal implements Serializable {
     public void setUserSourceId(BigInteger userSourceId) {
         this.userSourceId = userSourceId;
     }
-
-    public BigInteger getUserHasBankId() {
-        return userHasBankId;
+    
+    public Bank getBankId() {
+        return bankId;
+    }
+    
+    public void setbankId(Bank bankId) {
+        this.bankId = bankId;
     }
 
-    public void setUserHasBankId(BigInteger userHasBankId) {
-        this.userHasBankId = userHasBankId;
+    public String getAccountBank() {
+        return accountBank;
+    }
+
+    public void setAccountBank(String accountBank) {
+        this.accountBank = accountBank;
     }
 
     public String getAdditional() {

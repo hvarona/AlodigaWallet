@@ -126,4 +126,8 @@ public class Constante {
         public static final Long sTransationTypeEP = 4l;
         public static final String sTransactionConceptExchangeProducts = "Exchange Products";
         
+        //Retiro Manual
+        public static final Long sTransationTypeManualWithdrawal = 5l;
+        public static final Long sWithdrawalTypeManual = 1L;
+        
 }
