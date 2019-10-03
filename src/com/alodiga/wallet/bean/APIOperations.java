@@ -26,6 +26,7 @@ import com.alodiga.wallet.model.TransactionStatus;
 import com.alodiga.wallet.model.Commission;
 import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
+import com.alodiga.wallet.model.BankHasProduct;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
 import com.alodiga.wallet.model.Withdrawal;
