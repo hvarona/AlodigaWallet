@@ -115,7 +115,6 @@ public class Constante {
         public static final String sValidatePreferenceTransaction3 = "MAX_TRANSACTION_NUMBER_BY_CUSTOMER";
         public static final Long sTransationTypePS = 2l;
         public static final Long sTransactionSource = 2l;
-        public static final String sTransactionConceptPaymentShop = "Payment Shop";
         public static final String sUserHasNotBalance = "USER_HAS_NOT_BALANCE";
         
         //Transferencias entre cuentas

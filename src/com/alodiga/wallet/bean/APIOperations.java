@@ -478,13 +478,13 @@ public class APIOperations {
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
             
-            //Obtiene las transacciones del dÃ­a para el usuario
+            //Obtiene las transacciones del dia para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
             //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
-            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
+            //Obtiene las transacciones del dia para el producto que se esta comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
             
             //Cotejar las preferencias vs las transacciones del usuario
@@ -544,8 +544,7 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             transfer.setCreationDate(creationDate);
-            //cambiar por valor de parÃ¡metro
-            transfer.setConcept(Constante.sTransactionConceptTranferAccounts);
+            transfer.setConcept(conceptTransaction);
             transfer.setAmount(amountTransfer);
             transfer.setTransactionStatus(TransactionStatus.CREATED.name());
             transfer.setTotalAmount(amountTransfer);
@@ -561,7 +560,7 @@ public class APIOperations {
             commissionItem.setTransactionId(transfer);
             entityManager.persist(commissionItem);
             
-            //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
+            //Se actualiza el estatus de la transaccion a IN_PROCESS
             transfer.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(transfer);
             
@@ -598,7 +597,7 @@ public class APIOperations {
             balanceHistory.setVersion(balanceUserDestination.getId());
             entityManager.persist(balanceHistory);  
             
-            //Se actualiza el estado de la transacciÃ³n a COMPLETED
+            //Se actualiza el estado de la transaccion a COMPLETED
             transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(transfer);
             //Envias notificaciones
@@ -643,13 +642,13 @@ public class APIOperations {
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
 
-            //Obtiene las transacciones del dÃ­a para el usuario
+            //Obtiene las transacciones del dia para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
             //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
+            //Obtiene las transacciones del dia para el producto que se esta comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productSourceId, userId, begginingDateTime, endingDateTime);
 
             //Cotejar las preferencias vs las transacciones del usuario
@@ -695,7 +694,7 @@ public class APIOperations {
                 }
             }
 
-            //Se calcula el monto de la conversiÃ³n entre los productos
+            //Se calcula el monto de la conversion entre los productos
             ExchangeRate RateByProductSource = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productSourceId).getSingleResult();
             ExchangeRate RateByProductDestination = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productDestinationId).getSingleResult();
             Float amountConversion = (amountExchange * RateByProductSource.getValue()) / RateByProductDestination.getValue();
@@ -713,14 +712,13 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             exchange.setCreationDate(creationDate);
-            //cambiar por valor de parÃ¡metro
-            exchange.setConcept(Constante.sTransactionConceptExchangeProducts);
+            exchange.setConcept(conceptTransaction);
             exchange.setAmount(amountExchange);
             exchange.setTransactionStatus(TransactionStatus.CREATED.name());
             exchange.setTotalAmount(amountExchange);
             entityManager.persist(exchange);
             
-            //Se calcula la comisiÃ³n asociada al producto de origen
+            //Se calcula la comision asociada al producto de origen
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productSourceId).setParameter("transactionTypeId",Constante.sTransationTypeEP).getResultList();
                 for (Commission c: commissions) {
@@ -744,7 +742,7 @@ public class APIOperations {
                 
             }
             
-            //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
+            //Se actualiza el estatus de la transaccion a IN_PROCESS
             exchange.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(exchange);
                 
@@ -789,7 +787,7 @@ public class APIOperations {
             balanceHistory.setVersion(balanceProductDestination.getId());
             entityManager.persist(balanceHistory);
             
-            //Se actualiza el estado de la transacciÃ³n a COMPLETED
+            //Se actualiza el estado de la transaccion a COMPLETED
             exchange.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(exchange);
             //Envias notificaciones
@@ -1111,7 +1109,7 @@ public class APIOperations {
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
 
-            //Obtiene las transacciones del día para el usuario
+            //Obtiene las transacciones del dia para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
             //Obtiene la sumatoria de los montos de las transacciones del usuario
@@ -1163,7 +1161,7 @@ public class APIOperations {
                 }
             }
             
-            //Registrar la transacción
+            //Registrar la transaccion
             Transaction withdrawal = new Transaction();
             withdrawal.setId(null);
             withdrawal.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -1176,7 +1174,6 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             withdrawal.setCreationDate(creationDate);
-            //cambiar por valor de parámetro
             withdrawal.setConcept(conceptTransaction);
             withdrawal.setAmount(amountWithdrawal);
             withdrawal.setTransactionStatus(TransactionStatus.CREATED.name());
@@ -1207,7 +1204,7 @@ public class APIOperations {
             manualWithdrawal.setAccountBank(accountBank);
             entityManager.persist(manualWithdrawal);
             
-            //Se actualiza el estatus de la transacción a IN_PROCESS
+            //Se actualiza el estatus de la transaccion a IN_PROCESS
             withdrawal.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(withdrawal);
             
