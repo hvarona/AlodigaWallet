@@ -28,6 +28,8 @@ import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
+import com.alodiga.wallet.model.Withdrawal;
+import com.alodiga.wallet.model.WithdrawalType;
 import com.alodiga.wallet.response.generic.BankGeneric;
 import com.alodiga.wallet.respuestas.BankListResponse;
 import java.sql.Connection;
