@@ -151,6 +151,19 @@ public class APIAlodigaWallet {
     }
     
     
+    @WebMethod
+    public CountryListResponse getCountriesHasBank(){
+        return operations.getCountriesHasBank();        
+    }
+    
+        //no esta 
+    @WebMethod
+    public ProductListResponse getProductsByBankId(
+        @WebParam(name = "BankId") String bankId){
+       return operations.getProductsByBankId(Long.valueOf(bankId));         
+    }
+    
+    
     
     
 }
