@@ -821,8 +821,8 @@ public class APIOperations {
         return preferencesValue = entityManager.createNamedQuery("PreferenceValue.findByPreferenceFieldId", PreferenceValue.class).setParameter("preferenceFieldId",idPreferenceField).getResultList();
     }  
     
-     public BalanceHistory loadLastBalanceHistoryByAccount(Long userId, Long productId) {
-        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
+    public BalanceHistory loadLastBalanceHistoryByAccount(Long userId, Long productId) {
+        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
         query.setMaxResults(1);
         BalanceHistory result = (BalanceHistory) query.setHint("toplink.refresh", "true").getSingleResult();
         return result;
