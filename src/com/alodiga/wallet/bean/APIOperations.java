@@ -278,13 +278,13 @@ public class APIOperations {
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
             
-            //Obtiene las transacciones del dÃ­a para el usuario
+            //Obtiene las transacciones del dia para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
             //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
             
-            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
+            //Obtiene las transacciones del dia para el producto que se esta comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
             
             //Cotejar las preferencias vs las transacciones del usuario
@@ -344,14 +344,13 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             paymentShop.setCreationDate(creationDate);
-            //cambiar por valor de parÃ¡metro
-            paymentShop.setConcept(Constante.sTransactionConceptPaymentShop);
+            paymentShop.setConcept(conceptTransaction);
             paymentShop.setAmount(amountPayment);
             paymentShop.setTransactionStatus(TransactionStatus.CREATED.name());
             paymentShop.setTotalAmount(amountPayment);
             entityManager.persist(paymentShop);
             
-            //Revisar si la transacciÃ³n estÃ¡ sujeta a comisiones
+            //Revisar si la transaccion esta sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypePS).getResultList();
                 for (Commission c: commissions) {
@@ -375,7 +374,7 @@ public class APIOperations {
                 
             }
             
-            //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
+            //Se actualiza el estatus de la transaccion a IN_PROCESS
             paymentShop.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(paymentShop);
             
@@ -412,7 +411,7 @@ public class APIOperations {
             balanceHistory.setVersion(balanceUserDestination.getId());
             entityManager.persist(balanceHistory);            
             
-            //Se actualiza el estado de la transacciÃ³n a COMPLETED
+            //Se actualiza el estado de la transaccion a COMPLETED
             paymentShop.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(paymentShop);
             //Envias notificaciones
