@@ -1217,6 +1217,50 @@ public class APIOperations {
         } 
         return new TransactionResponse(ResponseCode.EXITO);
     }
+	 
+	
+     public ProductListResponse getProductsByBankId(Long bankId) {
+        List<BankHasProduct> bankHasProducts = new ArrayList<BankHasProduct>();
+        List<Product> products = new ArrayList<Product>();
+        try {
+            bankHasProducts = (List<BankHasProduct>) entityManager.createNamedQuery("BankHasProduct.findByBankId", BankHasProduct.class).setParameter("bankId", bankId).getResultList();
+            
+            if (bankHasProducts.size() <= 0) {
+                return new ProductListResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
+            }
+           
+           for (BankHasProduct bhp : bankHasProducts) {
+                Product product = new Product();
+                product = entityManager.find(Product.class, bhp.getProductId());
+                products.add(product);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+        }
+       
+
+        return new ProductListResponse(ResponseCode.EXITO, "", products);
+    }
+	
+	
+   public CountryListResponse getCountriesHasBank() {
+        List<Bank> banks = null;
+        List<Country> countrys = new ArrayList<Country>();
+        try {
+            banks = entityManager.createNamedQuery("Bank.findGroupByCountry", Bank.class).getResultList();
+            for(Bank b:banks) {
+                countrys.add(b.getCountryId());
+            }
+        }  catch (NoResultException e) {
+            e.printStackTrace();
+            return new CountryListResponse(ResponseCode.EMPTY_LIST_COUNTRY, "Empty Countries List");
+        }catch (Exception e) {
+            e.printStackTrace();
+            return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading Countries");
+        }
+        return new CountryListResponse(ResponseCode.EXITO, "", countrys);
+    }
 	
 	
     
