@@ -1060,44 +1060,6 @@ public class APIOperations {
         return new TransactionListResponse(ResponseCode.EXITO, "", transactions);
     }
 	
-    public BalanceHistory loadLastBalanceHistoryByAccount(Long userId, Long productId) {
-        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
-        query.setMaxResults(1);
-        BalanceHistory result = (BalanceHistory) query.setHint("toplink.refresh", "true").getSingleResult();
-        return result;
-    }
-    
-    public int TransactionsByUserCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3");
-        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
-        query.setParameter("1", begginingDateTime);
-        query.setParameter("2", endingDateTime);
-        query.setParameter("3", userId);
-        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
-        return result.size();
-    }
-    
-    public Double AmountMaxByUserCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT SUM(t.totalAmount) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3");
-        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
-        query.setParameter("1", begginingDateTime);
-        query.setParameter("2", endingDateTime);
-        query.setParameter("3", userId);
-        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
-        return result.get(0) != null ? (double) result.get(0) : 0f;
-    }
-    
-    public Long TransactionsByProductByUserCurrentDate(Long productId, Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT COUNT(t.productId) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3 AND t.productId = ?4");
-        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
-        query.setParameter("1", begginingDateTime);
-        query.setParameter("2", endingDateTime);
-        query.setParameter("3", userId);
-        query.setParameter("4",productId);
-        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
-        return result.get(0) != null ? (Long) result.get(0) : 0l;
-    }
-	
    public TransactionResponse ManualWithdrawals(Long bankId, String emailUser, String accountBank, 
                                                  Float amountWithdrawal, Long productId, String conceptTransaction) {
         
