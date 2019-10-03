@@ -163,7 +163,4 @@ public class APIAlodigaWallet {
        return operations.getProductsByBankId(Long.valueOf(bankId));         
     }
     
-    
-    
-    
 }

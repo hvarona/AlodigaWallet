@@ -1262,9 +1262,7 @@ public class APIOperations {
         }
         return new CountryListResponse(ResponseCode.EXITO, "", countrys);
     }
-	
-	
-    
+  
 }
 
 
