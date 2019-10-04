@@ -1251,7 +1251,13 @@ public class APIOperations {
         } 
         return new TransactionResponse(ResponseCode.EXITO);
     }
+	 
 	
+     
+	
+	
+   
+  
    
    //Desarrollador por kerwin 2-10-2019 modificaciòn solicitada por adira
     public BalanceHistoryResponse getBalanceHistoryByUserAndProduct(Long userId, Long productId) {

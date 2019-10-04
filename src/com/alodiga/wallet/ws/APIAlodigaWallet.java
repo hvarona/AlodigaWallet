@@ -159,6 +159,9 @@ public class APIAlodigaWallet {
         @WebParam(name = "conceptTransaction") String conceptTransaction) {
         return operations.ManualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction);
     }
+    
+
+    
      
      //Desarrollado por Kerwin 2102019
     @WebMethod
