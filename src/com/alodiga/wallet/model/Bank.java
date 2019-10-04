@@ -37,7 +37,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Bank.findAll", query = "SELECT b FROM Bank b"),
     @NamedQuery(name = "Bank.findById", query = "SELECT b FROM Bank b WHERE b.id = :id"),
     @NamedQuery(name = "Bank.findByName", query = "SELECT b FROM Bank b WHERE b.name = :name"),
-    @NamedQuery(name = "Bank.findByAba", query = "SELECT b FROM Bank b WHERE b.aba = :aba")})
+    @NamedQuery(name = "Bank.findByAba", query = "SELECT b FROM Bank b WHERE b.aba = :aba"),
+    @NamedQuery(name = "Bank.findByCountryId", query = "SELECT b FROM Bank b WHERE b.countryId.id = :countryId")})
 public class Bank implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
