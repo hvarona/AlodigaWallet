@@ -99,6 +99,7 @@ public class APIOperations {
 
     public ProductResponse saveProduct(Long enterpriseId, Long categoryId, Long productIntegrationTypeId, String name, boolean taxInclude, boolean status, String referenceCode, String rateUrl, String accesNumberURL, boolean isFree, boolean isAlocashProduct) {
         try {
+            //t
             Product product = new Product();
             product.setId(null);
             Enterprise enterprise = entityManager.find(Enterprise.class, enterpriseId);
