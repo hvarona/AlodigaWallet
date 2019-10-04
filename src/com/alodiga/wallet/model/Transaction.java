@@ -71,7 +71,7 @@ public class Transaction implements Serializable {
     private String concept;
     @Basic(optional = false)
     @Column(name = "creationDate")
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date creationDate;
     @Basic(optional = false)
     @Column(name = "amount")
