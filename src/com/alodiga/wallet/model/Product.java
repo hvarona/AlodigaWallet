@@ -74,6 +74,9 @@ public class Product implements Serializable {
     @Basic(optional = false)
     @Column(name = "referenceCode")
     private String referenceCode;
+    @Basic(optional = false)
+    @Column(name = "simbol")
+    private String simbol;
     @Column(name = "ratesUrl")
     private String ratesUrl;
     @Column(name = "accessNumberUrl")
@@ -105,6 +108,8 @@ public class Product implements Serializable {
     private Collection<BalanceHistory> balanceHistoryCollection;
     @Transient
     private Float currentBalance;
+    
+    
 
     public Product() {
     }
@@ -327,7 +332,13 @@ public class Product implements Serializable {
         return currentBalance;
     }
 
-   
-    
-    
+    public String getSimbol() {
+        return simbol;
+    }
+
+    public void setSimbol(String simbol) {
+        this.simbol = simbol;
+    }
+
 }
+
