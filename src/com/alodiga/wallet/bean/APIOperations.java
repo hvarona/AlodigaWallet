@@ -373,7 +373,7 @@ public class APIOperations {
                     entityManager.persist(commissionItem);
                 }
             } catch (NoResultException e) {
-                
+                //No result
             }
             
             //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
