@@ -51,4 +51,5 @@ public enum ResponseCode {
 	public String getCodigo(){
 		return codigo;
 	}
+
 }
