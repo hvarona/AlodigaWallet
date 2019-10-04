@@ -32,6 +32,7 @@ import com.alodiga.wallet.model.ExchangeDetail;
 import com.alodiga.wallet.model.Withdrawal;
 import com.alodiga.wallet.model.WithdrawalType;
 import com.alodiga.wallet.response.generic.BankGeneric;
+import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
 import java.sql.Connection;
 import java.text.DateFormat;
@@ -1261,6 +1262,32 @@ public class APIOperations {
             return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading Countries");
         }
         return new CountryListResponse(ResponseCode.EXITO, "", countrys);
+    }
+   
+   //Desarrollador por kerwin 2-10-2019 modificaciòn solicitada por adira
+    public BalanceHistoryResponse getBalanceHistoryByUserAndProduct(Long userId, Long productId) {
+        BalanceHistory balanceHistory = new BalanceHistory();
+        try {
+            balanceHistory = loadLastBalanceHistoryByAccount_(userId, productId);
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new BalanceHistoryResponse(ResponseCode.BALANCE_HISTORY_NOT_FOUND_EXCEPTION, "Error loading BalanceHistory");
+        }
+        return new BalanceHistoryResponse(ResponseCode.EXITO, "", balanceHistory);
+    }
+    
+    public BalanceHistory loadLastBalanceHistoryByAccount_(Long userId, Long productId) throws NoResultException {
+
+        try {
+            Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " +userId+ " AND b.productId.id = " + productId + " ORDER BY b.id desc");
+            query.setMaxResults(1);
+            BalanceHistory result = (BalanceHistory) query.setHint("toplink.refresh", "true").getSingleResult();
+            return result;
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            throw  new NoResultException();
+        } 
+
     }
   
 }
