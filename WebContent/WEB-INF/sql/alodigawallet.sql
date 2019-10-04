@@ -1497,3 +1497,7 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2019-09-12  9:42:22
+
+-- cambio incorporado el 3 10 2019
+ALTER TABLE `alodigaWallet`.`product` 
+ADD COLUMN `simbol` VARCHAR(255) NOT NULL AFTER `isAlocashProduct`;

@@ -8,6 +8,7 @@ import javax.jws.WebParam;
 import javax.jws.WebService;
 import org.apache.log4j.Logger;
 import com.alodiga.wallet.bean.APIOperations;
+import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
@@ -68,6 +69,7 @@ public class APIAlodigaWallet {
        return operations.getProductsByUserId(Long.valueOf(userId));         
     }
     
+    //no esta 
     @WebMethod
     public CountryListResponse getCountriesHasBank(){
         return operations.getCountriesHasBank();        
@@ -85,6 +87,7 @@ public class APIAlodigaWallet {
     }
     
     
+    //no esta 
     @WebMethod
     public ProductListResponse getProductsByBankId(
         @WebParam(name = "BankId") String bankId){
@@ -156,8 +159,15 @@ public class APIAlodigaWallet {
         @WebParam(name = "conceptTransaction") String conceptTransaction) {
         return operations.ManualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction);
     }
-    
-    
-    
-    
+     
+     //Desarrollado por Kerwin 2102019
+    @WebMethod
+    public BalanceHistoryResponse getBalanceHistoryByProductAndUser(
+        @WebParam(name = "userId") Long userId, 
+        @WebParam(name = "productId") Long productId)
+    {
+       return operations.getBalanceHistoryByUserAndProduct(userId, productId);
+    }
+
+
 }
