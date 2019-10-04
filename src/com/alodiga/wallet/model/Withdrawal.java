@@ -32,7 +32,6 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Withdrawal.findAll", query = "SELECT w FROM Withdrawal w"),
     @NamedQuery(name = "Withdrawal.findById", query = "SELECT w FROM Withdrawal w WHERE w.id = :id"),
     @NamedQuery(name = "Withdrawal.findByUserSourceId", query = "SELECT w FROM Withdrawal w WHERE w.userSourceId = :userSourceId"),
-    @NamedQuery(name = "Withdrawal.findByUserHasBankId", query = "SELECT w FROM Withdrawal w WHERE w.userHasBankId = :userHasBankId"),
     @NamedQuery(name = "Withdrawal.findByAdditional", query = "SELECT w FROM Withdrawal w WHERE w.additional = :additional"),
     @NamedQuery(name = "Withdrawal.findByAdditional2", query = "SELECT w FROM Withdrawal w WHERE w.additional2 = :additional2")})
 public class Withdrawal implements Serializable {
