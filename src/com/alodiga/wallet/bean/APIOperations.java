@@ -220,29 +220,32 @@ public class APIOperations {
     }
     
     
-        public CountryListResponse getBankByCountryApp(Long countryId) {
+        public BankListResponse getBankByCountryApp(Long countryId) {
         List<Bank> banks = new ArrayList<Bank>();
         List<Country> countrys = new ArrayList<Country>();
+        List<BankGeneric> bankGenerics = new ArrayList<BankGeneric>();
         try {
-            banks = (List<Bank>) entityManager.createNamedQuery("Bank.findByCountry", Bank.class).setParameter("countryId", countryId).getResultList();
+            banks = (List<Bank>) entityManager.createNamedQuery("Bank.findByCountryIdBank", Bank.class).setParameter("countryId", countryId).getResultList();
             
             if (banks.size() <= 0) {
-                return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Lista de banco vacia");
+                return new BankListResponse(ResponseCode.ERROR_INTERNO, "Lista de banco vacia");
             }
             
-            for (Bank b : banks) {
-                Country country = new Country();
-                country = entityManager.find(Country.class, b.getCountryId());
-                countrys.add(country);
-                
+            for(Bank b: banks){
+                BankGeneric bankGeneric = new BankGeneric(b.getId().toString(),b.getName(), b.getAba());
+                bankGenerics.add(bankGeneric);
             }
+            
+                     
+            
+       
         } catch (Exception e) {
             e.printStackTrace();
-            return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
+            return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
         }
        
 
-        return new CountryListResponse(ResponseCode.EXITO, "", countrys);
+        return new BankListResponse(ResponseCode.EXITO, "",bankGenerics);
     }
     
     
@@ -827,7 +830,7 @@ public class APIOperations {
     }  
     
      public BalanceHistory loadLastBalanceHistoryByAccount(Long userId, Long productId) {
-        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
+        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
         query.setMaxResults(1);
         BalanceHistory result = (BalanceHistory) query.setHint("toplink.refresh", "true").getSingleResult();
         return result;
