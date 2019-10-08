@@ -133,5 +133,6 @@ public class Constante {
         
         //Recarga Manual
         public static final Long sTransationTypeManualRecharge = 6l;
+        public static final Long sBankOperationTypeRecharge = 2L;
         
 }

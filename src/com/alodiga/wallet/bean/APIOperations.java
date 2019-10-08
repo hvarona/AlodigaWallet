@@ -1093,27 +1093,6 @@ public class APIOperations {
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             
-            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
-            BalanceHistory balanceUser = loadLastBalanceHistoryByAccount(userId,productId);
-            try {
-                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualWithdrawal).getResultList();
-                for (Commission c: commissions) {
-                    commissionWithdrawal = (Commission) c;
-                    amountCommission = c.getValue();
-                    isPercentCommission = c.getIsPercentCommision();
-                    if (isPercentCommission == 1 && amountCommission > 0) {
-                        amountCommission = (amountWithdrawal * amountCommission)/100;
-                    }
-                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
-                }    
-            } catch (NoResultException e) {
-                
-            }
-            Float amountWithdrawalTotal = amountWithdrawal + amountCommission;
-            if (balanceUser == null || balanceUser.getCurrentAmount() < amountWithdrawalTotal) {
-                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
-            }
-
             //Validar preferencias
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
@@ -1183,22 +1162,36 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             withdrawal.setCreationDate(creationDate);
-            //cambiar por valor de parámetro
             withdrawal.setConcept(conceptTransaction);
             withdrawal.setAmount(amountWithdrawal);
             withdrawal.setTransactionStatus(TransactionStatus.CREATED.name());
             withdrawal.setTotalAmount(amountWithdrawal);
             entityManager.persist(withdrawal);
             
-            //Se crea el objeto commissionItem y se persiste en BD
-            CommissionItem commissionItem = new CommissionItem();
-            commissionItem.setCommissionId(commissionWithdrawal);           
-            commissionItem.setAmount(amountCommission);
-            Date commissionDate = new Date();
-            Timestamp processedDate = new Timestamp(commissionDate.getTime());
-            commissionItem.setProcessedDate(processedDate);
-            commissionItem.setTransactionId(withdrawal);
-            entityManager.persist(commissionItem);
+            //Revisar si la transaccion esta sujeta a comisiones
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualWithdrawal).getResultList();
+                for (Commission c: commissions) {
+                    commissionWithdrawal = (Commission) c;
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (amountWithdrawal * amountCommission)/100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                }    
+                //Se crea el objeto commissionItem y se persiste en BD
+                CommissionItem commissionItem = new CommissionItem();
+                commissionItem.setCommissionId(commissionWithdrawal);           
+                commissionItem.setAmount(amountCommission);
+                Date commissionDate = new Date();
+                Timestamp processedDate = new Timestamp(commissionDate.getTime());
+                commissionItem.setProcessedDate(processedDate);
+                commissionItem.setTransactionId(withdrawal);
+                entityManager.persist(commissionItem);
+            } catch (NoResultException e) {
+                
+            }
             
             //Guardar los datos del retiro          
             BankOperation manualWithdrawal = new BankOperation();
@@ -1207,10 +1200,10 @@ public class APIOperations {
             manualWithdrawal.setProductId(product);
             manualWithdrawal.setTransactionId(withdrawal);
             manualWithdrawal.setCommisionId(commissionWithdrawal);
-            BankOperationType withdrawalType = entityManager.find(BankOperationType.class,Constante.sBankOperationTypeWithdrawal);
-            manualWithdrawal.setBankOperationTypeId(withdrawalType);
-            BankOperationMode withdrawalMode = entityManager.find(BankOperationMode.class, Constante.sBankOperationModeManual);
-            manualWithdrawal.setBankOperationModeId(withdrawalMode);
+            BankOperationType operationType = entityManager.find(BankOperationType.class,Constante.sBankOperationTypeWithdrawal);
+            manualWithdrawal.setBankOperationTypeId(operationType);
+            BankOperationMode operationMode = entityManager.find(BankOperationMode.class, Constante.sBankOperationModeManual);
+            manualWithdrawal.setBankOperationModeId(operationMode);
             Bank bank = entityManager.find(Bank.class, bankId);
             manualWithdrawal.setBankId(bank);
             manualWithdrawal.setBankOperationNumber(accountBank);
@@ -1230,7 +1223,7 @@ public class APIOperations {
     /*
      *
      */
-    public TransactionResponse ManualRecharge(Long bankId, String emailUser, String accountBank, 
+    public TransactionResponse ManualRecharge(Long bankId, String emailUser, String referenceNumberOperation, 
                                               Float amountRecharge, Long productId, String conceptTransaction) {
     
     Long idTransaction                      = 0L;
@@ -1256,8 +1249,88 @@ public class APIOperations {
             
             // Validar que el balance history del cliente disponga de saldo para hacer la operacion
             BalanceHistory balanceUser = loadLastBalanceHistoryByAccount(userId,productId);
+            if (balanceUser == null || balanceUser.getCurrentAmount() < amountRecharge) {
+                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
+            }
+            
+            //Validar preferencias
+            begginingDateTime = Utils.DateTransaction()[0];
+            endingDateTime = Utils.DateTransaction()[1];
+
+            //Obtiene las transacciones del día para el usuario
+            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+            
+            //Obtiene la sumatoria de los montos de las transacciones del usuario
+            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+
+            //Obtiene las transacciones del día para el producto que se está comprando
+            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
+            
+            //Cotejar las preferencias vs las transacciones del usuario
+            List<Preference> preferences = getPreferences();
+            for(Preference p: preferences){
+                if (p.getName().equals(Constante.sPreferenceTransaction)) {
+                    idTransaction = p.getId();
+                }
+            }
+            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+            for(PreferenceField pf: preferencesField){
+                switch(pf.getName()) {
+                    case Constante.sValidatePreferenceTransaction1:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per day");
+                                }
+                            }
+                        }
+                    break;
+                    case Constante.sValidatePreferenceTransaction2:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);                           
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
+                                }
+                            }
+                        }
+                    break;
+                    case Constante.sValidatePreferenceTransaction3:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER,"The user exceeded the maximum number of transactions per day");
+                                }
+                            }
+                        }
+                    break;
+                }
+            }
+            
+            //Registrar la transacción en la BD
+            Transaction recharge = new Transaction();
+            recharge.setId(null);
+            recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+            Product product = entityManager.find(Product.class, productId);
+            recharge.setProductId(product);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualRecharge);
+            recharge.setTransactionTypeId(transactionType);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            recharge.setTransactionSourceId(transactionSource);
+            Date date = new Date();
+            Timestamp creationDate = new Timestamp(date.getTime());
+            recharge.setCreationDate(creationDate);
+            recharge.setConcept(conceptTransaction);
+            recharge.setAmount(amountRecharge);
+            recharge.setTransactionStatus(TransactionStatus.CREATED.name());
+            recharge.setTotalAmount(amountRecharge);
+            entityManager.persist(recharge);
+            
+            //Revisar si la transaccion esta sujeta a comisiones
             try {
-                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualRecharge).getResultList();
+            commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualRecharge).getResultList();
                 for (Commission c: commissions) {
                     commissionRecharge = (Commission) c;
                     amountCommission = c.getValue();
@@ -1266,16 +1339,39 @@ public class APIOperations {
                         amountCommission = (amountRecharge * amountCommission)/100;
                     }
                     amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
-                }    
+                } 
+                //Se crea el objeto commissionItem y se persiste en BD
+                CommissionItem commissionItem = new CommissionItem();
+                commissionItem.setCommissionId(commissionRecharge);           
+                commissionItem.setAmount(amountCommission);
+                Date commissionDate = new Date();
+                Timestamp processedDate = new Timestamp(commissionDate.getTime());
+                commissionItem.setProcessedDate(processedDate);
+                commissionItem.setTransactionId(recharge);
+                entityManager.persist(commissionItem);
             } catch (NoResultException e) {
                 
             }
-            Float amountRechargeTotal = amountRecharge + amountCommission;
-            if (balanceUser == null || balanceUser.getCurrentAmount() < amountRechargeTotal) {
-                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
-            }
+            
+            //Guardar los datos de la recarga          
+            BankOperation manualRecharge = new BankOperation();
+            manualRecharge.setId(null);
+            manualRecharge.setUserSourceId(BigInteger.valueOf(userId));
+            manualRecharge.setProductId(product);
+            manualRecharge.setTransactionId(recharge);
+            manualRecharge.setCommisionId(commissionRecharge);
+            BankOperationType operationType = entityManager.find(BankOperationType.class,Constante.sBankOperationTypeRecharge);
+            manualRecharge.setBankOperationTypeId(operationType);
+            BankOperationMode operationMode = entityManager.find(BankOperationMode.class, Constante.sBankOperationModeManual);
+            manualRecharge.setBankOperationModeId(operationMode);
+            Bank bank = entityManager.find(Bank.class, bankId);
+            manualRecharge.setBankId(bank);
+            manualRecharge.setBankOperationNumber(referenceNumberOperation);
+            entityManager.persist(manualRecharge);
         
-        
+            //Se actualiza el estatus de la transacción a IN_PROCESS
+            recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(recharge);
         
     } catch (Exception e) {
             e.printStackTrace();
