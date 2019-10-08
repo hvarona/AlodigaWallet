@@ -1225,19 +1225,24 @@ public class APIOperations {
     }
 	 
 	
-     public ProductListResponse getProductsByBankId(Long bankId) {
+     public ProductListResponse getProductsByBankId(Long bankId,Long userId) {
         List<BankHasProduct> bankHasProducts = new ArrayList<BankHasProduct>();
         List<Product> products = new ArrayList<Product>();
         try {
             bankHasProducts = (List<BankHasProduct>) entityManager.createNamedQuery("BankHasProduct.findByBankId", BankHasProduct.class).setParameter("bankId", bankId).getResultList();
-            
             if (bankHasProducts.size() <= 0) {
                 return new ProductListResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
             }
-           
-           for (BankHasProduct bhp : bankHasProducts) {
+            for (BankHasProduct bhp : bankHasProducts) {
                 Product product = new Product();
                 product = entityManager.find(Product.class, bhp.getProductId());
+                BalanceHistory balanceHistory = new BalanceHistory();
+                try {
+                    balanceHistory = loadLastBalanceHistoryByAccount_(userId, product.getId());
+                    product.setCurrentBalance(balanceHistory.getCurrentAmount());
+                } catch (NoResultException e) {
+                    product.setCurrentBalance(0F);
+                }
                 products.add(product);
             }
         } catch (Exception e) {
@@ -1250,20 +1255,29 @@ public class APIOperations {
     }
 	
 	
-   public CountryListResponse getCountriesHasBank() {
-        List<Bank> banks = null;
-        List<Country> countrys = new ArrayList<Country>();
+   public CountryListResponse getCountriesHasBank(Long userId) {
+        List countries = null;
+        ArrayList<Country> countrys = new ArrayList<Country>();
         try {
-            banks = entityManager.createNamedQuery("Bank.findGroupByCountry", Bank.class).getResultList();
-            for(Bank b:banks) {
-                countrys.add(b.getCountryId());
-            }
-        }  catch (NoResultException e) {
-            e.printStackTrace();
-            return new CountryListResponse(ResponseCode.EMPTY_LIST_COUNTRY, "Empty Countries List");
-        }catch (Exception e) {
-            e.printStackTrace();
+            StringBuilder sqlBuilder = new StringBuilder("SELECT b.countryId FROM alodigaWallet.bank b WHERE b.id IN (SELECT bhp.bankId FROM alodigaWallet.bank_has_product bhp WHERE bhp.productId IN (SELECT uhp.productId FROM alodigaWallet.user_has_product uhp  WHERE uhp.userSourceId='"+userId+"'))GROUP BY b.countryId;");
+            Query query = entityManager.createNativeQuery(sqlBuilder.toString());
+            countries = query.setHint("toplink.refresh", "true").getResultList();
+        } catch (Exception ex) {
+            ex.printStackTrace();
             return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading Countries");
+            
+        }
+        if (countries != null && countries.size() > 0) {
+            for (int i = 0; i < countries.size(); i++) {
+               Long countryId = (Long) countries.get(i);
+               
+               
+               Country country = entityManager.find(Country.class, countryId);
+               countrys.add(country);
+            }
+        }else{
+              
+            return new CountryListResponse(ResponseCode.EMPTY_LIST_COUNTRY, "Empty Countries List");
         }
         return new CountryListResponse(ResponseCode.EXITO, "", countrys);
     }
@@ -1294,6 +1308,27 @@ public class APIOperations {
 
     }
   
+    
+    public ArrayList<Product> getProductsListByUserId(Long userId) throws NoResultException,Exception{
+        List<UserHasProduct> userHasProducts = new ArrayList<UserHasProduct>();
+        ArrayList<Product> products = new ArrayList<Product>();
+        try {
+            userHasProducts = (List<UserHasProduct>) entityManager.createNamedQuery("UserHasProduct.findByUserSourceId", UserHasProduct.class).setParameter("userSourceId", userId).getResultList();
+            
+            if (userHasProducts.size() <= 0) {
+                throw new NoResultException();
+            }
+            
+            for (UserHasProduct uhp : userHasProducts) {
+                Product product = new Product();
+                product = entityManager.find(Product.class, uhp.getProductId());
+                products.add(product);
+            }
+        } catch (Exception e) {   
+            throw new Exception();   
+        }
+        return products;
+    }
 }
 
 
