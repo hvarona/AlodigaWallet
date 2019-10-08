@@ -120,7 +120,6 @@ public class APIAlodigaWallet {
         @WebParam(name = "productDestinationId") Long productDestinationId,
         @WebParam(name = "amountExchange") Float amountExchange,
         @WebParam(name = "conceptTransaction") String conceptTransaction) {
-        
         return operations.ExchangeProduct(emailUser, productSourceId, productDestinationId, amountExchange, conceptTransaction);
     }
 
@@ -153,15 +152,17 @@ public class APIAlodigaWallet {
     
     
     @WebMethod
-    public CountryListResponse getCountriesHasBank(){
-        return operations.getCountriesHasBank();        
+    public CountryListResponse getCountriesHasBank(
+         @WebParam(name = "userId") Long userId){
+        return operations.getCountriesHasBank(userId);        
     }
     
         //no esta 
     @WebMethod
     public ProductListResponse getProductsByBankId(
-        @WebParam(name = "BankId") String bankId){
-       return operations.getProductsByBankId(Long.valueOf(bankId));         
+        @WebParam(name = "bankId") String bankId,
+        @WebParam(name = "userId") String userId){
+       return operations.getProductsByBankId(Long.valueOf(bankId),Long.valueOf(userId));         
     }
     
     
