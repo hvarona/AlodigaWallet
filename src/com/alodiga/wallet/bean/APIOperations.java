@@ -5,6 +5,9 @@ import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
 import com.alodiga.transferto.integration.model.ReserveResponse;
 import com.alodiga.transferto.integration.model.TopUpResponse;
 import com.alodiga.wallet.model.Bank;
+import com.alodiga.wallet.model.BankOperation;
+import com.alodiga.wallet.model.BankOperationMode;
+import com.alodiga.wallet.model.BankOperationType;
 import com.alodiga.wallet.model.Category;
 import com.alodiga.wallet.model.Country;
 import com.alodiga.wallet.model.Enterprise;
@@ -29,8 +32,6 @@ import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.BankHasProduct;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
-import com.alodiga.wallet.model.Withdrawal;
-import com.alodiga.wallet.model.WithdrawalType;
 import com.alodiga.wallet.response.generic.BankGeneric;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
@@ -1069,7 +1070,7 @@ public class APIOperations {
     }
 	
    public TransactionResponse ManualWithdrawals(Long bankId, String emailUser, String accountBank, 
-                                                 Float amountWithdrawal, Long productId, String conceptTransaction) {
+                                                Float amountWithdrawal, Long productId, String conceptTransaction) {
         
         Long idTransaction                      = 0L;
         Long userId                             = 0L;
@@ -1199,18 +1200,20 @@ public class APIOperations {
             commissionItem.setTransactionId(withdrawal);
             entityManager.persist(commissionItem);
             
-            //Guardar los datos del retiro
-            Withdrawal manualWithdrawal = new Withdrawal();
+            //Guardar los datos del retiro          
+            BankOperation manualWithdrawal = new BankOperation();
             manualWithdrawal.setId(null);
             manualWithdrawal.setUserSourceId(BigInteger.valueOf(userId));
             manualWithdrawal.setProductId(product);
             manualWithdrawal.setTransactionId(withdrawal);
             manualWithdrawal.setCommisionId(commissionWithdrawal);
-            WithdrawalType withdrawalType = entityManager.find(WithdrawalType.class, Constante.sWithdrawalTypeManual);
-            manualWithdrawal.setTypeWithdrawalId(withdrawalType);
+            BankOperationType withdrawalType = entityManager.find(BankOperationType.class,Constante.sBankOperationTypeWithdrawal);
+            manualWithdrawal.setBankOperationTypeId(withdrawalType);
+            BankOperationMode withdrawalMode = entityManager.find(BankOperationMode.class, Constante.sBankOperationModeManual);
+            manualWithdrawal.setBankOperationModeId(withdrawalMode);
             Bank bank = entityManager.find(Bank.class, bankId);
-            manualWithdrawal.setbankId(bank);
-            manualWithdrawal.setAccountBank(accountBank);
+            manualWithdrawal.setBankId(bank);
+            manualWithdrawal.setBankOperationNumber(accountBank);
             entityManager.persist(manualWithdrawal);
             
             //Se actualiza el estatus de la transacción a IN_PROCESS
@@ -1224,8 +1227,65 @@ public class APIOperations {
         return new TransactionResponse(ResponseCode.EXITO);
     }
 	 
-	
-     public ProductListResponse getProductsByBankId(Long bankId) {
+    /*
+     *
+     */
+    public TransactionResponse ManualRecharge(Long bankId, String emailUser, String accountBank, 
+                                              Float amountRecharge, Long productId, String conceptTransaction) {
+    
+    Long idTransaction                      = 0L;
+    Long userId                             = 0L;
+    int totalTransactionsByUser             = 0;
+    Long totalTransactionsByProduct         = 0L;
+    Double totalAmountByUser                = 0.00D;
+    List<Transaction> transactionsByUser    = new ArrayList<Transaction>();
+    List<PreferenceField> preferencesField  = new ArrayList<PreferenceField>();
+    List<PreferenceValue> preferencesValue  = new ArrayList<PreferenceValue>();
+    List<Commission> commissions            = new ArrayList<Commission>();
+    Timestamp begginingDateTime             = new Timestamp(0);   
+    Timestamp endingDateTime                = new Timestamp(0); 
+    Float amountCommission                  = 0.00F;
+    short isPercentCommission               = 0;
+    Commission commissionRecharge           = new Commission();
+        
+    try {
+        //Se obtiene el usuario de la API de Registro Unificado
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
+        userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            
+            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
+            BalanceHistory balanceUser = loadLastBalanceHistoryByAccount(userId,productId);
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualRecharge).getResultList();
+                for (Commission c: commissions) {
+                    commissionRecharge = (Commission) c;
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (amountRecharge * amountCommission)/100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                }    
+            } catch (NoResultException e) {
+                
+            }
+            Float amountRechargeTotal = amountRecharge + amountCommission;
+            if (balanceUser == null || balanceUser.getCurrentAmount() < amountRechargeTotal) {
+                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
+            }
+        
+        
+        
+    } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
+        } 
+        return new TransactionResponse(ResponseCode.EXITO);
+        
+    }
+    
+    public ProductListResponse getProductsByBankId(Long bankId) {
         List<BankHasProduct> bankHasProducts = new ArrayList<BankHasProduct>();
         List<Product> products = new ArrayList<Product>();
         try {

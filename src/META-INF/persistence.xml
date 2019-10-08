@@ -7,6 +7,9 @@
              	<class>com.alodiga.wallet.model.Address</class>
                 <class>com.alodiga.wallet.model.BalanceHistory</class>
                 <class>com.alodiga.wallet.model.Bank</class>
+                <class>com.alodiga.wallet.model.BankOperation</class>
+                <class>com.alodiga.wallet.model.BankOperationMode</class>
+                <class>com.alodiga.wallet.model.BankOperationType</class>
                 <class>ccom.alodiga.wallet.model.Category</class>
                 <class>com.alodiga.wallet.model.CategoryData</class>
                 <class>com.alodiga.wallet.model.City</class>
@@ -52,8 +55,6 @@
                 <class>com.alodiga.wallet.model.TransactionType</class>
                 <class>com.alodiga.wallet.model.UserHasBank</class>
                 <class>com.alodiga.wallet.model.UserHasProduct</class>
-                <class>com.alodiga.wallet.model.Withdrawal</class>
-                <class>com.alodiga.wallet.model.WithdrawalType</class>
                 <class>com.alodiga.wallet.model.UserHasProduct</class>
                 <class>com.alodiga.wallet.model.UserHasBank</class>
                 <class>com.alodiga.wallet.model.BankHasProduct</class>

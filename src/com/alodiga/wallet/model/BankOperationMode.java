@@ -8,6 +8,7 @@ package com.alodiga.wallet.model;
 import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -25,16 +26,17 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
- * @author usuario
+ * @author jose
  */
 @Entity
-@Table(name = "withdrawal_type")
+@Table(name = "bank_operation_mode")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "WithdrawalType.findAll", query = "SELECT w FROM WithdrawalType w"),
-    @NamedQuery(name = "WithdrawalType.findById", query = "SELECT w FROM WithdrawalType w WHERE w.id = :id"),
-    @NamedQuery(name = "WithdrawalType.findByName", query = "SELECT w FROM WithdrawalType w WHERE w.name = :name")})
-public class WithdrawalType implements Serializable {
+    @NamedQuery(name = "BankOperationMode.findAll", query = "SELECT b FROM BankOperationMode b")
+    , @NamedQuery(name = "BankOperationMode.findById", query = "SELECT b FROM BankOperationMode b WHERE b.id = :id")
+    , @NamedQuery(name = "BankOperationMode.findByName", query = "SELECT b FROM BankOperationMode b WHERE b.name = :name")})
+public class BankOperationMode implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,17 +48,17 @@ public class WithdrawalType implements Serializable {
     @Size(min = 1, max = 45)
     @Column(name = "name")
     private String name;
-    @OneToMany(mappedBy = "typeWithdrawalId")
-    private Collection<Withdrawal> withdrawalCollection;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "bankOperationModeId")
+    private Collection<BankOperation> bankOperationCollection;
 
-    public WithdrawalType() {
+    public BankOperationMode() {
     }
 
-    public WithdrawalType(Long id) {
+    public BankOperationMode(Long id) {
         this.id = id;
     }
 
-    public WithdrawalType(Long id, String name) {
+    public BankOperationMode(Long id, String name) {
         this.id = id;
         this.name = name;
     }
@@ -79,12 +81,12 @@ public class WithdrawalType implements Serializable {
 
     @XmlTransient
     @JsonIgnore
-    public Collection<Withdrawal> getWithdrawalCollection() {
-        return withdrawalCollection;
+    public Collection<BankOperation> getBankOperationCollection() {
+        return bankOperationCollection;
     }
 
-    public void setWithdrawalCollection(Collection<Withdrawal> withdrawalCollection) {
-        this.withdrawalCollection = withdrawalCollection;
+    public void setBankOperationCollection(Collection<BankOperation> bankOperationCollection) {
+        this.bankOperationCollection = bankOperationCollection;
     }
 
     @Override
@@ -97,10 +99,10 @@ public class WithdrawalType implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof WithdrawalType)) {
+        if (!(object instanceof BankOperationMode)) {
             return false;
         }
-        WithdrawalType other = (WithdrawalType) object;
+        BankOperationMode other = (BankOperationMode) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -109,7 +111,7 @@ public class WithdrawalType implements Serializable {
 
     @Override
     public String toString() {
-        return "com.alodiga.wallet.model.WithdrawalType[ id=" + id + " ]";
+        return "com.alodiga.wallet.model.BankOperationMode[ id=" + id + " ]";
     }
     
 }
