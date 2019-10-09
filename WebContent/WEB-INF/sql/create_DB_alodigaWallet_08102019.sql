@@ -1584,3 +1584,27 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2019-10-08 13:32:58
+
+
+
+-- Cambios hechos por moises data dummy
+
+UPDATE `alodigaWallet`.`product` SET `symbol`='AL' WHERE `id`='1';
+UPDATE `alodigaWallet`.`product` SET `symbol`='SA' WHERE `id`='2';
+UPDATE `alodigaWallet`.`product` SET `symbol`='TP' WHERE `id`='3';
+UPDATE `alodigaWallet`.`product` SET `symbol`='HC' WHERE `id`='4';
+UPDATE `alodigaWallet`.`product` SET `symbol`='DL' WHERE `id`='5';
+UPDATE `alodigaWallet`.`product` SET `symbol`='BS' WHERE `id`='6';
+
+
+
+
+
+
+
+INSERT INTO `alodigaWallet`.`commission` (`productId`, `transactionTypeId`, `beginningDate`, `isPercentCommision`, `value`) VALUES ('1', '5', '2019-10-07 10:00:00', '1', '2.5');
+INSERT INTO `alodigaWallet`.`commission` (`productId`, `transactionTypeId`, `beginningDate`, `isPercentCommision`, `value`) VALUES ('2', '5', '2019-10-07 10:00:00', '1', '2.5');
+
+
+
+
