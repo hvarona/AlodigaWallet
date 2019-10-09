@@ -44,7 +44,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Product.findByIsFree", query = "SELECT p FROM Product p WHERE p.isFree = :isFree"),
     @NamedQuery(name = "Product.findByIsAlocashProduct", query = "SELECT p FROM Product p WHERE p.isAlocashProduct = :isAlocashProduct")})
 public class Product implements Serializable {
-    
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
+    private Collection<BankOperation> bankOperationCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
     private Collection<ExchangeDetail> exchangeDetailCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
@@ -54,8 +56,6 @@ public class Product implements Serializable {
     public static final Long ALODIGA_BALANCE = 2L ;
     public static final Long PREPAID_CARD = 3L ;
     
-    @OneToMany(mappedBy = "productId")
-    private Collection<Withdrawal> withdrawalCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,8 +75,8 @@ public class Product implements Serializable {
     @Column(name = "referenceCode")
     private String referenceCode;
     @Basic(optional = false)
-    @Column(name = "simbol")
-    private String simbol;
+    @Column(name = "symbol")
+    private String symbol;
     @Column(name = "ratesUrl")
     private String ratesUrl;
     @Column(name = "accessNumberUrl")
@@ -294,16 +294,6 @@ public class Product implements Serializable {
     public String toString() {
         return "dto.Product[ id=" + id + " ]";
     }
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<Withdrawal> getWithdrawalCollection() {
-        return withdrawalCollection;
-    }
-
-    public void setWithdrawalCollection(Collection<Withdrawal> withdrawalCollection) {
-        this.withdrawalCollection = withdrawalCollection;
-    }
     
     @XmlTransient
     @JsonIgnore
@@ -331,13 +321,23 @@ public class Product implements Serializable {
     public Float getCurrentBalance() {
         return currentBalance;
     }
-
-    public String getSimbol() {
-        return simbol;
+    
+     public String getSymbol() {
+        return symbol;
     }
 
-    public void setSimbol(String simbol) {
-        this.simbol = simbol;
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<BankOperation> getBankOperationCollection() {
+        return bankOperationCollection;
+    }
+
+    public void setBankOperationCollection(Collection<BankOperation> bankOperationCollection) {
+        this.bankOperationCollection = bankOperationCollection;
     }
 
 }
