@@ -410,15 +410,21 @@ public class APIOperations {
             balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
             balanceHistory.setUserId(idUserDestination);
-            balanceHistory.setOldAmount(balanceUserDestination.getCurrentAmount());
-            Float currentAmountUserDestination = balanceUserDestination.getCurrentAmount() - amountCommission;
-            balanceHistory.setCurrentAmount(currentAmountUserDestination);
+            if (balanceUserDestination == null) {
+                balanceHistory.setOldAmount(Constante.sOldAmountUserDestination);
+                balanceHistory.setCurrentAmount(amountPayment - amountCommission);
+            } else {
+                balanceHistory.setOldAmount(balanceUserDestination.getCurrentAmount());
+                Float currentAmountUserDestination = (balanceUserDestination.getCurrentAmount()+amountPayment) - amountCommission;
+                balanceHistory.setCurrentAmount(currentAmountUserDestination);
+                balanceHistory.setVersion(balanceUserDestination.getId());
+            }
             balanceHistory.setProductId(product);
             balanceHistory.setTransactionId(paymentShop);
             balanceDate = new Date();
             balanceHistoryDate = new Timestamp(balanceDate.getTime());
             balanceHistory.setDate(balanceHistoryDate);
-            balanceHistory.setVersion(balanceUserDestination.getId());
+            
             entityManager.persist(balanceHistory);            
             
             //Se actualiza el estado de la transacciÃ³n a COMPLETED
@@ -852,10 +858,14 @@ public class APIOperations {
     }  
     
      public BalanceHistory loadLastBalanceHistoryByAccount(Long userId, Long productId) {
-        Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
-        query.setMaxResults(1);
-        BalanceHistory result = (BalanceHistory) query.setHint("toplink.refresh", "true").getSingleResult();
-        return result;
+        try {
+            Query query = entityManager.createQuery("SELECT b FROM BalanceHistory b WHERE b.userId = " + userId + " AND b.productId.id = " + productId + " ORDER BY b.id desc");
+            query.setMaxResults(1);
+            BalanceHistory result = (BalanceHistory) query.setHint("toplink.refresh", "true").getSingleResult();
+            return result;
+        } catch (NoResultException e) {
+            return null;
+        }
     }
     
     public int TransactionsByUserCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
