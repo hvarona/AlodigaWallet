@@ -236,10 +236,7 @@ public class APIOperations {
                 BankGeneric bankGeneric = new BankGeneric(b.getId().toString(),b.getName(), b.getAba());
                 bankGenerics.add(bankGeneric);
             }
-            
-                     
-            
-       
+
         } catch (Exception e) {
             e.printStackTrace();
             return new BankListResponse(ResponseCode.ERROR_INTERNO, "Error loading bank");
@@ -267,7 +264,7 @@ public class APIOperations {
         Timestamp endingDateTime                = new Timestamp(0); 
         Float amountCommission                  = 0.00F;
         short isPercentCommission               = 0;
-        
+         ArrayList<Product> products = new ArrayList<Product>(); 
         try {    
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -360,6 +357,9 @@ public class APIOperations {
             //Revisar si la transacciÃ³n estÃ¡ sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypePS).getResultList();
+                if(commissions.size() < 1){
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: "+ userId);
+                }  
                 for (Commission c: commissions) {
                     amountCommission = c.getValue();
                     isPercentCommission = c.getIsPercentCommision();
@@ -378,7 +378,8 @@ public class APIOperations {
                     entityManager.persist(commissionItem);
                 }
             } catch (NoResultException e) {
-                //No result
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
             }
             
             //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
@@ -423,12 +424,30 @@ public class APIOperations {
             entityManager.merge(paymentShop);
             //Envias notificaciones
             //envias sms
+
+            ////////////////////////////////////////////////////////////
+           /// se incorpora para delvolver el saldo actual del cliente///
+            /////////////////////////////////////////////////////////////
+            products = getProductsListByUserId(userId);
+            for(Product p: products){
+                Float amount = 0F;
+                try {
+                    amount = loadLastBalanceHistoryByAccount_(userId,  p.getId()).getCurrentAmount();
+                } catch (NoResultException e) {
+                    amount = 0F;        
+                }
+                 p.setCurrentBalance(amount);   
+            }
             
+            ////////////////////////////////////////////////////////////
+           /// se incorpora para delvolver el saldo actual del cliente///
+            /////////////////////////////////////////////////////////////
+
         } catch (Exception e) {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
         } 
-        return new TransactionResponse(ResponseCode.EXITO);
+        return new TransactionResponse(ResponseCode.EXITO,"",products);
     }
     
 /*
@@ -1171,11 +1190,9 @@ public class APIOperations {
             //Revisar si la transaccion esta sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualWithdrawal).getResultList();
-                
                 if(commissions.size() < 1){
                     throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: "+ userId);
-                }
-                
+                }                
                 for (Commission c: commissions) {
                     commissionWithdrawal = (Commission) c;
                     amountCommission = c.getValue();
