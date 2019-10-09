@@ -41,6 +41,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Bank.findGroupByCountry", query = "SELECT b FROM Bank b GROUP BY b.countryId.id"),
     @NamedQuery(name = "Bank.findByAba", query = "SELECT b FROM Bank b WHERE b.aba = :aba")})
 public class Bank implements Serializable {
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "bankId")
+    private Collection<BankOperation> bankOperationCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -152,6 +155,16 @@ public class Bank implements Serializable {
     @Override
     public String toString() {
         return "com.alodiga.wallet.model.Bank[ id=" + id + " ]";
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<BankOperation> getBankOperationCollection() {
+        return bankOperationCollection;
+    }
+
+    public void setBankOperationCollection(Collection<BankOperation> bankOperationCollection) {
+        this.bankOperationCollection = bankOperationCollection;
     }
     
 }

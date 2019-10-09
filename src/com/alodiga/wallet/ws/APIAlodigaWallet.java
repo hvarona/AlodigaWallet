@@ -113,7 +113,7 @@ public class APIAlodigaWallet {
                                                      conceptTransaction, cryptogramUserSource, idUserDestination) ;
     }
     
-      @WebMethod
+    @WebMethod
     public TransactionResponse ExchangeProduct ( 
         @WebParam(name = "emailUser") String emailUser, 
         @WebParam(name = "productSourceId") Long productSourceId, 
@@ -131,16 +131,16 @@ public class APIAlodigaWallet {
     }
     
     
-       @WebMethod
+    @WebMethod
     public TransactionListResponse getTransactionsByUserIdApp(
         @WebParam(name = "userId") String userId, 
         @WebParam(name = "maxResult") String maxResult)
-    
     {
        return operations.getTransactionsByUserIdApp(Long.valueOf(userId), Integer.valueOf(maxResult));
     }
     
-     public TransactionResponse ManualWithdrawals ( 
+    @WebMethod
+    public TransactionResponse ManualWithdrawals ( 
         @WebParam(name = "bankId") Long bankId,
         @WebParam(name = "emailUser") String emailUser,
         @WebParam(name = "accountBank") String accountBank,
@@ -150,6 +150,16 @@ public class APIAlodigaWallet {
         return operations.ManualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction);
     }
     
+    @WebMethod
+    public TransactionResponse ManualRecharge ( 
+        @WebParam(name = "bankId") Long bankId,
+        @WebParam(name = "emailUser") String emailUser,
+        @WebParam(name = "accountBank") String referenceNumberOperation,
+        @WebParam(name = "amountWithdrawal") Float amountRecharge,
+        @WebParam(name = "productId") Long productId, 
+        @WebParam(name = "conceptTransaction") String conceptTransaction) {
+        return operations.ManualWithdrawals(bankId, emailUser, referenceNumberOperation, amountRecharge, productId, conceptTransaction);
+    }
     
     @WebMethod
     public CountryListResponse getCountriesHasBank(
