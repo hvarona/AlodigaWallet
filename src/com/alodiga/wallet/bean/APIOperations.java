@@ -360,6 +360,9 @@ public class APIOperations {
             //Revisar si la transacciÃ³n estÃ¡ sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypePS).getResultList();
+                if(commissions.size() < 1){
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: "+ userId);
+                }  
                 for (Commission c: commissions) {
                     amountCommission = c.getValue();
                     isPercentCommission = c.getIsPercentCommision();
@@ -378,7 +381,8 @@ public class APIOperations {
                     entityManager.persist(commissionItem);
                 }
             } catch (NoResultException e) {
-                //No result
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
             }
             
             //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
@@ -1171,11 +1175,9 @@ public class APIOperations {
             //Revisar si la transaccion esta sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualWithdrawal).getResultList();
-                
                 if(commissions.size() < 1){
                     throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: "+ userId);
-                }
-                
+                }                
                 for (Commission c: commissions) {
                     commissionWithdrawal = (Commission) c;
                     amountCommission = c.getValue();
