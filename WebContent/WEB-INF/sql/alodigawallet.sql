@@ -1497,3 +1497,6 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2019-09-12  9:42:22
+
+//Yamelis
+INSERT INTO `alodigawallet`.`transaction_type` (`id`, `value`) VALUES ('7', 'TOP_UP_RECHARGE');
