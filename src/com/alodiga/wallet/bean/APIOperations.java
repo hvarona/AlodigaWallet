@@ -1363,7 +1363,10 @@ public class APIOperations {
             
             //Revisar si la transaccion esta sujeta a comisiones
             try {
-            commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualRecharge).getResultList();
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeManualRecharge).getResultList();
+                if(commissions.size() < 1){
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: "+ userId);
+                }  
                 for (Commission c: commissions) {
                     commissionRecharge = (Commission) c;
                     amountCommission = c.getValue();
@@ -1383,7 +1386,8 @@ public class APIOperations {
                 commissionItem.setTransactionId(recharge);
                 entityManager.persist(commissionItem);
             } catch (NoResultException e) {
-                
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
             }
             
             //Guardar los datos de la recarga          

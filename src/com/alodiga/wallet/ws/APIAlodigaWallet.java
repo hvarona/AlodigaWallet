@@ -155,10 +155,10 @@ public class APIAlodigaWallet {
         @WebParam(name = "bankId") Long bankId,
         @WebParam(name = "emailUser") String emailUser,
         @WebParam(name = "accountBank") String referenceNumberOperation,
-        @WebParam(name = "amountWithdrawal") Float amountRecharge,
+        @WebParam(name = "amountRecharge") Float amountRecharge,
         @WebParam(name = "productId") Long productId, 
         @WebParam(name = "conceptTransaction") String conceptTransaction) {
-        return operations.ManualWithdrawals(bankId, emailUser, referenceNumberOperation, amountRecharge, productId, conceptTransaction);
+        return operations.ManualRecharge(bankId, emailUser, referenceNumberOperation, amountRecharge, productId, conceptTransaction);
     }
     
     @WebMethod
