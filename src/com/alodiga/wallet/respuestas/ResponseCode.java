@@ -40,7 +40,7 @@ public enum ResponseCode {
         DENOMINATION_NOT_AVAILABLE("301"),
         DESTINATION_MSISDN_OUT_OF_RANGE("101"),
         DESTINATION_NOT_PREPAID("204"),
-        EROR_TRANSACTION_TOP_UP("205"),
+        ERROR_TRANSACTION_TOP_UP("205"),
         //Mensajes Guardar Transaction
         TRANSACTION_AMOUNT_LIMIT("30"),
         TRANSACTION_MAX_NUMBER_BY_ACCOUNT("31"),

@@ -995,6 +995,7 @@ public class APIOperations {
                 }
                
             }
+        
 
         } catch (Exception ex) {
             return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error en el metodo getTopUpInfs");
@@ -1003,62 +1004,53 @@ public class APIOperations {
     }
     
     
-    private TransactionResponse executeTopUp(TopUpInfo topUpInfo, String destinationNumber, String externalId, String senderNumber, TransactionResponse transaction) {
-        Map<String, String> response_01 = new HashMap<String, String>();
-        String error = "";
-        Float amount = topUpInfo.getDenomination();
+    private TransactionResponse executeTopUp(String skuidIdRequest, Float amount, String destinationNumber, String senderNumber) {
+        TransactionResponse transaction = new TransactionResponse();
         String phoneNumber = destinationNumber;
          try {
-             response_01.put(TopUpResponseConstants.AMOUNT, topUpInfo.getDenomination().toString());
              MSIDN_INFOResponse response1 = RequestManager.getMsisdn_ingo(phoneNumber);
              String skuidId = response1.getSkuid();
              if (response1.getSkuid() == null) {
                 String[] Skuids = response1.getSkuid_list().split(",");
                 String[] products = response1.getProduct_list().split(",");
                 for (int o = 0; o < products.length; o++) {
-                  if (Float.parseFloat(products[o])==amount) {
+                  if (Float.parseFloat(products[o])==amount ) {
                     skuidId = Skuids[o];
                   }
                 }
              }
-             ReserveResponse response2 = RequestManager.getReserve();
-             TopUpResponse topUpResponseExecute = RequestManager.simulationDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId);
+             if (skuidId.equals(skuidIdRequest)) {
+                 ReserveResponse response2 = RequestManager.getReserve();
+                 TopUpResponse topUpResponseExecute = RequestManager.simulationDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId);
 //             TopUpResponse topUpResponseExecute = RequestManager.newDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId, response2.getReserved_id());
-             String code = topUpResponseExecute.getErrorCode(); 
-             if (!code.equals("0")) {//Cuando es 0 esta bien...
-                StringBuilder errorBuilder = new StringBuilder(TopUpResponseConstants.TRANSFER_TO_CODES.get(code));
-                errorBuilder.append("Integrator = ").append("TransferTo").append("ProductId = ").append(topUpInfo.getOperatorid()).append("phoneNumber = ").append(destinationNumber);
-                error = errorBuilder.toString();
-                if (code.equals("301") || topUpResponseExecute.getErrorText().equals("Denomination not available")) {
-                    transaction.setCodigoRespuesta(ResponseCode.DENOMINATION_NOT_AVAILABLE.getCodigo());
-                } else if (code.equals("101") || topUpResponseExecute.getErrorText().equals("Destination MSISDN out of range")) {
-                    transaction.setCodigoRespuesta(ResponseCode.DESTINATION_MSISDN_OUT_OF_RANGE.getCodigo());
-                } else if (code.equals("204")) {
-                    transaction.setCodigoRespuesta(ResponseCode.DESTINATION_NOT_PREPAID.getCodigo());
-                }    else
-                    transaction.setCodigoRespuesta(ResponseCode.EROR_TRANSACTION_TOP_UP.getCodigo());
-             } else {
-                 transaction.setCodigoRespuesta(ResponseCode.EXITO.getCodigo());
-                 transaction.setMensajeRespuesta("TOPUP TRANSACTION SUCCESSFUL");
-                 transaction.response.setTopUpDescription(phoneNumber);
-                 response_01.put(TopUpResponseConstants.MESSAGE, "TRANSACTION SUCCESSFUL");
-                 response_01.put(TopUpResponseConstants.EXTERNAL_ID, externalId);
-                 response_01.put(TopUpResponseConstants.AMOUNT, amount.toString());
-                 response_01.put(TopUpResponseConstants.DESTINATION_NUMBER, phoneNumber);
-                 response_01.put(TopUpResponseConstants.PIN_CODE, topUpResponseExecute.getPinCode());
-                 response_01.put(TopUpResponseConstants.PIN_SERIAL, topUpResponseExecute.getPinSerial());
-                 response_01.put(TopUpResponseConstants.PIN_IVR, topUpResponseExecute.getPinIvr());
-                 response_01.put(TopUpResponseConstants.SENDER_NUMBER, senderNumber);
-                 response_01.put(TopUpResponseConstants.TRANSACTION_MESSAGE, "TRANSACTION SUCCESSFUL");
-                 response_01.put(TopUpResponseConstants.SMS_SENDER, senderNumber);
-                 response_01.put(TopUpResponseConstants.SMS_DESTINATION, phoneNumber);
-                 response_01.put(TopUpResponseConstants.COMPLETE_RESPONSE, "EXITO");
-                 response_01.put(TopUpResponseConstants.TOP_UP, topUpInfo.getOperatorid().toString());
-                 response_01.put(TopUpResponseConstants.TUP_UP_AMOUNT, amount.toString());
+                 String code = topUpResponseExecute.getErrorCode();
+                 if (!code.equals("0")) {//Cuando es 0 esta bien...
+                     StringBuilder errorBuilder = new StringBuilder(TopUpResponseConstants.TRANSFER_TO_CODES.get(code));
+                     errorBuilder.append("Integrator = ").append("TransferTo").append("ProductId = ").append(response1.getOperatorId()).append("phoneNumber = ").append(destinationNumber);
+                     if (code.equals("301") || topUpResponseExecute.getErrorText().equals("Denomination not available")) {
+                         transaction.setCodigoRespuesta(ResponseCode.DENOMINATION_NOT_AVAILABLE.getCodigo());
+                         transaction.setMensajeRespuesta("DENOMINATION NOT AVAILABLE");
+                     } else if (code.equals("101") || topUpResponseExecute.getErrorText().equals("Destination MSISDN out of range")) {
+                         transaction.setCodigoRespuesta(ResponseCode.DESTINATION_MSISDN_OUT_OF_RANGE.getCodigo());
+                         transaction.setMensajeRespuesta("DESTINATION MSISDN OUT OF RANGE");
+                     } else if (code.equals("204")) {
+                         transaction.setCodigoRespuesta(ResponseCode.DESTINATION_NOT_PREPAID.getCodigo());
+                         transaction.setMensajeRespuesta("DESTINATION NOT PREPAID");
+                     } else {
+                         transaction.setCodigoRespuesta(ResponseCode.ERROR_TRANSACTION_TOP_UP.getCodigo());
+                         transaction.setMensajeRespuesta("ERROR TRANSACTION TOP UP");
+                     }
+                 } else {
+                     transaction.setCodigoRespuesta(ResponseCode.EXITO.getCodigo());
+                     transaction.setMensajeRespuesta("TOPUP TRANSACTION SUCCESSFUL");
+                 }
+             }else{
+                transaction.setCodigoRespuesta(ResponseCode.DENOMINATION_NOT_AVAILABLE.getCodigo());
+                transaction.setMensajeRespuesta("DENOMINATION NOT AVAILABLE");
              }
         } catch (Exception ex) {
-            ex.printStackTrace();
-//            throw new GeneralException(ex.getMessage() + error);
+            transaction.setCodigoRespuesta(ResponseCode.ERROR_TRANSACTION_TOP_UP.getCodigo());
+            transaction.setMensajeRespuesta("TOPUP TRANSACTION FAILED");
         }
    
         return transaction;
@@ -1543,15 +1535,13 @@ public class APIOperations {
         Float amountCommission                  = 0.00F;
         short isPercentCommission               = 0;
         
+        TransactionResponse response = null;
         try {    
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             
-            //Obtener el topUpInfo
-            TopUpInfo topUpInfo = new TopUpInfo();
-
             // Validar que el balance history del cliente disponga de saldo para hacer la operacion
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountRecharge) {
@@ -1658,6 +1648,7 @@ public class APIOperations {
             entityManager.persist(balanceHistory);
             
            //ejecuta la recarga de TopUp
+            response = this.executeTopUp(skudId,amountRecharge, destinationNumber,  senderNumber);
             
             //Se actualiza el estado de la transacciÃ³n a COMPLETED
             recharge.setTransactionStatus(TransactionStatus.COMPLETED.name());
@@ -1669,7 +1660,7 @@ public class APIOperations {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction saveRechargeTopUp");  
         } 
-        return new TransactionResponse(ResponseCode.EXITO);
+        return response;
     }
 }
 
