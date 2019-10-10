@@ -1003,7 +1003,7 @@ public class APIOperations {
     }
     
     
-    private Map<String, String> executeTopUp(TopUpInfo topUpInfo, String destinationNumber, String externalId, String senderNumber) {
+    private TransactionResponse executeTopUp(TopUpInfo topUpInfo, String destinationNumber, String externalId, String senderNumber, TransactionResponse transaction) {
         Map<String, String> response_01 = new HashMap<String, String>();
         String error = "";
         Float amount = topUpInfo.getDenomination();
@@ -1022,23 +1022,25 @@ public class APIOperations {
                 }
              }
              ReserveResponse response2 = RequestManager.getReserve();
-//             TopUpResponse topUpResponseSimulation = RequestManager.simulationDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId);
-             TopUpResponse topUpResponseExecute = RequestManager.newDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId, response2.getReserved_id());
+             TopUpResponse topUpResponseExecute = RequestManager.simulationDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId);
+//             TopUpResponse topUpResponseExecute = RequestManager.newDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId, response2.getReserved_id());
              String code = topUpResponseExecute.getErrorCode(); 
              if (!code.equals("0")) {//Cuando es 0 esta bien...
                 StringBuilder errorBuilder = new StringBuilder(TopUpResponseConstants.TRANSFER_TO_CODES.get(code));
                 errorBuilder.append("Integrator = ").append("TransferTo").append("ProductId = ").append(topUpInfo.getOperatorid()).append("phoneNumber = ").append(destinationNumber);
                 error = errorBuilder.toString();
                 if (code.equals("301") || topUpResponseExecute.getErrorText().equals("Denomination not available")) {
-//                    return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Denomination not available");
+                    transaction.setCodigoRespuesta(ResponseCode.DENOMINATION_NOT_AVAILABLE.getCodigo());
                 } else if (code.equals("101") || topUpResponseExecute.getErrorText().equals("Destination MSISDN out of range")) {
-//                    return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Destination MSISDN out of range");
+                    transaction.setCodigoRespuesta(ResponseCode.DESTINATION_MSISDN_OUT_OF_RANGE.getCodigo());
                 } else if (code.equals("204")) {
-//                    return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Destination Not Prepaid");
-                }
-//                    else
-//                return new TopUpInfoListResponse(ResponseCode.ERROR_INTERNO, "Error en transaccion de TopUp");
+                    transaction.setCodigoRespuesta(ResponseCode.DESTINATION_NOT_PREPAID.getCodigo());
+                }    else
+                    transaction.setCodigoRespuesta(ResponseCode.EROR_TRANSACTION_TOP_UP.getCodigo());
              } else {
+                 transaction.setCodigoRespuesta(ResponseCode.EXITO.getCodigo());
+                 transaction.setMensajeRespuesta("TOPUP TRANSACTION SUCCESSFUL");
+                 transaction.response.setTopUpDescription(phoneNumber);
                  response_01.put(TopUpResponseConstants.MESSAGE, "TRANSACTION SUCCESSFUL");
                  response_01.put(TopUpResponseConstants.EXTERNAL_ID, externalId);
                  response_01.put(TopUpResponseConstants.AMOUNT, amount.toString());
@@ -1059,7 +1061,7 @@ public class APIOperations {
 //            throw new GeneralException(ex.getMessage() + error);
         }
    
-        return response_01;
+        return transaction;
     }
     
     
@@ -1521,6 +1523,153 @@ public class APIOperations {
             throw new Exception();   
         }
         return products;
+    }
+    
+    public TransactionResponse saveRechargeTopUp(String emailUser, Long productId, String cryptogramUser,
+            String skudId, String destinationNumber, String senderNumber, Float amountRecharge, Float amountPayment) {
+        
+        Long idTransaction                      = 0L;
+        Long idPreferenceField                  = 0L;
+        Long userId                             = 0L;
+        int totalTransactionsByUser             = 0;
+        Long totalTransactionsByProduct         = 0L;
+        Double totalAmountByUser                = 0.00D;
+        List<Transaction> transactionsByUser    = new ArrayList<Transaction>();
+        List<PreferenceField> preferencesField  = new ArrayList<PreferenceField>();
+        List<PreferenceValue> preferencesValue  = new ArrayList<PreferenceValue>();
+        List<Commission> commissions            = new ArrayList<Commission>();
+        Timestamp begginingDateTime             = new Timestamp(0);   
+        Timestamp endingDateTime                = new Timestamp(0); 
+        Float amountCommission                  = 0.00F;
+        short isPercentCommission               = 0;
+        
+        try {    
+            //Se obtiene el usuario de la API de Registro Unificado
+            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+            RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            
+            //Obtener el topUpInfo
+            TopUpInfo topUpInfo = new TopUpInfo();
+
+            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
+            BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
+            if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountRecharge) {
+                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
+            }
+            
+            //Validar preferencias
+            begginingDateTime = Utils.DateTransaction()[0];
+            endingDateTime = Utils.DateTransaction()[1];
+            
+            //Obtiene las transacciones del dÃ­a para el usuario
+            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+            
+            //Obtiene la sumatoria de los montos de las transacciones del usuario
+            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+            
+            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
+            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
+            
+            //Cotejar las preferencias vs las transacciones del usuario
+            List<Preference> preferences = getPreferences();
+            for(Preference p: preferences){
+                if (p.getName().equals(Constants.sPreferenceTransaction)) {
+                    idTransaction = p.getId();
+                }
+            }
+            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+            for(PreferenceField pf: preferencesField){
+                switch(pf.getName()) {
+                    case Constants.sValidatePreferenceTransaction1:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT,"The user exceeded the maximum amount per day");
+                                }
+                            }
+                        }
+                    break;
+                    case Constants.sValidatePreferenceTransaction2:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);                           
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT,"The user exceeded the maximum number of transactions per product");
+                                }
+                            }
+                        }
+                    break;
+                    case Constants.sValidatePreferenceTransaction3:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf); 
+                            for(PreferenceValue pv: preferencesValue){
+                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
+                                    return new TransactionResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER,"The user exceeded the maximum number of transactions per day");
+                                }
+                            }
+                        }
+                    break;
+                }
+            }
+            
+            //Crear el objeto Transaction para registrar el pago al comercio
+            Transaction recharge = new Transaction();
+            recharge.setId(null);
+            recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+//            recharge.setUserDestinationId(BigInteger.valueOf(idUserDestination));
+            Product product = entityManager.find(Product.class, productId);
+            recharge.setProductId(product);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTopUP);
+            recharge.setTransactionTypeId(transactionType);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSourceTopUP);
+            recharge.setTransactionSourceId(transactionSource);
+            Date date = new Date();
+            Timestamp creationDate = new Timestamp(date.getTime());
+            recharge.setCreationDate(creationDate);
+            //cambiar por valor de parÃ¡metro
+            recharge.setConcept(Constante.sTransactionConceptTopUp);
+            recharge.setAmount(amountPayment);
+            recharge.setTransactionStatus(TransactionStatus.CREATED.name());
+            recharge.setTotalAmount(amountPayment);
+            entityManager.persist(recharge);
+            
+            
+            //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
+            recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(recharge);
+            
+            //Se actualizan los saldos del cliente en la BD
+            //Balance History del cliente
+            balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
+            BalanceHistory balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setUserId(userId);
+            balanceHistory.setOldAmount(balanceUserSource.getCurrentAmount());
+            Float currentAmountUserSource = balanceUserSource.getCurrentAmount() - amountPayment;
+            balanceHistory.setCurrentAmount(currentAmountUserSource);
+            balanceHistory.setProductId(product);
+            balanceHistory.setTransactionId(recharge);
+            Date balanceDate = new Date();
+            Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(balanceUserSource.getId());
+            entityManager.persist(balanceHistory);
+            
+           //ejecuta la recarga de TopUp
+            
+            //Se actualiza el estado de la transacciÃ³n a COMPLETED
+            recharge.setTransactionStatus(TransactionStatus.COMPLETED.name());
+            entityManager.merge(recharge);
+            //Envias notificaciones
+            //envias sms
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction saveRechargeTopUp");  
+        } 
+        return new TransactionResponse(ResponseCode.EXITO);
     }
 }
 

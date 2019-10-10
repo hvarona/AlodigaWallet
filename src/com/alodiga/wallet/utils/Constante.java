@@ -139,4 +139,9 @@ public class Constante {
         public static final Long sTransationTypeManualRecharge = 6l;
         public static final Long sBankOperationTypeRecharge = 2L;
         
+        //Recargas de TopUp
+        public static final Long sTransationTypeTopUP = 2l;
+        public static final Long sTransactionSourceTopUP = 2l;
+        public static final String sTransactionConceptTopUp = "Recharge TopUp";
+        
 }

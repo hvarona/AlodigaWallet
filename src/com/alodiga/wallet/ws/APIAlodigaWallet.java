@@ -1,6 +1,5 @@
 package com.alodiga.wallet.ws;
 
-import java.util.List;
 
 import javax.ejb.EJB;
 import javax.jws.WebMethod;
@@ -12,15 +11,11 @@ import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
-import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ProductResponse;
-import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.TransactionResponse;
-import java.sql.Timestamp;
-import java.util.ArrayList;
 
 @WebService
 public class APIAlodigaWallet {
@@ -185,5 +180,18 @@ public class APIAlodigaWallet {
        return operations.getBalanceHistoryByUserAndProduct(userId, productId);
     }
 
-    
+    @WebMethod
+    public TransactionResponse saveRechargeTopUp(
+        @WebParam(name = "emailUser") String emailUser,
+        @WebParam(name = "productId") Long productId,
+        @WebParam(name = "cryptogramUser") String cryptogramUser,
+        @WebParam(name = "skudId") String skudId,
+        @WebParam(name = "destinationNumber") String destinationNumber,
+        @WebParam(name = "senderNumber") String senderNumber,
+        @WebParam(name = "amountRecharge") Float amountRecharge,
+        @WebParam(name = "amountPayment") Float amountPayment) {
+        
+        return operations.saveRechargeTopUp(emailUser, productId,cryptogramUser, skudId, destinationNumber, senderNumber,
+                 amountRecharge,  amountPayment);        
+    }
 }
