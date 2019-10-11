@@ -459,7 +459,7 @@ public class APIOperations {
 /*
      *
      */
-    public TransactionResponse SaveTransferBetweenAccount(String cryptograUserSource, String emailUser, Long productId, Float amountTransfer,
+    public TransactionResponse saveTransferBetweenAccount(String cryptograUserSource, String emailUser, Long productId, Float amountTransfer,
                                                           String conceptTransaction, String cryptograUserDestination, Long idUserDestination) {
         
         Long idTransaction                      = 0L;
@@ -489,6 +489,9 @@ public class APIOperations {
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeTA).getResultList();
+                if(commissions.size() < 1){
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: "+ userId);
+                }  
                 for (Commission c: commissions) {
                     commissionTransfer = (Commission) c;
                     amountCommission = c.getValue();
@@ -499,7 +502,8 @@ public class APIOperations {
                     amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
                 }    
             } catch (NoResultException e) {
-                
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
             }
             Float amountTransferTotal = amountTransfer + amountCommission;
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
@@ -593,7 +597,7 @@ public class APIOperations {
             commissionItem.setTransactionId(transfer);
             entityManager.persist(commissionItem);
             
-            //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
+            //Se actualiza el estatus de la transaccion a IN_PROCESS
             transfer.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(transfer);
             
@@ -619,18 +623,23 @@ public class APIOperations {
             balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
             balanceHistory.setUserId(idUserDestination);
-            balanceHistory.setOldAmount(balanceUserDestination.getCurrentAmount());
-            Float currentAmountUserDestination = balanceUserDestination.getCurrentAmount() + amountTransfer;
-            balanceHistory.setCurrentAmount(currentAmountUserDestination);
+            if (balanceUserDestination == null) {
+                balanceHistory.setOldAmount(Constante.sOldAmountUserDestination);
+                balanceHistory.setCurrentAmount(amountTransfer);
+            } else {
+                balanceHistory.setOldAmount(balanceUserDestination.getCurrentAmount());
+                Float currentAmountUserDestination = balanceUserDestination.getCurrentAmount() + amountTransfer;
+                balanceHistory.setCurrentAmount(currentAmountUserDestination);
+                balanceHistory.setVersion(balanceUserDestination.getId());
+            }
             balanceHistory.setProductId(product);
             balanceHistory.setTransactionId(transfer);
             balanceDate = new Date();
             balanceHistoryDate = new Timestamp(balanceDate.getTime());
             balanceHistory.setDate(balanceHistoryDate);
-            balanceHistory.setVersion(balanceUserDestination.getId());
             entityManager.persist(balanceHistory);  
             
-            //Se actualiza el estado de la transacciÃ³n a COMPLETED
+            //Se actualiza el estado de la transaccion a COMPLETED
             transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(transfer);
             //Envias notificaciones
@@ -711,7 +720,7 @@ public class APIOperations {
     /*
      *
      */
-    public TransactionResponse ExchangeProduct(String emailUser, Long productSourceId, Long productDestinationId,
+    public TransactionResponse exchangeProduct(String emailUser, Long productSourceId, Long productDestinationId,
                                                 Float amountExchange, String conceptTransaction) {
         
         Long idTransaction                      = 0L;
@@ -1156,7 +1165,7 @@ public class APIOperations {
         return new TransactionListResponse(ResponseCode.EXITO, "", transactions);
     }
 	
-   public TransactionResponse ManualWithdrawals(Long bankId, String emailUser, String accountBank, 
+   public TransactionResponse manualWithdrawals(Long bankId, String emailUser, String accountBank, 
                                                 Float amountWithdrawal, Long productId, String conceptTransaction) {
         
         Long idTransaction                      = 0L;
@@ -1314,7 +1323,7 @@ public class APIOperations {
     /*
      *
      */
-    public TransactionResponse ManualRecharge(Long bankId, String emailUser, String referenceNumberOperation, 
+    public TransactionResponse manualRecharge(Long bankId, String emailUser, String referenceNumberOperation, 
                                               Float amountRecharge, Long productId, String conceptTransaction) {
     
     Long idTransaction                      = 0L;
