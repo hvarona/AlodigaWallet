@@ -109,6 +109,16 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
+    public TransactionResponse previewExchangeProduct ( 
+        @WebParam(name = "emailUser") String emailUser, 
+        @WebParam(name = "productSourceId") Long productSourceId, 
+        @WebParam(name = "productDestinationId") Long productDestinationId,
+        @WebParam(name = "amountExchange") Float amountExchange,
+        @WebParam(name = "includedAmount") int includedAmount) {
+        return operations.previewExchangeProduct(emailUser,productSourceId,productDestinationId,amountExchange,includedAmount);
+    }
+    
+    @WebMethod
     public TransactionResponse ExchangeProduct ( 
         @WebParam(name = "emailUser") String emailUser, 
         @WebParam(name = "productSourceId") Long productSourceId, 

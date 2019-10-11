@@ -644,6 +644,68 @@ public class APIOperations {
     }
     
     
+    public TransactionResponse previewExchangeProduct(String emailUser, Long productSourceId, Long productDestinationId, 
+                                                      Float amountExchange, int includedAmount) {
+        
+        Long userId                             = 0L;
+        Float amountCommission                  = 0.00F;
+        List<Commission> commissions            = new ArrayList<Commission>();
+        short isPercentCommission               = 0;
+        Float valueCommission                   = 0.00F;
+        Float totalDebit                        = 0.00F;
+        Float amountConversion                  = 0.00F;
+        Float valueRateByProductSource          = 0.00F;
+        Float valueRateByProductDestination     = 0.00F;;
+        
+        try {
+            //Se obtiene el usuario de la API de Registro Unificado
+            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+            RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            
+            // Validar que el cliente disponga de saldo para hacer la operacion
+            BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId,productSourceId);
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productSourceId).setParameter("transactionTypeId",Constante.sTransationTypeEP).getResultList();
+                if(commissions.size() < 1){
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productSourceId + " and userId: "+ userId);
+                }  
+                for (Commission c: commissions) {
+                    valueCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && valueCommission > 0) {
+                        amountCommission = (amountExchange * valueCommission)/100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                }
+            } catch (NoResultException e) {
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
+            }
+            if (includedAmount == 0) {
+                totalDebit = amountExchange + amountCommission;
+            } else {
+                totalDebit = amountExchange - amountCommission;
+            }
+            if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < totalDebit) {
+                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
+            }
+            
+            //Se calcula el monto de la conversion entre los productos
+            ExchangeRate RateByProductSource = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productSourceId).getSingleResult();
+            valueRateByProductSource = RateByProductSource.getValue();
+            ExchangeRate RateByProductDestination = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productDestinationId).getSingleResult();
+            valueRateByProductDestination = RateByProductDestination.getValue();
+            amountConversion = (amountExchange * RateByProductSource.getValue()) / RateByProductDestination.getValue();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
+        } 
+        return new TransactionResponse(ResponseCode.EXITO,"",amountCommission,valueCommission,totalDebit,
+                                       amountConversion,valueRateByProductSource,valueRateByProductDestination); 
+    }
+    
     /*
      *
      */
@@ -1281,13 +1343,7 @@ public class APIOperations {
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
         userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-            
-            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
-            BalanceHistory balanceUser = loadLastBalanceHistoryByAccount(userId,productId);
-            if (balanceUser == null || balanceUser.getCurrentAmount() < amountRecharge) {
-                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
-            }
-            
+                  
             //Validar preferencias
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
