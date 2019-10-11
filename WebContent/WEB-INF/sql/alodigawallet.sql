@@ -1498,5 +1498,7 @@ UNLOCK TABLES;
 
 -- Dump completed on 2019-09-12  9:42:22
 
-//Yamelis
+//Yamelis 10-10-2019
 INSERT INTO `alodigawallet`.`transaction_type` (`id`, `value`) VALUES ('7', 'TOP_UP_RECHARGE');
+INSERT INTO `alodigawallet`.`product` (`id`, `enterpriseId`, `categoryId`, `productIntegrationTypeId`, `name`, `taxInclude`, `enabled`, `referenceCode`, `ratesUrl`, `accessNumberUrl`, `isFree`, `isAlocashProduct`) VALUES ('4', '1', '1', '1', 'Top Up', '0', '1', '1001', 'htttp://www.alodiga.com', '584241934005', '0', '1');
+
