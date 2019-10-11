@@ -682,13 +682,15 @@ public class APIOperations {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
             }
+            if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < totalDebit) {
+                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
+            }
+            
+            //Calcular el total a debitar dependiendo si se incluye o no la comision
             if (includedAmount == 0) {
                 totalDebit = amountExchange + amountCommission;
             } else {
                 totalDebit = amountExchange - amountCommission;
-            }
-            if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < totalDebit) {
-                return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE,"The user has no balance available to complete the transaction");
             }
             
             //Se calcula el monto de la conversion entre los productos
