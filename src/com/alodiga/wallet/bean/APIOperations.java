@@ -818,16 +818,18 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             exchange.setCreationDate(creationDate);
-            //cambiar por valor de parÃ¡metro
-            exchange.setConcept(Constante.sTransactionConceptExchangeProducts);
+            exchange.setConcept(conceptTransaction);
             exchange.setAmount(amountExchange);
             exchange.setTransactionStatus(TransactionStatus.CREATED.name());
             exchange.setTotalAmount(amountExchange);
             entityManager.persist(exchange);
             
-            //Se calcula la comisiÃ³n asociada al producto de origen
+            //Se calcula la comision asociada al producto de origen
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productSourceId).setParameter("transactionTypeId",Constante.sTransationTypeEP).getResultList();
+                if(commissions.size() < 1){
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productSourceId + " and userId: "+ userId);
+                }
                 for (Commission c: commissions) {
                     amountCommission = c.getValue();
                     isPercentCommission = c.getIsPercentCommision();
@@ -846,14 +848,15 @@ public class APIOperations {
                     entityManager.persist(commissionItem);
                 }    
             } catch (NoResultException e) {
-                
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
             }
             
-            //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
+            //Se actualiza el estatus de la transaccion a IN_PROCESS
             exchange.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(exchange);
                 
-            //Guardar los detalles del intercambio (producto destino)
+            //Guardar los detalles del intercambio entre los productos (para producto destino)
             ExchangeDetail detailProductDestination = new ExchangeDetail();
             detailProductDestination.setId(null);
             detailProductDestination.setExchangeRateId(RateByProductDestination);
@@ -883,18 +886,23 @@ public class APIOperations {
             balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
             balanceHistory.setUserId(userId);
-            balanceHistory.setOldAmount(balanceProductDestination.getCurrentAmount());
-            Float currentAmountProductDestination = balanceProductDestination.getCurrentAmount() + amountConversion;
-            balanceHistory.setCurrentAmount(currentAmountProductDestination);
+            if (balanceProductDestination == null) {
+                balanceHistory.setOldAmount(Constante.sOldAmountUserDestination);
+                balanceHistory.setCurrentAmount(amountConversion);
+            } else {
+                balanceHistory.setOldAmount(balanceProductDestination.getCurrentAmount());
+                Float currentAmountUserDestination = balanceProductDestination.getCurrentAmount() + amountConversion;
+                balanceHistory.setCurrentAmount(currentAmountUserDestination);
+                balanceHistory.setVersion(balanceProductDestination.getId());
+            }
             balanceHistory.setProductId(productDestination);
             balanceHistory.setTransactionId(exchange);
             balanceDate = new Date();
             balanceHistoryDate = new Timestamp(balanceDate.getTime());
             balanceHistory.setDate(balanceHistoryDate);
-            balanceHistory.setVersion(balanceProductDestination.getId());
             entityManager.persist(balanceHistory);
             
-            //Se actualiza el estado de la transacciÃ³n a COMPLETED
+            //Se actualiza el estado de la transaccion a COMPLETED
             exchange.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(exchange);
             //Envias notificaciones
