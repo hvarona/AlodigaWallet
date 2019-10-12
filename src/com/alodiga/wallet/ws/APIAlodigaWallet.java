@@ -1,6 +1,5 @@
 package com.alodiga.wallet.ws;
 
-import java.util.List;
 
 import javax.ejb.EJB;
 import javax.jws.WebMethod;
@@ -12,15 +11,11 @@ import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
-import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ProductResponse;
-import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.TransactionResponse;
-import java.sql.Timestamp;
-import java.util.ArrayList;
 
 @WebService
 public class APIAlodigaWallet {
@@ -100,7 +95,7 @@ public class APIAlodigaWallet {
     }
 
     @WebMethod
-    public TransactionResponse SaveTransferBetweenAccount (
+    public TransactionResponse saveTransferBetweenAccount (
         @WebParam(name = "cryptogramUserSource") String cryptogramUserSource, 
         @WebParam(name = "emailUser") String emailUser, 
         @WebParam(name = "productId") Long productId, 
@@ -109,18 +104,28 @@ public class APIAlodigaWallet {
         @WebParam(name = "cryptogramUserDestination") String cryptogramUserDestination, 
         @WebParam(name = "idUserDestination") Long idUserDestination) {
         
-        return operations.SaveTransferBetweenAccount(cryptogramUserSource, emailUser, productId, amountTransfer,
+        return operations.saveTransferBetweenAccount(cryptogramUserSource, emailUser, productId, amountTransfer,
                                                      conceptTransaction, cryptogramUserSource, idUserDestination) ;
     }
     
     @WebMethod
-    public TransactionResponse ExchangeProduct ( 
+    public TransactionResponse previewExchangeProduct ( 
+        @WebParam(name = "emailUser") String emailUser, 
+        @WebParam(name = "productSourceId") Long productSourceId, 
+        @WebParam(name = "productDestinationId") Long productDestinationId,
+        @WebParam(name = "amountExchange") Float amountExchange,
+        @WebParam(name = "includedAmount") int includedAmount) {
+        return operations.previewExchangeProduct(emailUser,productSourceId,productDestinationId,amountExchange,includedAmount);
+    }
+    
+    @WebMethod
+    public TransactionResponse exchangeProduct ( 
         @WebParam(name = "emailUser") String emailUser, 
         @WebParam(name = "productSourceId") Long productSourceId, 
         @WebParam(name = "productDestinationId") Long productDestinationId,
         @WebParam(name = "amountExchange") Float amountExchange,
         @WebParam(name = "conceptTransaction") String conceptTransaction) {
-        return operations.ExchangeProduct(emailUser, productSourceId, productDestinationId, amountExchange, conceptTransaction);
+        return operations.exchangeProduct(emailUser, productSourceId, productDestinationId, amountExchange, conceptTransaction);
     }
 
     @WebMethod
@@ -140,25 +145,25 @@ public class APIAlodigaWallet {
     }
     
     @WebMethod
-    public TransactionResponse ManualWithdrawals ( 
+    public TransactionResponse manualWithdrawals ( 
         @WebParam(name = "bankId") Long bankId,
         @WebParam(name = "emailUser") String emailUser,
         @WebParam(name = "accountBank") String accountBank,
         @WebParam(name = "amountWithdrawal") Float amountWithdrawal,
         @WebParam(name = "productId") Long productId, 
         @WebParam(name = "conceptTransaction") String conceptTransaction) {
-        return operations.ManualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction);
+        return operations.manualWithdrawals(bankId, emailUser, accountBank, amountWithdrawal, productId, conceptTransaction);
     }
     
     @WebMethod
-    public TransactionResponse ManualRecharge ( 
+    public TransactionResponse manualRecharge ( 
         @WebParam(name = "bankId") Long bankId,
         @WebParam(name = "emailUser") String emailUser,
-        @WebParam(name = "accountBank") String referenceNumberOperation,
-        @WebParam(name = "amountWithdrawal") Float amountRecharge,
+        @WebParam(name = "referenceNumberOperation") String referenceNumberOperation,
+        @WebParam(name = "amountRecharge") Float amountRecharge,
         @WebParam(name = "productId") Long productId, 
         @WebParam(name = "conceptTransaction") String conceptTransaction) {
-        return operations.ManualWithdrawals(bankId, emailUser, referenceNumberOperation, amountRecharge, productId, conceptTransaction);
+        return operations.manualRecharge(bankId, emailUser, referenceNumberOperation, amountRecharge, productId, conceptTransaction);
     }
     
     @WebMethod
@@ -185,6 +190,20 @@ public class APIAlodigaWallet {
        return operations.getBalanceHistoryByUserAndProduct(userId, productId);
     }
 
+    @WebMethod
+    public TransactionResponse saveRechargeTopUp(
+        @WebParam(name = "emailUser") String emailUser,
+        @WebParam(name = "productId") Long productId,
+        @WebParam(name = "cryptogramUser") String cryptogramUser,
+        @WebParam(name = "skudId") String skudId,
+        @WebParam(name = "destinationNumber") String destinationNumber,
+        @WebParam(name = "senderNumber") String senderNumber,
+        @WebParam(name = "amountRecharge") Float amountRecharge,
+        @WebParam(name = "amountPayment") Float amountPayment) {
+        
+        return operations.saveRechargeTopUp(emailUser, productId,cryptogramUser, skudId, destinationNumber, senderNumber,
+                 amountRecharge,  amountPayment);        
+    }
     
     
     @WebMethod

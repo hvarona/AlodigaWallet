@@ -19,6 +19,12 @@ public class TransactionResponse extends Response implements Serializable {
 	private static final long serialVersionUID = -5826822375335798732L;
 	public List<Product> products;
 	public Transaction response;
+        public Float amountCommission;
+        public Float valueCommission;
+        public Float totalDebit;
+        public Float amountConversion;
+        public Float exchangeRateProductSource;
+        public Float exchangeRateProductDestination;
 
 	public TransactionResponse() {
 		super();
@@ -46,4 +52,17 @@ public class TransactionResponse extends Response implements Serializable {
 		super(new Date(), codigo.getCodigo(), mensajeRespuesta);
                 this.products = products;
 	}
+        
+        public TransactionResponse(ResponseCode codigo,
+			String mensajeRespuesta, Float amountCommission,
+                        Float valueCommission, Float totalDebit, Float amountConversion,
+                        Float exchangeRateProductSource, Float exchangeRateProductDestination) {
+                super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+                this.amountCommission = amountCommission;
+                this.valueCommission = valueCommission;
+                this.totalDebit = totalDebit;
+                this.amountConversion = amountConversion;
+                this.exchangeRateProductDestination = exchangeRateProductDestination;
+                this.exchangeRateProductSource = exchangeRateProductSource;
+        }
 }
