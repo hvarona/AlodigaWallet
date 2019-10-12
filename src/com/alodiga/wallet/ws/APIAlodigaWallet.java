@@ -186,4 +186,11 @@ public class APIAlodigaWallet {
     }
 
     
+    
+    @WebMethod
+    public void sendMailTest()
+            {
+         operations.sendmailTest();
+    }
+    
 }

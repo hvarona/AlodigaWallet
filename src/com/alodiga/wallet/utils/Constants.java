@@ -120,7 +120,12 @@ public class Constants {
         public static final String ALODIGA_WALLET_USUARIO_API = "usuarioWS";
         public static final String ALODIGA_WALLET_PASSWORD_API = "passwordWS";
         
-        
+        // constantes SendTypeEmail
+	public static final int SEND_TYPE_EMAIL_REGISTER = 1;
+        public static final int SEND_TYPE_EMAIL_RECHARGE = 2;
+        public static final int SEND_TYPE_EMAIL_COMERCE_PEYMENT = 3;
+        public static final int SEND_TYPE_EMAIL_WITHDRAWALS = 4;
+        public static final int SEND_TYPE_EMAIL_CHANGE_PASSWORD = 5;
 
 
 }

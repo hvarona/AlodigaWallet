@@ -78,7 +78,10 @@ import com.alodiga.wallet.topup.TopUpInfo;
 import com.alodiga.wallet.utils.Constante;
 import com.alodiga.wallet.utils.Constants;
 import com.alodiga.wallet.utils.Encryptor;
+import com.alodiga.wallet.utils.EnvioCorreo;
+import com.alodiga.wallet.utils.Mail;
 import com.alodiga.wallet.utils.SendCallRegister;
+import com.alodiga.wallet.utils.SendMailTherad;
 import java.rmi.RemoteException;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
@@ -87,6 +90,7 @@ import com.ericsson.alodiga.ws.Usuario;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.sql.Timestamp;
 import com.alodiga.wallet.utils.Utils;
+import com.ericsson.alodiga.ws.Cuenta;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -450,11 +454,23 @@ public class APIOperations {
             ////////////////////////////////////////////////////////////
            /// se incorpora para delvolver el saldo actual del cliente///
             /////////////////////////////////////////////////////////////
+            
+            
+        
+        Usuario usuario = new Usuario();
+        usuario.setEmail(emailUser);
+        SendMailTherad sendMailTherad = new SendMailTherad("ES", amountPayment, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido() , emailUser, Integer.valueOf("3"));
+        sendMailTherad.run();
 
         } catch (Exception e) {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
         } 
+        
+        
+        
+        
+     
         return new TransactionResponse(ResponseCode.EXITO,"",products);
     }
     
@@ -1244,14 +1260,23 @@ public class APIOperations {
             manualWithdrawal.setBankOperationNumber(accountBank);
             entityManager.persist(manualWithdrawal);
             
+            
+            
+            
             //Se actualiza el estatus de la transacción a IN_PROCESS
             withdrawal.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(withdrawal);
-            
+//            Usuario usuario = new Usuario();
+        Usuario usuario = new Usuario();
+        usuario.setEmail(emailUser);
+        SendMailTherad sendMailTherad = new SendMailTherad("ES", accountBank, amountWithdrawal, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido() ,emailUser , Integer.valueOf("4"));
+        sendMailTherad.run();
+                        
         } catch (Exception e) {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
-        } 
+        }
+        
         return new TransactionResponse(ResponseCode.EXITO);
     }
 	 
@@ -1407,11 +1432,18 @@ public class APIOperations {
             //Se actualiza el estatus de la transacción a IN_PROCESS
             recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(recharge);
-        
+            
+            
+          Usuario usuario = new Usuario();
+        usuario.setEmail(emailUser);
+        SendMailTherad sendMailTherad = new SendMailTherad("ES", referenceNumberOperation, conceptTransaction, amountRecharge, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido() ,emailUser, Integer.valueOf("2"));
+        sendMailTherad.run();
     } catch (Exception e) {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
         } 
+    
+        
         return new TransactionResponse(ResponseCode.EXITO);
         
     }
@@ -1500,6 +1532,42 @@ public class APIOperations {
     }
   
     
+    public void sendmailTest() {
+        
+        Usuario usuario = new Usuario();
+        usuario.setNombre("Kerwin");
+        usuario.setApellido("Gomez");
+        usuario.setCredencial("DAnye");
+        usuario.setEmail("moisegrat12@gmail.com");
+        usuario.setMovil("584241934005");
+        Cuenta cunCuenta = new Cuenta();
+        cunCuenta.setNumeroCuenta("01050614154515461528");
+        usuario.setCuenta(cunCuenta);
+        Transaction transaction = new Transaction();
+        transaction.setId(1412L);
+        transaction.getId();
+        transaction.getTotalAmount();
+        transaction.setTotalAmount(Float.valueOf("2"));
+        BalanceHistory balanceHistory = new BalanceHistory();
+        balanceHistory.setCurrentAmount(20);
+        balanceHistory.setOldAmount(25);
+        
+        
+        
+                Mail mail = Utils.SendMailUserChangePassword("ES", usuario);
+        System.out.println("body: " + mail.getBody());
+                try {
+        EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
+                mail.getSubject(),  mail.getBody(), Utils.obtienePropiedad("mail.user"), null);     
+            //AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
+            //Envio de Correo Electronico
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+                }
+    
+    
+    
     public ArrayList<Product> getProductsListByUserId(Long userId) throws NoResultException,Exception{
         List<UserHasProduct> userHasProducts = new ArrayList<UserHasProduct>();
         ArrayList<Product> products = new ArrayList<Product>();
@@ -1520,6 +1588,9 @@ public class APIOperations {
         }
         return products;
     }
+    
+    
+    
 }
 
 
