@@ -1841,7 +1841,7 @@ public class APIOperations {
             }else {
                 //Fallo el topUp devolver el saldo
                 //Se actualizan los saldos del cliente en la BD
-                //Balance History del cliente
+                //Balance History del cliente FAILED
                 balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
                 balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -1857,6 +1857,10 @@ public class APIOperations {
                 balanceHistory.setVersion(balanceUserSource.getId());
                 balanceHistory.setAdjusmentInfo("TopUp Failed. Balance Refund");
                 entityManager.persist(balanceHistory);
+                
+                 //Se actualiza el estatus de la transaccion a FAILED
+                recharge.setTransactionStatus(TransactionStatus.FAILED.name());
+                entityManager.merge(recharge);
             }
         } catch (Exception e) {
             e.printStackTrace();
