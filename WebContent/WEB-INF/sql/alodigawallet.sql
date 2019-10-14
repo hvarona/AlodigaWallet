@@ -1504,3 +1504,6 @@ INSERT INTO `alodigawallet`.`transaction_type` (`id`, `value`) VALUES ('7', 'TOP
 //Yamelis 12-10-2019
 INSERT INTO `alodigawallet`.`product` (`id`, `enterpriseId`, `categoryId`, `productIntegrationTypeId`, `name`, `taxInclude`, `enabled`, `referenceCode`, `ratesUrl`, `accessNumberUrl`, `isFree`, `isAlocashProduct`, `symbol`) VALUES ('7', '1', '1', '1', 'Top Up', '0', '1', '1001', 'htttp://www.alodiga.com', '584241934005', '0', '1','TP');
 
+//Yamelis 14-10-2019
+INSERT INTO `alodigawallet`.`commission` (`id`, `productId`, `transactionTypeId`, `beginningDate`, `isPercentCommision`, `value`) VALUES ('14', '7', '7', '2019-10-14 10:00:00', '1', '2.5');
+

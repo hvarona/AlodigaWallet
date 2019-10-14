@@ -1679,6 +1679,7 @@ public class APIOperations {
         Timestamp endingDateTime                = new Timestamp(0); 
         Float amountCommission                  = 0.00F;
         short isPercentCommission               = 0;
+        Commission commissionTopUp              = new Commission();
         
         TransactionResponse response = null;
         try {    
@@ -1686,6 +1687,7 @@ public class APIOperations {
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS","passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+//            userId = Long.valueOf("402");//para test
             
             // Validar que el balance history del cliente disponga de saldo para hacer la operacion
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
@@ -1749,11 +1751,12 @@ public class APIOperations {
                 }
             }
             
-            //Crear el objeto Transaction para registrar el pago al comercio
+            //Crear el objeto Transaction para registrar el pago del topUp
             Transaction recharge = new Transaction();
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
-//            recharge.setUserDestinationId(BigInteger.valueOf(idUserDestination));
+//            recharge.setUserSourceId(BigInteger.valueOf(402));//para test
+            recharge.setTopUpDescription("Destination:"+destinationNumber+" SkuidID:"+skudId);
             Product product = entityManager.find(Product.class, productId);
             recharge.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTopUP);
@@ -1763,18 +1766,48 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             recharge.setCreationDate(creationDate);
-            //cambiar por valor de parÃ¡metro
+            //cambiar por valor de parametro
             recharge.setConcept(Constante.sTransactionConceptTopUp);
-            recharge.setAmount(amountPayment);
+            recharge.setAmount(amountRecharge);
             recharge.setTransactionStatus(TransactionStatus.CREATED.name());
-            recharge.setTotalAmount(amountPayment);
+            recharge.setTotalAmount(amountRecharge);
             entityManager.persist(recharge);
             
+                      
+            //Revisar si la transaccion esta sujeta a comisiones
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId",Constante.sTransationTypeTopUP).getResultList();
+                if(commissions.size() < 1){
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + productId + " and userId: "+ userId);
+                }                
+                for (Commission c: commissions) {
+                    commissionTopUp = (Commission) c;
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (amountRecharge * amountCommission)/100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                }    
+                //Se crea el objeto commissionItem y se persiste en BD
+                CommissionItem commissionItem = new CommissionItem();
+                commissionItem.setCommissionId(commissionTopUp);           
+                commissionItem.setAmount(amountCommission);
+                Date commissionDate = new Date();
+                Timestamp processedDate = new Timestamp(commissionDate.getTime());
+                commissionItem.setProcessedDate(processedDate);
+                commissionItem.setTransactionId(recharge);
+                entityManager.persist(commissionItem);
+            } catch (NoResultException e) {
+                e.printStackTrace();
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
+            }
             
-            //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
-            recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            //Se actualiza el monto total monto del topUp + comision
+            amountPayment = amountRecharge + amountCommission;
+            recharge.setTotalAmount(amountPayment);
             entityManager.merge(recharge);
-            
+               
             //Se actualizan los saldos del cliente en la BD
             //Balance History del cliente
             balanceUserSource = loadLastBalanceHistoryByAccount(userId,productId);
@@ -1792,15 +1825,39 @@ public class APIOperations {
             balanceHistory.setVersion(balanceUserSource.getId());
             entityManager.persist(balanceHistory);
             
+            //Se actualiza el estatus de la transaccion a IN_PROCESS
+            recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(recharge);
+            
            //ejecuta la recarga de TopUp
             response = this.executeTopUp(skudId,amountRecharge, destinationNumber,  senderNumber);
+            if (response.getCodigoRespuesta().equals(ResponseCode.EXITO.getCodigo())){
             
-            //Se actualiza el estado de la transacciÃ³n a COMPLETED
-            recharge.setTransactionStatus(TransactionStatus.COMPLETED.name());
-            entityManager.merge(recharge);
-            //Envias notificaciones
-            //envias sms
-            
+                //Se actualiza el estado de la transaccion a COMPLETED
+                recharge.setTransactionStatus(TransactionStatus.COMPLETED.name());
+                entityManager.merge(recharge);
+                //Envias notificaciones
+                //envias sms
+            }else {
+                //Fallo el topUp devolver el saldo
+                //Se actualizan los saldos del cliente en la BD
+                //Balance History del cliente
+                balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
+                balanceHistory = new BalanceHistory();
+                balanceHistory.setId(null);
+                balanceHistory.setUserId(userId);
+                balanceHistory.setOldAmount(balanceUserSource.getCurrentAmount());
+                currentAmountUserSource = balanceUserSource.getCurrentAmount() + amountPayment;
+                balanceHistory.setCurrentAmount(currentAmountUserSource);
+                balanceHistory.setProductId(product);
+                balanceHistory.setTransactionId(recharge);
+                balanceDate = new Date();
+                balanceHistoryDate = new Timestamp(balanceDate.getTime());
+                balanceHistory.setDate(balanceHistoryDate);
+                balanceHistory.setVersion(balanceUserSource.getId());
+                balanceHistory.setAdjusmentInfo("TopUp Failed. Balance Refund");
+                entityManager.persist(balanceHistory);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction saveRechargeTopUp");  
