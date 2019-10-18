@@ -39,8 +39,9 @@ public class APIAlodigaWallet {
         @WebParam(name = "rateUrl") String rateUrl,
         @WebParam(name = "accesNumberUrl") String accesNumberUrl,
         @WebParam(name = "isFree") boolean isFree,
-        @WebParam(name = "isAlocashproduct") boolean isAlocashproduct){
-       return operations.saveProduct(Long.valueOf(enterpriseId), Long.valueOf(categoryId), Long.valueOf(productIntegrationTypeId), name, taxInclude, status, referenceCode, rateUrl, accesNumberUrl, isFree, isAlocashproduct);         
+        @WebParam(name = "isAlocashproduct") boolean isAlocashproduct,
+        @WebParam(name = "symbol") String symbol){
+       return operations.saveProduct(Long.valueOf(enterpriseId), Long.valueOf(categoryId), Long.valueOf(productIntegrationTypeId), name, taxInclude, status, referenceCode, rateUrl, accesNumberUrl, isFree, isAlocashproduct, symbol);         
     }
     
     //coment21

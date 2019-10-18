@@ -40,7 +40,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @NamedQueries({
     @NamedQuery(name = "Transaction.findAll", query = "SELECT t FROM Transaction t"),
     @NamedQuery(name = "Transaction.findById", query = "SELECT t FROM Transaction t WHERE t.id = :id"),
-    @NamedQuery(name = "Transaction.findByUserSourceId", query = "SELECT t FROM Transaction t WHERE t.userSourceId = :userSourceId ORDER BY t.id DESC"),
+    @NamedQuery(name = "Transaction.findByUserSourceId", query = "SELECT t FROM Transaction t WHERE t.userSourceId = :userSourceId OR t.userDestinationId = :userDestinationId ORDER BY t.id DESC"),
     @NamedQuery(name = "Transaction.findByUserDestinationId", query = "SELECT t FROM Transaction t WHERE t.userDestinationId = :userDestinationId"),
     @NamedQuery(name = "Transaction.findByCreationDate", query = "SELECT t FROM Transaction t WHERE t.creationDate = :creationDate"),
     @NamedQuery(name = "Transaction.findByAmount", query = "SELECT t FROM Transaction t WHERE t.amount = :amount"),

@@ -241,7 +241,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='200.73.192.179:8080/RegistroUnificado/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='https://200.73.192.179:8080/AlodigaWallet/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"

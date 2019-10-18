@@ -104,7 +104,7 @@ public class APIOperations {
 
     
     
-    public ProductResponse saveProduct(Long enterpriseId, Long categoryId, Long productIntegrationTypeId, String name, boolean taxInclude, boolean status, String referenceCode, String rateUrl, String accesNumberURL, boolean isFree, boolean isAlocashProduct) {
+    public ProductResponse saveProduct(Long enterpriseId, Long categoryId, Long productIntegrationTypeId, String name, boolean taxInclude, boolean status, String referenceCode, String rateUrl, String accesNumberURL, boolean isFree, boolean isAlocashProduct, String symbol) {
         try {
             //t
             Product product = new Product();
@@ -123,6 +123,7 @@ public class APIOperations {
             product.setAccessNumberUrl(accesNumberURL);
             product.setIsFree(isFree);
             product.setIsAlocashProduct(isAlocashProduct);
+            product.setSymbol(symbol);
             entityManager.persist(product);
         } catch (Exception e) {
             e.printStackTrace();
@@ -136,6 +137,7 @@ public class APIOperations {
             UserHasProduct userHasProduct = new UserHasProduct();
             userHasProduct.setProductId(productId);
             userHasProduct.setUserSourceId(userId);
+            userHasProduct.setBeginningDate(new Timestamp(new Date().getTime()));
             entityManager.persist(userHasProduct);
         } catch (Exception e) {
             e.printStackTrace();
@@ -495,6 +497,7 @@ public class APIOperations {
         Float amountCommission                  = 0.00F;
         short isPercentCommission               = 0;
         Commission commissionTransfer           = new Commission();
+        ArrayList<Product> products = new ArrayList<Product>(); 
         
         try {
             
@@ -663,11 +666,30 @@ public class APIOperations {
             //Envias notificaciones
             //envias sms
             
+            
+                        ////////////////////////////////////////////////////////////
+           /// se incorpora para delvolver el saldo actual del cliente///
+            /////////////////////////////////////////////////////////////
+            products = getProductsListByUserId(userId);
+            for(Product p: products){
+                Float amount = 0F;
+                try {
+                    amount = loadLastBalanceHistoryByAccount_(userId,  p.getId()).getCurrentAmount();
+                } catch (NoResultException e) {
+                    amount = 0F;        
+                }
+                 p.setCurrentBalance(amount);   
+            }
+            
+           ////////////////////////////////////////////////////////////
+           /// se incorpora para delvolver el saldo actual del cliente///
+           /////////////////////////////////////////////////////////////
+
         } catch (Exception e) {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");  
         } 
-        return new TransactionResponse(ResponseCode.EXITO); 
+        return new TransactionResponse(ResponseCode.EXITO,"",products); 
     }
     
     
@@ -1162,7 +1184,7 @@ public class APIOperations {
         try {
             entityManager.flush();
             
-            transactions = (List<Transaction>) entityManager.createNamedQuery("Transaction.findByUserSourceId", Transaction.class).setParameter("userSourceId", userId).setMaxResults(maxResult).getResultList();
+            transactions = (List<Transaction>) entityManager.createNamedQuery("Transaction.findByUserSourceId", Transaction.class).setParameter("userSourceId", userId).setMaxResults(maxResult).setParameter("userDestinationId", userId).getResultList();
             if (transactions.size() < 1) {
                 throw new NoResultException(ResponseCode.TRANSACTION_LIST_NOT_FOUND_EXCEPTION.toString());
             }
@@ -1178,8 +1200,9 @@ public class APIOperations {
         
         for(Transaction t :transactions) {
             t.setPaymentInfoId(null);
-            t.setProductId(null);
+            t.setProductId(t.getProductId());
             t.setTransactionType(t.getTransactionTypeId().getId().toString());
+            t.setId(t.getId());
             RespuestaUsuario usuarioRespuesta = new RespuestaUsuario();
             try {
                 usuarioRespuesta = api.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, t.getUserDestinationId().toString());
@@ -1275,6 +1298,7 @@ public class APIOperations {
             Transaction withdrawal = new Transaction();
             withdrawal.setId(null);
             withdrawal.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+            withdrawal.setUserDestinationId(withdrawal.getUserSourceId());
             Product product = entityManager.find(Product.class, productId);
             withdrawal.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualWithdrawal);
@@ -1442,6 +1466,7 @@ public class APIOperations {
             Transaction recharge = new Transaction();
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+            recharge.setUserDestinationId(recharge.getUserSourceId());
             Product product = entityManager.find(Product.class, productId);
             recharge.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualRecharge);
@@ -1500,10 +1525,12 @@ public class APIOperations {
             Bank bank = entityManager.find(Bank.class, bankId);
             manualRecharge.setBankId(bank);
             manualRecharge.setBankOperationNumber(referenceNumberOperation);
+      
             entityManager.persist(manualRecharge);
         
             //Se actualiza el estatus de la transacción a IN_PROCESS
             recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            
             entityManager.merge(recharge);
             
             
