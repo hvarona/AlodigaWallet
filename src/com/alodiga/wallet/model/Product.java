@@ -1,9 +1,11 @@
+package com.alodiga.wallet.model;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.alodiga.wallet.model;
+
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -42,7 +44,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Product.findByRatesUrl", query = "SELECT p FROM Product p WHERE p.ratesUrl = :ratesUrl"),
     @NamedQuery(name = "Product.findByAccessNumberUrl", query = "SELECT p FROM Product p WHERE p.accessNumberUrl = :accessNumberUrl"),
     @NamedQuery(name = "Product.findByIsFree", query = "SELECT p FROM Product p WHERE p.isFree = :isFree"),
-    @NamedQuery(name = "Product.findByIsAlocashProduct", query = "SELECT p FROM Product p WHERE p.isAlocashProduct = :isAlocashProduct")})
+    @NamedQuery(name = "Product.findByIsAlocashProduct", query = "SELECT p FROM Product p WHERE p.isAlocashProduct = :isAlocashProduct"),
+    @NamedQuery(name = "Product.findByIsPayTopUp", query = "SELECT p FROM Product p WHERE p.isPayTopUp = :isPayTopUp")})
 public class Product implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
@@ -87,6 +90,8 @@ public class Product implements Serializable {
     @Basic(optional = false)
     @Column(name = "isAlocashProduct")
     private boolean isAlocashProduct;
+    @Column(name = "isPayTopUp")
+    private boolean isPayTopUp;
     @OneToMany(mappedBy = "productId")
     private Collection<Transaction> transactionCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
@@ -118,7 +123,7 @@ public class Product implements Serializable {
         this.id = id;
     }
 
-    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct) {
+    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct,String symbol, boolean isPayTopUp) {
         this.id = id;
         this.name = name;
         this.taxInclude = taxInclude;
@@ -126,6 +131,8 @@ public class Product implements Serializable {
         this.referenceCode = referenceCode;
         this.isFree = isFree;
         this.isAlocashProduct = isAlocashProduct;
+        this.symbol = symbol;
+        this.isPayTopUp = isPayTopUp;
     }
 
     public Long getId() {
@@ -198,8 +205,21 @@ public class Product implements Serializable {
 
     public void setIsAlocashProduct(boolean isAlocashProduct) {
         this.isAlocashProduct = isAlocashProduct;
+             
     }
 
+    public boolean isIsPayTopUp() {
+        return isPayTopUp;
+    }
+
+    public void setIsPayTopUp(boolean isPayTopUp) {
+        this.isPayTopUp = isPayTopUp;
+    }
+
+   
+    
+    
+    
     @XmlTransient
     public Collection<Transaction> getTransactionCollection() {
         return transactionCollection;

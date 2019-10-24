@@ -32,6 +32,7 @@ import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.BankHasProduct;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
+import com.alodiga.wallet.model.TopUpCountry;
 import com.alodiga.wallet.response.generic.BankGeneric;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
@@ -69,8 +70,10 @@ import com.alodiga.wallet.respuestas.ProductResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
+import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.PreferenceListResponse;
+import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.TransactionResponse;
@@ -1056,10 +1059,11 @@ public class APIOperations {
                 TopUpInfo topUpInfo = new TopUpInfo();
                 topUpInfo.setCountry(inf.getCountry());
                 topUpInfo.setCoutryId(inf.getCountryId());
+                topUpInfo.setIsOpenRange(true);
                 topUpInfo.setOpertador(inf.getOperator());
                 topUpInfo.setOperatorid(inf.getOperatorId());
                 topUpInfo.setDestinationCurrency(inf.getDestinationCurrency());
-                topUpInfo.setIsOpenRange(true);
+                
                 topUpInfo.setSkuid(inf.getSkuid());
                 topUpInfo.setMinimumAmount(Float.parseFloat(inf.getOpen_range_minimum_amount_local_currency()));
                 topUpInfo.setMaximumAmount(Float.parseFloat(inf.getOpen_range_maximum_amount_local_currency()));
@@ -1091,10 +1095,11 @@ public class APIOperations {
                     TopUpInfo topUpInfo = new TopUpInfo();
                     topUpInfo.setCountry(inf.getCountry());
                     topUpInfo.setCoutryId(inf.getCountryId());
+                    topUpInfo.setIsOpenRange(false);
                     topUpInfo.setOpertador(inf.getOperator());
                     topUpInfo.setOperatorid(inf.getOperatorId());
                     topUpInfo.setDestinationCurrency(inf.getLocal_info_currency());
-                    topUpInfo.setIsOpenRange(false);
+                    
                     topUpInfo.setSkuid(skuids[i]);
                     Float retailPrice = Float.parseFloat(productRetailsPrices[i]);
                     Float wholesalePrice = Float.parseFloat(productWholesalePrices[i]);
@@ -1690,7 +1695,7 @@ public class APIOperations {
     }
     
     public TransactionResponse saveRechargeTopUp(String emailUser, Long productId, String cryptogramUser,
-            String skudId, String destinationNumber, String senderNumber, Float amountRecharge, Float amountPayment) {
+            String skudId, String destinationNumber, String senderNumber, Float amountRecharge, Float amountPayment, String language ) {
         
         Long idTransaction                      = 0L;
         Long idPreferenceField                  = 0L;
@@ -1895,6 +1900,67 @@ public class APIOperations {
         } 
         return response;
     }
+    
+    
+    public TopUpCountryListResponse getTopUpCountries() {
+        List<TopUpCountry> topUpCountrys = null;
+        try {
+            topUpCountrys = entityManager.createNamedQuery("TopUpCountry.findAll", TopUpCountry.class).getResultList();
+
+        } catch (Exception e) {
+            return new TopUpCountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+        }
+        return new TopUpCountryListResponse(ResponseCode.EXITO, "", topUpCountrys);
+    }
+    
+    
+    
+    public LanguageListResponse getLanguage() {
+        List<Language> languages = null;
+        try {
+            languages = entityManager.createNamedQuery("Language.findAll", Language.class).getResultList();
+
+        } catch (Exception e) {
+            return new LanguageListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+        }
+        return new LanguageListResponse(ResponseCode.EXITO, "", languages);
+    }
+    
+    
+    public ProductListResponse getProductsPayTopUpByUserId(Long userId) {
+        List<UserHasProduct> userHasProducts = new ArrayList<UserHasProduct>();
+        List<Product> products = new ArrayList<Product>();
+        List<Product> productFinals = new ArrayList<Product>();
+        try {        
+            products = getProductsListByUserId(userId);
+            for(Product p: products){
+                if(p.isIsPayTopUp()){
+                    Float amount = 0F;
+                try {
+                    amount = loadLastBalanceHistoryByAccount_(userId,  p.getId()).getCurrentAmount();
+                } catch (NoResultException e) {
+                    amount = 0F;        
+                }
+                 p.setCurrentBalance(amount);  
+                 productFinals.add(p);       
+                }
+            }
+             if (productFinals.size() <= 0) {
+                return new ProductListResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
+             }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+        }
+       
+
+        return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
+    }
+    
+    
+    
+    
 }
 
 

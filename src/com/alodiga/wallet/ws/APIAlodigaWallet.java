@@ -10,8 +10,10 @@ import com.alodiga.wallet.bean.APIOperations;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
+import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.ProductResponse;
+import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
@@ -200,12 +202,31 @@ public class APIAlodigaWallet {
         @WebParam(name = "destinationNumber") String destinationNumber,
         @WebParam(name = "senderNumber") String senderNumber,
         @WebParam(name = "amountRecharge") Float amountRecharge,
-        @WebParam(name = "amountPayment") Float amountPayment) {
+        @WebParam(name = "amountPayment") Float amountPayment,
+        @WebParam(name = "language") String language) {
         
         return operations.saveRechargeTopUp(emailUser, productId,cryptogramUser, skudId, destinationNumber, senderNumber,
-                 amountRecharge,  amountPayment);        
+                 amountRecharge,  amountPayment, language);        
     }
     
+    
+    @WebMethod
+    public TopUpCountryListResponse getTopUpCountries(){
+        return operations.getTopUpCountries();        
+    }
+    
+    @WebMethod
+    public LanguageListResponse getLanguage(){
+         return operations.getLanguage();        
+    }
+    
+    
+    @WebMethod
+    public ProductListResponse getProductsPayTopUpByUserId(
+        @WebParam(name = "userId") String userId){
+       return operations.getProductsPayTopUpByUserId(Long.valueOf(userId));         
+    }
+   
     
     @WebMethod
     public void sendMailTest()
