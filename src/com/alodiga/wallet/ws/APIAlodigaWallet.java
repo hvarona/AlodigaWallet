@@ -13,11 +13,13 @@ import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.ProductResponse;
+import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.TransactionResponse;
+import javax.persistence.EntityManager;
 
 @WebService
 public class APIAlodigaWallet {
@@ -226,12 +228,28 @@ public class APIAlodigaWallet {
         @WebParam(name = "userId") String userId){
        return operations.getProductsPayTopUpByUserId(Long.valueOf(userId));         
     }
+    
+    @WebMethod
+    public ProductListResponse getProductsIsExchangeProductUserId(
+        @WebParam(name = "userId") String userId){
+       return operations.getProductsIsExchangeProductUserId(Long.valueOf(userId));         
+    }
    
     
     @WebMethod
     public void sendMailTest()
             {
          operations.sendmailTest();
+    }
+    
+    
+    
+    @WebMethod
+    public String sendSmsSimbox(
+            @WebParam(name = "phoneNumber") String phoneNumber,
+            @WebParam(name = "text") String text,
+            @WebParam(name = "userId") Long userId){
+        return operations.sendSmsSimbox(phoneNumber, text , userId);
     }
     
 }

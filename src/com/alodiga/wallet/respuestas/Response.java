@@ -23,6 +23,8 @@ public class Response {
 	private String codigoRespuesta;
 	@XmlElement(name = "mensajeRespuesta")
 	private String mensajeRespuesta;
+        @XmlElement(name = "idTransaction")
+	private String idTransaction;
 
 	public Response(Date fechaHora, String codigoRespuesta,
 			String mensajeRespuesta) {
@@ -63,6 +65,16 @@ public class Response {
 	public void setMensajeRespuesta(String mensajeRespuesta) {
 		this.mensajeRespuesta = mensajeRespuesta;
 	}
+
+    public String getIdTransaction() {
+        return idTransaction;
+    }
+
+    public void setIdTransaction(String idTransaction) {
+        this.idTransaction = idTransaction;
+    }
+        
+        
 
 	@Override
 	public String toString() {

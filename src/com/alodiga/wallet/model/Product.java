@@ -45,7 +45,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Product.findByAccessNumberUrl", query = "SELECT p FROM Product p WHERE p.accessNumberUrl = :accessNumberUrl"),
     @NamedQuery(name = "Product.findByIsFree", query = "SELECT p FROM Product p WHERE p.isFree = :isFree"),
     @NamedQuery(name = "Product.findByIsAlocashProduct", query = "SELECT p FROM Product p WHERE p.isAlocashProduct = :isAlocashProduct"),
-    @NamedQuery(name = "Product.findByIsPayTopUp", query = "SELECT p FROM Product p WHERE p.isPayTopUp = :isPayTopUp")})
+    @NamedQuery(name = "Product.findByIsPayTopUp", query = "SELECT p FROM Product p WHERE p.isPayTopUp = :isPayTopUp"),
+    @NamedQuery(name = "Product.findByIsExchangeProduct", query = "SELECT p FROM Product p WHERE p.isExchangeProduct = :isExchangeProduct")})
 public class Product implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
@@ -92,6 +93,8 @@ public class Product implements Serializable {
     private boolean isAlocashProduct;
     @Column(name = "isPayTopUp")
     private boolean isPayTopUp;
+    @Column(name = "isExchangeProduct")
+    private boolean isExchangeProduct;
     @OneToMany(mappedBy = "productId")
     private Collection<Transaction> transactionCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
@@ -123,7 +126,7 @@ public class Product implements Serializable {
         this.id = id;
     }
 
-    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct,String symbol, boolean isPayTopUp) {
+    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct,String symbol, boolean isPayTopUp, boolean isExchangeProduct) {
         this.id = id;
         this.name = name;
         this.taxInclude = taxInclude;
@@ -133,6 +136,7 @@ public class Product implements Serializable {
         this.isAlocashProduct = isAlocashProduct;
         this.symbol = symbol;
         this.isPayTopUp = isPayTopUp;
+        this.isExchangeProduct = isExchangeProduct;
     }
 
     public Long getId() {
@@ -214,6 +218,14 @@ public class Product implements Serializable {
 
     public void setIsPayTopUp(boolean isPayTopUp) {
         this.isPayTopUp = isPayTopUp;
+    }
+
+    public boolean isIsExchangeProduct() {
+        return isExchangeProduct;
+    }
+
+    public void setIsExchangeProduct(boolean isExchangeProduct) {
+        this.isExchangeProduct = isExchangeProduct;
     }
 
    
