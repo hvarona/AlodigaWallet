@@ -1,5 +1,7 @@
 package com.alodiga.wallet.utils;
 
+import com.alodiga.massiva.sms.SendSmsMassiva;
+import static com.alodiga.massiva.sms.SendSmsMassiva.sendSmsMassiva;
 import com.alodiga.twilio.sms.services.TwilioSmsSender;
 import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
 import com.alodiga.wallet.bean.APIOperations;
@@ -34,7 +36,6 @@ public class SendSmsThread extends Thread {
     private Float amountExchange;
     private Long userId;
     EntityManager entityManager = null;
-   
 
     public SendSmsThread(String movil, String codigo_) {
         this.codigo = codigo_;
@@ -156,25 +157,35 @@ public class SendSmsThread extends Thread {
                 TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
                 proxy.sendTwilioSMS(movil, message);
             } else if (movil.substring(0, 2).equals("58")) {
-                //Venezuela  integras con simbox
-                APIOperations aPIOperations = new APIOperations();
+                //Venezuela  integras con Massiva
+//                APIOperations aPIOperations = new APIOperations();
+                SendSmsMassiva sendSmsMassiva = new SendSmsMassiva();
                 try {
-                    String response = aPIOperations.sendSmsSimbox(message, movil, userId);
+                    //String response = aPIOperations.sendSmsSimbox(message, movil, userId);
+                    //String response = sendSmsMassiva.sendSmsMassiva(message, movil);
                     Sms sms = new Sms();
                     sms.setUserId(BigInteger.valueOf(userId));
                     sms.setIntegratorName(Constants.INTEGRATOR_SIMBOX);
+                    //sms.setIntegratorName(Constants.INTEGRATOR_MASSIVA);
                     sms.setSender(movil);
                     sms.setDestination(movil);
                     sms.setContent(message);
                     sms.setCreationDate(new Timestamp(new Date().getTime()));
-                    sms.setAdditional(response);
+//                    if (getelement(response, "status").equals("1")) {
+//                        sms.setStatus(Constants.SEND_SMS);
+//                        sms.setAdditional(getelementIntoLabel(response, "celular", "sid"));
+//                    } else {
+//                        sms.setStatus(Constants.SEND_SMS_FAILED);
+//                        sms.setAdditional(null);
+//                    }
                     sms.setStatus(Constants.SEND_SMS);
+                    //sms.setAdditional(response);
                     entityManager.flush();
                     entityManager.persist(sms);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                } else if (movil.substring(0, 2).equals("57")) {
+            } else if (movil.substring(0, 2).equals("57")) {
                 //TODO:
                 //Colombia
             }
@@ -191,4 +202,11 @@ public class SendSmsThread extends Thread {
         }
     }
 
+    private static String getelement(String document, String element) {
+        return (document.split("<" + element + ">")[1].split("</" + element + ">")[0]).trim();
+    }
+
+    private static String getelementIntoLabel(String document, String element, String element2) {
+        return (document.split("<" + element)[1].split(element2 + "=")[1].split(" ")[0].replace("\"", ""));
+    }
 }

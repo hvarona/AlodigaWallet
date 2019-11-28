@@ -163,11 +163,11 @@ public class SendMailTherad extends Thread {
         try {
 
             //Esto es para hacer el envio con Servidor smtp de alodiga
-            EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
-                    mail.getSubject(), mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
+//            EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
+//                    mail.getSubject(), mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
 
             //Esto es para hacer el envio con Servidor smtp de amazon
-            //AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
+            AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
         } catch (Exception ex) {
             ex.printStackTrace();
             Logger.getLogger(SendMailTherad.class.getName()).log(Level.SEVERE, null, ex);

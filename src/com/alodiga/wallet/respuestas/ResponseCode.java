@@ -45,7 +45,11 @@ public enum ResponseCode {
         TRANSACTION_AMOUNT_LIMIT("30"),
         TRANSACTION_MAX_NUMBER_BY_ACCOUNT("31"),
         TRANSACTION_MAX_NUMBER_BY_CUSTOMER("32"),
-        USER_HAS_NOT_BALANCE("33");
+        USER_HAS_NOT_BALANCE("33"),
+        
+        //Mensajes Status Cumplimient
+        NOT_VALIDATE("40");
+        
 	
 	private String codigo; 
 	

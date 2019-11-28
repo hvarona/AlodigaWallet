@@ -149,7 +149,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='200.73.192.179:8080/RegistroUnificado/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -260,7 +260,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='200.73.192.179:8080/RegistroUnificado/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -371,7 +371,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='200.73.192.179:8080/RegistroUnificado/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -482,7 +482,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='200.73.192.179:8080/RegistroUnificado/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -557,9 +557,9 @@ public class Utils {
         //Transferencia recibida
         public static Mail sendMailUserExchangeProduct(String idioma, String productSource, String productDestination, Float amountExchange, String userSource, String conceptTransaction, String emailUser)  {
         String hello = "Hola";
-        String subject = "Alodiga Wallet: Transferencia:";
-        String text1 = "Alodiga Wallet: Transferencia";
-        String text2 = "Datos de su Transferencia Recibida:";
+        String subject = "Alodiga Wallet: Convertir Producto:";
+        String text1 = "Alodiga Wallet: Convertir Producto";
+        String text2 = "Datos de su Conversi&oacute;n de Producto:";
         String product_Source = "Producto Origen: ";
         String product_Destination = "Producto Destino: ";
         String amount_Exchange = "Monto de Cambio: ";
@@ -573,9 +573,9 @@ public class Utils {
         String allRights = "Todos los derechos reservados";
         if (idioma.equalsIgnoreCase("EN")) {
             hello = "Hello";
-            subject = "Alodiga Wallet: Transfer:";
-            text1 = "Alodiga Wallet: transfer:";
-            text2 = "Data of your Transfer Received: ";
+            subject = "Alodiga Wallet: Convert Product:";
+            text1 = "Alodiga Wallet: Convert Product:";
+            text2 = "Data of your Product Conversion: ";
             product_Source = "Product Source: ";
             concept_Transaction = "Concept Transaction: ";
             product_Destination = "Product Destination";
@@ -597,7 +597,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='200.73.192.179:8080/RegistroUnificado/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -709,7 +709,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='https://200.73.192.179:8080/AlodigaWallet/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -818,7 +818,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='200.73.192.179:8080/RegistroUnificado/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -925,7 +925,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='200.73.192.179:8080/RegistroUnificado/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -1039,7 +1039,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='200.73.192.179:8080/RegistroUnificado/image/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -1120,11 +1120,14 @@ public class Utils {
         try {
             Authenticator.setDefault(new MyAuthenticator(Constants.USER_SIMBOX_1, Constants.PASSWORD_SIMBOX_1));
             java.net.URL url = new java.net.URL(Constants.URL_SIMBOX);
+            
             connection = (HttpsURLConnection) url.openConnection();
             connection.setRequestMethod(Constants.TYPE_REQUEST_SIMBOX);
             connection.setRequestProperty(Constants.REQUEST_PROPERTIE_CONTENT_TYPE, Constants.REQUEST_PROPERTIE_CONTENT_TYPE_VALUE);
             connection.setUseCaches(false);
             connection.setDoOutput(true);
+            connection.setConnectTimeout(3000);
+            
             //   REQUEST_PROPERTIE_CONTENT_TYPE_VALUE
             //Send request
             DataOutputStream wr = new DataOutputStream(
@@ -1155,10 +1158,17 @@ public class Utils {
             rd.close();
             System.out.println(response.toString());
             return response.toString();            
-        } catch (Exception e) {
+        } catch (java.net.SocketTimeoutException e) {
+            e.printStackTrace();
+            return null;  
+        }   catch (Exception e) {
             e.printStackTrace();
             return e.getMessage();
-        } finally {
+        }      
+        
+        
+        
+        finally {
             if (connection != null) {
                 connection.disconnect();
             }

@@ -41,6 +41,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 public class Country implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "countryId")
+    private Collection<ValidationCollection> validationCollectionCollection;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "countryId")
     private Collection<SmsProvider> smsProviderCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "countryId")
     private Collection<Bank> bankCollection;
@@ -208,6 +211,16 @@ public class Country implements Serializable {
 
     public void setSmsProviderCollection(Collection<SmsProvider> smsProviderCollection) {
         this.smsProviderCollection = smsProviderCollection;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<ValidationCollection> getValidationCollectionCollection() {
+        return validationCollectionCollection;
+    }
+
+    public void setValidationCollectionCollection(Collection<ValidationCollection> validationCollectionCollection) {
+        this.validationCollectionCollection = validationCollectionCollection;
     }
     
 }

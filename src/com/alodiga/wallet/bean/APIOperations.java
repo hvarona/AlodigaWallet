@@ -4,6 +4,8 @@ import com.alodiga.transferto.integration.connection.RequestManager;
 import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
 import com.alodiga.transferto.integration.model.ReserveResponse;
 import com.alodiga.transferto.integration.model.TopUpResponse;
+import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
+import com.alodiga.wallet.model.Address;
 import com.alodiga.wallet.model.Bank;
 import com.alodiga.wallet.model.BankOperation;
 import com.alodiga.wallet.model.BankOperationMode;
@@ -30,13 +32,18 @@ import com.alodiga.wallet.model.Commission;
 import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.BankHasProduct;
+import com.alodiga.wallet.model.Code;
+import com.alodiga.wallet.model.Cumplimient;
+import com.alodiga.wallet.model.CumplimientStatus;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
 import com.alodiga.wallet.model.Sms;
 import com.alodiga.wallet.model.TopUpCountry;
+import com.alodiga.wallet.model.ValidationCollection;
 import com.alodiga.wallet.response.generic.BankGeneric;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
+import com.alodiga.wallet.respuestas.CollectionListResponse;
 import java.sql.Connection;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -71,6 +78,7 @@ import com.alodiga.wallet.respuestas.ProductResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
+import com.alodiga.wallet.respuestas.CumplimientResponse;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.PreferenceListResponse;
@@ -79,6 +87,7 @@ import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.TransactionResponse;
 import com.alodiga.wallet.topup.TopUpInfo;
+import com.alodiga.wallet.utils.AmazonSESSendMail;
 import com.alodiga.wallet.utils.Constante;
 import com.alodiga.wallet.utils.Constants;
 import com.alodiga.wallet.utils.Encryptor;
@@ -95,9 +104,25 @@ import com.ericsson.alodiga.ws.Usuario;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.sql.Timestamp;
 import com.alodiga.wallet.utils.Utils;
+import com.alodiga.ws.cumpliments.services.OFACMethodWS;
+import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
+import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
+import com.alodiga.ws.cumpliments.services.WsLoginResponse;
+
 import com.ericsson.alodiga.ws.Cuenta;
+import com.sun.accessibility.internal.resources.accessibility;
+import com.sun.corba.se.impl.orbutil.closure.Constant;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import static javafx.scene.input.KeyCode.T;
+import javax.persistence.LockModeType;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import static jdk.nashorn.internal.objects.NativeMath.log;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -270,6 +295,7 @@ public class APIOperations {
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         ArrayList<Product> products = new ArrayList<Product>();
+        Transaction paymentShop = new Transaction();
         try {
             //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
@@ -340,7 +366,6 @@ public class APIOperations {
             }
 
             //Crear el objeto Transaction para registrar el pago al comercio
-            Transaction paymentShop = new Transaction();
             paymentShop.setId(null);
             paymentShop.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             paymentShop.setUserDestinationId(BigInteger.valueOf(idUserDestination));
@@ -478,8 +503,11 @@ public class APIOperations {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
         }
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        transactionResponse.setIdTransaction(paymentShop.getId().toString());
+        transactionResponse.setProducts(products);
+        return transactionResponse;
 
-        return new TransactionResponse(ResponseCode.EXITO, "", products);
     }
 
     /*
@@ -504,7 +532,7 @@ public class APIOperations {
         short isPercentCommission = 0;
         Commission commissionTransfer = new Commission();
         ArrayList<Product> products = new ArrayList<Product>();
-
+        Transaction transfer = new Transaction();
         try {
 
             //Se obtiene el usuario de la API de Registro Unificado
@@ -595,7 +623,6 @@ public class APIOperations {
             }
 
             //Crear el objeto Transaction para registrar la transferencia del cliente
-            Transaction transfer = new Transaction();
             transfer.setId(null);
             transfer.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
@@ -711,7 +738,10 @@ public class APIOperations {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
         }
-        return new TransactionResponse(ResponseCode.EXITO, "", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+        transactionResponse.setIdTransaction(transfer.getId().toString());
+        transactionResponse.setProducts(products);
+        return transactionResponse;
     }
 
     public TransactionResponse previewExchangeProduct(String emailUser, Long productSourceId, Long productDestinationId,
@@ -782,11 +812,12 @@ public class APIOperations {
      *
      */
     public TransactionResponse exchangeProduct(String emailUser, Long productSourceId, Long productDestinationId,
-            Float amountExchange, String conceptTransaction) {
+            Float amountExchange, String conceptTransaction, int includedAmount) {
 
         Long idTransaction = 0L;
         Long idPreferenceField = 0L;
         Long userId = 0L;
+        Float totalDebit = 0.00F;
         int totalTransactionsByUser = 0;
         Long totalTransactionsByProduct = 0L;
         Double totalAmountByUser = 0.00D;
@@ -863,14 +894,10 @@ public class APIOperations {
                 }
             }
 
-            //Se calcula el monto de la conversion entre los productos
-            ExchangeRate RateByProductSource = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productSourceId).getSingleResult();
-            ExchangeRate RateByProductDestination = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productDestinationId).getSingleResult();
-            Float amountConversion = (amountExchange * RateByProductSource.getValue()) / RateByProductDestination.getValue();
-
             //Registrar el intercambio de los productos (producto de origen)
             exchange.setId(null);
             exchange.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+            exchange.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             Product productSource = entityManager.find(Product.class, productSourceId);
             exchange.setProductId(productSource);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeEP);
@@ -914,6 +941,17 @@ public class APIOperations {
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
             }
 
+            //Se calcula el monto de la conversion entre los productos
+            ExchangeRate RateByProductSource = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productSourceId).getSingleResult();
+            ExchangeRate RateByProductDestination = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productDestinationId).getSingleResult();
+            if (includedAmount == 0) {
+                totalDebit = amountExchange + amountCommission;
+            } else {
+                totalDebit = amountExchange;
+                amountExchange = amountExchange - amountCommission;
+            }
+            Float amountConversion = (amountExchange * RateByProductSource.getValue()) / RateByProductDestination.getValue();
+
             //Se actualiza el estatus de la transaccion a IN_PROCESS
             exchange.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(exchange);
@@ -933,7 +971,7 @@ public class APIOperations {
             balanceHistory.setId(null);
             balanceHistory.setUserId(userId);
             balanceHistory.setOldAmount(balanceProductSource.getCurrentAmount());
-            Float currentAmountProductSource = balanceProductSource.getCurrentAmount() - amountExchange;
+            Float currentAmountProductSource = balanceProductSource.getCurrentAmount() - totalDebit;
             balanceHistory.setCurrentAmount(currentAmountProductSource);
             balanceHistory.setProductId(productSource);
             balanceHistory.setTransactionId(exchange);
@@ -1004,7 +1042,7 @@ public class APIOperations {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
         }
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "", products);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
         transactionResponse.setIdTransaction(exchange.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
@@ -1281,6 +1319,7 @@ public class APIOperations {
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         Commission commissionWithdrawal = new Commission();
+        Transaction withdrawal = new Transaction();
 
         try {
             //Se obtiene el usuario de la API de Registro Unificado
@@ -1345,10 +1384,9 @@ public class APIOperations {
             }
 
             //Registrar la transacción
-            Transaction withdrawal = new Transaction();
             withdrawal.setId(null);
             withdrawal.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
-            withdrawal.setUserDestinationId(withdrawal.getUserSourceId());
+            withdrawal.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             Product product = entityManager.find(Product.class, productId);
             withdrawal.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualWithdrawal);
@@ -1427,8 +1465,10 @@ public class APIOperations {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
         }
-
-        return new TransactionResponse(ResponseCode.EXITO);
+//        return new TransactionResponse(ResponseCode.EXITO);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO");
+        transactionResponse.setIdTransaction(withdrawal.getId().toString());
+        return transactionResponse;
     }
 
     /*
@@ -1451,6 +1491,7 @@ public class APIOperations {
         Float amountCommission = 0.00F;
         short isPercentCommission = 0;
         Commission commissionRecharge = new Commission();
+        Transaction recharge = new Transaction();
 
         try {
             //Se obtiene el usuario de la API de Registro Unificado
@@ -1515,10 +1556,9 @@ public class APIOperations {
             }
 
             //Registrar la transacción en la BD
-            Transaction recharge = new Transaction();
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
-            recharge.setUserDestinationId(recharge.getUserSourceId());
+            recharge.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             Product product = entityManager.find(Product.class, productId);
             recharge.setProductId(product);
             TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeManualRecharge);
@@ -1597,7 +1637,10 @@ public class APIOperations {
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
         }
 
-        return new TransactionResponse(ResponseCode.EXITO);
+//        return new TransactionResponse(ResponseCode.EXITO);
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO");
+        transactionResponse.setIdTransaction(recharge.getId().toString());
+        return transactionResponse;
 
     }
 
@@ -1639,7 +1682,6 @@ public class APIOperations {
         } catch (Exception ex) {
             ex.printStackTrace();
             return new CountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading Countries");
-
         }
         if (countries != null && countries.size() > 0) {
             for (int i = 0; i < countries.size(); i++) {
@@ -1687,7 +1729,7 @@ public class APIOperations {
         usuario.setNombre("Kerwin");
         usuario.setApellido("Gomez");
         usuario.setCredencial("DAnye");
-        usuario.setEmail("moisegrat12@gmail.com");
+        usuario.setEmail("moisegrat@hotmail.com");
         usuario.setMovil("584241934005");
         Cuenta cunCuenta = new Cuenta();
         cunCuenta.setNumeroCuenta("01050614154515461528");
@@ -1704,9 +1746,9 @@ public class APIOperations {
         Mail mail = Utils.SendMailUserChangePassword("ES", usuario);
         System.out.println("body: " + mail.getBody());
         try {
-            EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
-                    mail.getSubject(), mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
-            //AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
+//            EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
+//                    mail.getSubject(), mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
+            AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
             //Envio de Correo Electronico
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -1827,6 +1869,7 @@ public class APIOperations {
             Transaction recharge = new Transaction();
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
+            recharge.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
 //            recharge.setUserSourceId(BigInteger.valueOf(402));//para test
             recharge.setTopUpDescription("Destination:" + destinationNumber + " SkuidID:" + skudId);
             Product product = entityManager.find(Product.class, productId);
@@ -2061,11 +2104,134 @@ public class APIOperations {
 
     public String sendSmsSimbox(String text, String phoneNumber, Long userId) {
         try {
-           return  Utils.sendSmsSimbox(text, phoneNumber);
+            return Utils.sendSmsSimbox(text, phoneNumber);
         } catch (Exception e) {
             e.printStackTrace();
-            return  e.getMessage();
+            return e.getMessage();
         }
+    }
+
+    public Cumplimient LoadCumplimientStatus(Long userId) {
+        try {
+            Query query = entityManager.createQuery("SELECT c FROM Cumplimient c WHERE c.userSourceId = " + userId + " AND c.endingDate IS NULL ORDER BY c.id desc");
+            query.setMaxResults(1);
+            Cumplimient result = (Cumplimient) query.setHint("toplink.refresh", "true").getSingleResult();
+            return result;
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    public CumplimientResponse getCumplimientStatus(Long userId) {
+        Cumplimient cumplimients = new Cumplimient();
+        try {
+            cumplimients = LoadCumplimientStatus(userId);
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new CumplimientResponse(ResponseCode.NOT_VALIDATE, "User Not Validate");
+        }
+        return new CumplimientResponse(ResponseCode.EXITO, "", cumplimients);
+    }
+
+    public CollectionListResponse getValidateCollection(Long userId, String language) {
+        List<ValidationCollection> validationCollections = new ArrayList<ValidationCollection>();
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser = null;
+        try {
+            responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            Country codeCountry = getCountryCode(responseUser.getDatosRespuesta().getMovil());
+            validationCollections = entityManager.createNamedQuery("ValidationCollection.findByStatusByLanguage", ValidationCollection.class).setParameter("languageId", language).setParameter("countryId", codeCountry.getId()).getResultList();
+
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections");
+        }
+
+        return new CollectionListResponse(ResponseCode.EXITO, "", validationCollections);
+    }
+
+    public CollectionListResponse saveCumplimient(Long userId, byte[] imgDocument, byte[] imgProfile, String estado, String ciudad, String zipCode, String addres1) {
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser = null;
+        Cumplimient cumplimient = new Cumplimient();
+        try {
+            responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections 1");
+        }
+        userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+        cumplimient.setAdditional(null);
+        OFACMethodWSProxy aCMethodWSProxy = new OFACMethodWSProxy();
+        WsLoginResponse response;
+        WsExcludeListResponse response2;
+        try {
+            response = aCMethodWSProxy.loginWS("alodiga", "d6f80e647631bb4522392aff53370502");
+            response2 = aCMethodWSProxy.queryOFACList(response.getToken(), responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getNombre(), null, null, null, null, 0.5F);
+            cumplimient.setAMLPercent(Float.valueOf(response2.getPercentMatch()));
+            Country codeCountry = getCountryCode(responseUser.getDatosRespuesta().getMovil());
+            cumplimient.setImgDocumentDate(imgDocument);
+            cumplimient.setImgProfile(imgProfile);
+            cumplimient.setAgentComplientId(null);
+            cumplimient.setUserSourceId(userId);
+            cumplimient.setIsKYC(true);
+            cumplimient.setIsAML(true);
+            cumplimient.setBeginningDate(new Timestamp(new Date().getTime()));
+            CumplimientStatus cumplimientStatus = entityManager.find(CumplimientStatus.class, CumplimientStatus.IN_PROCESS);
+            cumplimient.setComplientStatusId(cumplimientStatus);
+            cumplimient.setAprovedDate(new Timestamp(new Date().getTime()));
+            Address address = new Address();
+            address.setStateName(estado);
+            address.setZipCode(zipCode);
+            address.setCityName(ciudad);
+            address.setAddress(addres1);
+            address.setCountryId(codeCountry);
+            entityManager.persist(address);
+            cumplimient.setAddressId(address);
+            entityManager.persist(cumplimient);
+        } catch (ConstraintViolationException e) {
+            log(Level.SEVERE, "Exception: ");
+            e.getConstraintViolations().forEach(err -> log(Level.SEVERE, err.toString()));
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections");
+        }
+
+        return new CollectionListResponse(ResponseCode.EXITO);
+
+    }
+
+    public Country getCountryCode(String strAni) {
+        long ani = Long.parseLong(strAni);
+
+        String number = ani + "";
+
+        Country aniCode = null;
+        int index = number.length();
+
+        while (aniCode == null && index > 0) {
+            try {
+                aniCode = (Country) entityManager.createQuery("SELECT c FROM Country c WHERE c.code=" + number.substring(0, index)).getSingleResult();
+            } catch (Exception e) {
+            }
+            index--;
+        }
+
+        return aniCode;
+    }
+
+    public LanguageListResponse getLanguageByIso(String language) {
+        List<Language> languages = null;
+        try {
+            languages = entityManager.createNamedQuery("Language.findByIso", Language.class).setParameter("iso", language).getResultList();
+
+        } catch (Exception e) {
+            return new LanguageListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+        }
+        return new LanguageListResponse(ResponseCode.EXITO, "", languages);
     }
 
 }

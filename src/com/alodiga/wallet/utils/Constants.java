@@ -166,8 +166,16 @@ public class Constants {
     //Integrator Name
     public static final String INTEGRATOR_SIMBOX = "Simbox";
     public static final String INTEGRATOR_TWILIO = "Twilio";
+    public static final String INTEGRATOR_MASSIVA = "Massiva";
     
     //SMS
     public static final String SEND_SMS = "Enviado";
+    public static final String SEND_SMS_FAILED = "Failed";
+    
+    //CUMPLIMIENT
+    public static final Long VALIDATE = 2L;
+    public static final Long EXPIRATE = 3L;
+    public static final Long NOT_VALIDATE = 4L;
+    
 
 }
