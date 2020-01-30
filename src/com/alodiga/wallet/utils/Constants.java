@@ -130,7 +130,9 @@ public class Constants {
     public static final int SEND_TYPE_EMAIL_TRANSFER_ACCOUNT = 8;
     public static final int SEND_TYPE_EMAIL_TRANSFER_ACCOUNT_RECIBER = 9;
     public static final int SEND_TYPE_EMAIL_EXCHANGE_PRODUCT = 10;
-
+    public static final int SEND_TYPE_EMAIL_TRASNFER_CARD_TO_CARD = 11;
+    public static final int SEND_TYPE_EMAIL_TRASNFER_CARD_TO_CARD_RECIBER = 12;
+    
     // constantes SendTypeSMS
     public static final int SEND_TYPE_SMS_REGISTER = 20;
     public static final int SEND_TYPE_SMS_RECHARGE = 21;
@@ -142,8 +144,10 @@ public class Constants {
     public static final int SEND_TYPE_SMS_TRANSFER_ACCOUNT = 27;
     public static final int SEND_TYPE_SMS_TRANSFER_ACCOUNT_RECIBER = 28;
     public static final int SEND_TYPE_SMS_EXCHANGE_PRODUCT = 29;
+    public static final int SEND_TYPE_SMS_TRASNFER_CARD_TO_CARD= 30;
+    public static final int SEND_TYPE_SMS_TRASNFER_CARD_TO_CARD_RECIBER = 31;
     
-
+    
     //internat Access Api Operation
     public static final String USER_API = "usuarioWS";
     public static final String PASSWORD_API = "passwordWS";
@@ -161,21 +165,35 @@ public class Constants {
     //Language
     public static final Long SPANISH_LANGUAGE = 1L;
     public static final Long ENGLISH_LANGUAGE = 2L;
-    
-    
+
     //Integrator Name
     public static final String INTEGRATOR_SIMBOX = "Simbox";
     public static final String INTEGRATOR_TWILIO = "Twilio";
     public static final String INTEGRATOR_MASSIVA = "Massiva";
-    
+
     //SMS
     public static final String SEND_SMS = "Enviado";
     public static final String SEND_SMS_FAILED = "Failed";
-    
+
     //CUMPLIMIENT
     public static final Long VALIDATE = 2L;
     public static final Long EXPIRATE = 3L;
     public static final Long NOT_VALIDATE = 4L;
-    
+
+    public static final String PUBLIC_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcZKSFJW2gP/kskiaEuXz9nFDSHGKoDhLL+pIf0a1aGpfHeEhLf51cCyAGoX7rSDtlnmV1bwL5EUMsMj4KAmHhOSwygJAyQzthaYHTkEnOJ1NlDP7KyDdu9iyIEY87iWa4OlxJqElWYiHlUcrRZwWPWyTfk9v0lYyuu0lsF/n4tQIDAQAB";
+    public static final String CREDENTIAL_TIME_ZONE = "America/Caracas";
+    public static final String CREDENTIAL_WEB_SERVICES_USER_TEST = "usuarioWStest";
+    public static final String CREDENTIAL_WEB_SERVICES_USER = "PilotoWS";
+    public static final String CREDENTIAL_WEB_SERVICES_URL_TEST = "https://10.70.10.85:8000/CASA_SRTMX_TarjetaService?wsdl";
+    public static final String CREDENTIAL_WEB_SERVICES_URL_PROD = "https://10.70.10.71:8000/CASA_SRTMX_TarjetaService?wsdl";
+    public static final Long PREPAY_CARD_CREDENTIAL = 3L;
+
+    //Transferencias CARD TO CARD
+    public static final Long TRANSFER_CARD_TO_CARD = 8L;
+    public static final String TRANSACTION_CONCEPT_TRANSFER_CARD_TO_CARD = "Transfer card to card";
+
+    //Transferencias CARD TO CARD SOURCE
+    public static final Long TRANSFER_CARD_TO_CARD_SOURCE = 5L;
+
 
 }

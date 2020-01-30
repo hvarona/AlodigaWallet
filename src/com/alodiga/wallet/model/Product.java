@@ -50,6 +50,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 public class Product implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
+    private Collection<CardHasProduct> cardHasProductCollection;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
     private Collection<BankOperation> bankOperationCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
     private Collection<ExchangeDetail> exchangeDetailCollection;
@@ -370,6 +373,16 @@ public class Product implements Serializable {
 
     public void setBankOperationCollection(Collection<BankOperation> bankOperationCollection) {
         this.bankOperationCollection = bankOperationCollection;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<CardHasProduct> getCardHasProductCollection() {
+        return cardHasProductCollection;
+    }
+
+    public void setCardHasProductCollection(Collection<CardHasProduct> cardHasProductCollection) {
+        this.cardHasProductCollection = cardHasProductCollection;
     }
 
 }

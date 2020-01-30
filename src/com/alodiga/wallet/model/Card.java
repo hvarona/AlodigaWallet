@@ -18,8 +18,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -29,40 +27,33 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author ltoro
  */
 @Entity
-@Table(name = "cumplimient_status")
+@Table(name = "card")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "CumplimientStatus.findAll", query = "SELECT c FROM CumplimientStatus c")
-    , @NamedQuery(name = "CumplimientStatus.findById", query = "SELECT c FROM CumplimientStatus c WHERE c.id = :id")
-    , @NamedQuery(name = "CumplimientStatus.findByValue", query = "SELECT c FROM CumplimientStatus c WHERE c.value = :value")})
-public class CumplimientStatus implements Serializable {
+    @NamedQuery(name = "Card.findAll", query = "SELECT c FROM Card c")
+    , @NamedQuery(name = "Card.findById", query = "SELECT c FROM Card c WHERE c.id = :id")
+    , @NamedQuery(name = "Card.findByNumberCard", query = "SELECT c FROM Card c WHERE c.numberCard = :numberCard")})
+public class Card implements Serializable {
 
-    public static final Long IN_PROCESS = 1L;    
-    
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "cardId")
+    private Collection<UserHasCard> userHasCardCollection;
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
     @Column(name = "id")
     private Long id;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 45)
-    @Column(name = "value")
-    private String value;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "complientStatusId")
-    private Collection<Cumplimient> cumplimientCollection;
+    @Column(name = "numberCard")
+    private String numberCard;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "cardId")
+    private Collection<CardHasProduct> cardHasProductCollection;
 
-    public CumplimientStatus() {
+    public Card() {
     }
 
-    public CumplimientStatus(Long id) {
+    public Card(Long id) {
         this.id = id;
-    }
-
-    public CumplimientStatus(Long id, String value) {
-        this.id = id;
-        this.value = value;
     }
 
     public Long getId() {
@@ -73,22 +64,22 @@ public class CumplimientStatus implements Serializable {
         this.id = id;
     }
 
-    public String getValue() {
-        return value;
+    public String getNumberCard() {
+        return numberCard;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setNumberCard(String numberCard) {
+        this.numberCard = numberCard;
     }
 
     @XmlTransient
     @JsonIgnore
-    public Collection<Cumplimient> getCumplimientCollection() {
-        return cumplimientCollection;
+    public Collection<CardHasProduct> getCardHasProductCollection() {
+        return cardHasProductCollection;
     }
 
-    public void setCumplimientCollection(Collection<Cumplimient> cumplimientCollection) {
-        this.cumplimientCollection = cumplimientCollection;
+    public void setCardHasProductCollection(Collection<CardHasProduct> cardHasProductCollection) {
+        this.cardHasProductCollection = cardHasProductCollection;
     }
 
     @Override
@@ -101,10 +92,10 @@ public class CumplimientStatus implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof CumplimientStatus)) {
+        if (!(object instanceof Card)) {
             return false;
         }
-        CumplimientStatus other = (CumplimientStatus) object;
+        Card other = (Card) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -113,7 +104,17 @@ public class CumplimientStatus implements Serializable {
 
     @Override
     public String toString() {
-        return "com.alodiga.wallet.model.CumplimientStatus[ id=" + id + " ]";
+        return "com.alodiga.wallet.model.Card[ id=" + id + " ]";
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<UserHasCard> getUserHasCardCollection() {
+        return userHasCardCollection;
+    }
+
+    public void setUserHasCardCollection(Collection<UserHasCard> userHasCardCollection) {
+        this.userHasCardCollection = userHasCardCollection;
     }
     
 }

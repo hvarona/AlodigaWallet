@@ -147,6 +147,14 @@ public class SendSmsThread extends Thread {
                 // code block 
                 message = getLangujeByPhoneNumber((movil).toString()).equals(Constants.SPANISH_LANGUAGE) ? "Billetera Alodiga, Usted a realizado un intercambio de producto el dia: " + sdf.format(timestamp) + " producto origen: " + productSource + " " + " producto destino: " + productDestination + " por un monto de: " + amountExchange + " Bs." : "Alodiga Wallet, You have made a product exchange the day: " + sdf.format(timestamp) + " product source: " + productSource + " " + "product destination" + productDestination + " by a sum of: " + amountExchange + " $.";
                 break;
+            case Constants.SEND_TYPE_SMS_TRASNFER_CARD_TO_CARD:
+                // code block 
+                message = getLangujeByPhoneNumber((movil).toString()).equals(Constants.SPANISH_LANGUAGE) ? "Billetera Alodiga, Usted a realizado una transferencia  el dia: " + sdf.format(timestamp) + " por un monto de: " + amountPayment + " Bs." : "Alodiga Wallet, You have made a transfer the day: " + sdf.format(timestamp) + " by a sum of: " + amountPayment + " $.";
+                break;
+            case Constants.SEND_TYPE_SMS_TRASNFER_CARD_TO_CARD_RECIBER:
+                // code block 
+                message = getLangujeByPhoneNumber((movil).toString()).equals(Constants.SPANISH_LANGUAGE) ? "Billetera Alodiga, Usted a recibido una transferencia el dia: " + sdf.format(timestamp) + " por un monto de: " + amountPayment + " Bs." : "Alodiga Wallet, You have received a transfer the day: " + sdf.format(timestamp) + " by a sum of: " + amountPayment + " $.";
+                break;
         }
         try {
             //String message = getLangujeByPhoneNumber(movil).equals(Constante.SPANISH_LANGUAGE) ? "Billetera Alodiga, Su codigo de seguridad para el registro es: " + codigo : "Alodiga Wallet, Your security code is: " + codigo ;
@@ -162,23 +170,23 @@ public class SendSmsThread extends Thread {
                 SendSmsMassiva sendSmsMassiva = new SendSmsMassiva();
                 try {
                     //String response = aPIOperations.sendSmsSimbox(message, movil, userId);
-                    //String response = sendSmsMassiva.sendSmsMassiva(message, movil);
+                    String response = sendSmsMassiva.sendSmsMassiva(message, movil);
                     Sms sms = new Sms();
                     sms.setUserId(BigInteger.valueOf(userId));
-                    sms.setIntegratorName(Constants.INTEGRATOR_SIMBOX);
-                    //sms.setIntegratorName(Constants.INTEGRATOR_MASSIVA);
+                    //sms.setIntegratorName(Constants.INTEGRATOR_SIMBOX);
+                    sms.setIntegratorName(Constants.INTEGRATOR_MASSIVA);
                     sms.setSender(movil);
                     sms.setDestination(movil);
                     sms.setContent(message);
                     sms.setCreationDate(new Timestamp(new Date().getTime()));
-//                    if (getelement(response, "status").equals("1")) {
-//                        sms.setStatus(Constants.SEND_SMS);
-//                        sms.setAdditional(getelementIntoLabel(response, "celular", "sid"));
-//                    } else {
-//                        sms.setStatus(Constants.SEND_SMS_FAILED);
-//                        sms.setAdditional(null);
-//                    }
-                    sms.setStatus(Constants.SEND_SMS);
+                    if (getelement(response, "status").equals("1")) {
+                        sms.setStatus(Constants.SEND_SMS);
+                        sms.setAdditional(getelementIntoLabel(response, "celular", "sid"));
+                    } else {
+                        sms.setStatus(Constants.SEND_SMS_FAILED);
+                        sms.setAdditional(null);
+                    }
+
                     //sms.setAdditional(response);
                     entityManager.flush();
                     entityManager.persist(sms);

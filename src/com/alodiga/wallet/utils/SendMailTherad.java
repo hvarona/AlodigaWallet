@@ -80,7 +80,7 @@ public class SendMailTherad extends Thread {
 
     }
 
-        public SendMailTherad(String idioma, Float amountPayment, String conceptTransaction, String userDestinationName, String emailUser, Integer sendType) {
+    public SendMailTherad(String idioma, Float amountPayment, String conceptTransaction, String userDestinationName, String emailUser, Integer sendType) {
 
         this.idioma = idioma;
         this.amountPayment = amountPayment;
@@ -155,7 +155,16 @@ public class SendMailTherad extends Thread {
                 break;
             case Constants.SEND_TYPE_EMAIL_EXCHANGE_PRODUCT:
                 // code block 
-                mail = Utils.sendMailUserExchangeProduct("ES", productSource, productDestination, amountExchange, userSource, conceptTransaction,emailUser);
+                mail = Utils.sendMailUserExchangeProduct("ES", productSource, productDestination, amountExchange, userSource, conceptTransaction, emailUser);
+                break;
+            case Constants.SEND_TYPE_EMAIL_TRASNFER_CARD_TO_CARD:
+                // code block 
+                mail = Utils.sendMailUserTransferCardToCard("ES", amountPayment, conceptTransaction, userDestinationName, emailUser);
+                break;
+
+            case Constants.SEND_TYPE_EMAIL_TRASNFER_CARD_TO_CARD_RECIBER:
+                // code block 
+                mail = Utils.sendMailUserTransferCardToCardReciber("ES", amountPayment, conceptTransaction, userDestinationName, emailUser);
                 break;
         }
 
@@ -165,7 +174,6 @@ public class SendMailTherad extends Thread {
             //Esto es para hacer el envio con Servidor smtp de alodiga
 //            EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
 //                    mail.getSubject(), mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
-
             //Esto es para hacer el envio con Servidor smtp de amazon
             AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
         } catch (Exception ex) {

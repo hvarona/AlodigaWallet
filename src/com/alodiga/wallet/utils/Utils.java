@@ -1186,4 +1186,227 @@ public class Utils {
         return builderParam;
     }
    
+    
+    
+    //Transferencia
+        public static Mail sendMailUserTransferCardToCard(String idioma, Float amountPayment,  String conceptTransaction, String userDestinationName, String emailUser)  {
+        String hello = "Hola";
+        String subject = "Alodiga Wallet: Transferencia Tarjeta a Tarjeta:";
+        String text1 = "Alodiga Wallet: Transferencia Tarjeta a Tarjeta";
+        String text2 = "Datos de su Transferencia:";
+        String amount_Payment = "Monto Transferido: ";
+        String concept_Transaction = "Concepto de la transacci&oacute;n: ";
+        String date = "Fecha: ";
+        String usuario_Destination = "Nombre de Usuario de destino: ";
+        String moreInfo = "Para mayor informaci&oacute;n visiste";
+        String mailInvite = "Le invitamos a seguir disfrutando los beneficios y de los atractivos productos y servicios que le ofrece Alodiga.";
+        String thanks = "Gracias por preferirnos, Alodiga Mejora tu vida";
+        String messageFooter1 = "Este mensaje ha sido enviado desde una cuenta de correo electr&oacute;nico exclusivamente de notificaciones que no admite mensajes. No responda esta comunicaci&oacute;n.";
+        String allRights = "Todos los derechos reservados";
+        if (idioma.equalsIgnoreCase("EN")) {
+            hello = "Hello";
+            subject = "Alodiga Wallet: Transfer Card To Card:";
+            text1 = "Alodiga Wallet: transfer Card To Card:";
+            text2 = "Data of your transfer: ";
+            amount_Payment = "Amount Transferred: ";
+            concept_Transaction = "Concept Transaction: ";
+            date = "Date:";
+            usuario_Destination = "Usuario Destination: ";
+            moreInfo = "Form more info visit";
+            mailInvite = "We invite you to continue enjoying the benefits and attractive products and services offered by Alodiga.";
+            thanks = "Thank you for choosing Alodiga, Alodiga Mejora tu vida";
+            messageFooter1 = "This message was sent from an email distributor solely for notification messages that are not supported. Do not respond to this communication";
+            allRights = "All rights reserved";
+        }
+        String style1 = "style='font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;'";
+        String style2 = "style='background-color: #07b49c;color:#ffff;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px'";
+        String body = "";
+        body = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>";
+        body += "<html xmlns='http://www.w3.org/1999/xhtml'>";
+        body += "<head>";
+        body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
+                + "<table width='756' height='600' border='0'>"
+                + "<tr><th width='750' height='595'><p>"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
+                + "<table  width='730' border='0' >"
+                + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
+                + "<tr><th width='728' height='5' bgcolor='#232323'></th></tr>"
+                + "</table>"
+                + "<table width='728' border='0'>"
+                + "<tr><th width='728'>"
+                + "<p align='left' class='Estilo11'><br/><br/>&iexcl;"
+                + hello + " "  + "&nbsp;"
+                + "!<br/><br/>"
+                + text1 + "<br><br></p>"
+                + "</th>"
+                + "</tr>"
+                + "<tr>"
+                + "<th><p align='left' style='font: 16px/1.8em Arial,Helvetica,sans-serif,lighter ; color: #666; font-weight:bold; display: table;  margin: 0; padding:0;' >"
+                + text2
+                + "</p></th></tr>"
+                + "<tr height='3px'><th width='728' bgcolor='#232323'></th></tr>"
+                + "<tr>"
+                + "<th>"
+                + "<div><table width='728' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
+                
+                + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
+                + amount_Payment + "" + amountPayment +"</div></td>"
+                + "</tr>"
+                
+                + "<tr height='30px'><td " + style2 + " width='305'><div align='left' >"
+                + concept_Transaction + "" + conceptTransaction +"</div></td>"
+
+                       
+                + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
+                + usuario_Destination + "" + userDestinationName + "</div></td>"
+                
+                + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
+                + date + new Timestamp(new java.util.Date().getTime()) + "</div></td>"
+                
+               
+                
+                + "<tr height='3px'><th width='728' bgcolor='#232323'></th></tr>"
+                + "<tr height='40px'>"
+                + "<th height='40px'><div class='Estilo11' align='left'>"
+                + moreInfo
+                + "<span style='font-size: 13px'> "
+                + "<a href='https://www.alodiga.com/'>  www.alodiga.com</a></span></div>"
+                + "</th>"
+                + "</tr>"
+                + "<tr>"
+                + "<th height='31' bordercolor='#999999'><div align='center'><p align='center' style='font: 10px/1.8em Arial,Helvetica,sans-serif,lighter ; color: #666; display: table;  margin: 0; padding:0;' >"
+                + thanks
+                + "</p>"
+                + " <p align='center' style='font: 10px/1.8em Arial,Helvetica,sans-serif,lighter ; color: #666; display: table;  margin: 0; padding:0;'>"
+                + messageFooter1
+                + "</p>"
+
+                + "</div>"
+                + "</th>"
+                + "</tr>"
+                + " </table>"
+                + "<div align='center'>"
+                + "<p align='center' style='font: 10px/1.8em Arial,Helvetica,sans-serif,lighter ; color: #666; display: table;  margin: 0; padding:0;'>&copy; Copyright 2013 - Alodiga, C.A. " + allRights + "<br> </div></th></tr></table></div></body></html>";
+
+        Mail mail = new Mail(subject,body);
+        mail.setSubject(subject);
+        mail.setFrom(ALODIGA_WALLET_ADDRESS);
+        mail.setBody(body);
+        ArrayList<String> recipients = new ArrayList<String>();
+        recipients.add(emailUser);
+        mail.setTo(recipients);
+        return mail;
+    }
+    
+    //Transferencia recibida
+        public static Mail sendMailUserTransferCardToCardReciber(String idioma, Float amountPayment,  String conceptTransaction, String userDestinationName, String emailUser)  {
+        String hello = "Hola";
+        String subject = "Alodiga Wallet: Transferencia Tarjeta a Tarjeta:";
+        String text1 = "Alodiga Wallet: Transferencia Tarjeta a Tarjeta";
+        String text2 = "Datos de su Transferencia Recibida:";
+        String amount_Payment = "Monto Recibido: ";
+        String concept_Transaction = "Concepto de la transacci&oacute;n: ";
+        String date = "Fecha: ";
+        String usuario_Destination = "Nombre de Usuario de destino: ";
+        String moreInfo = "Para mayor informaci&oacute;n visiste";
+        String mailInvite = "Le invitamos a seguir disfrutando los beneficios y de los atractivos productos y servicios que le ofrece Alodiga.";
+        String thanks = "Gracias por preferirnos, Alodiga Mejora tu vida";
+        String messageFooter1 = "Este mensaje ha sido enviado desde una cuenta de correo electr&oacute;nico exclusivamente de notificaciones que no admite mensajes. No responda esta comunicaci&oacute;n.";
+        String allRights = "Todos los derechos reservados";
+        if (idioma.equalsIgnoreCase("EN")) {
+            hello = "Hello";
+            subject = "Alodiga Wallet: Transfer Card to Card:";
+            text1 = "Alodiga Wallet: transfer Card to Card:";
+            text2 = "Data of your Transfer Received: ";
+            amount_Payment = "Amount received: ";
+            concept_Transaction = "Concept Transaction: ";
+            date = "Date:";
+            usuario_Destination = "Usuario Destination: ";
+            moreInfo = "Form more info visit";
+            mailInvite = "We invite you to continue enjoying the benefits and attractive products and services offered by Alodiga.";
+            thanks = "Thank you for choosing Alodiga, Alodiga Mejora tu vida";
+            messageFooter1 = "This message was sent from an email distributor solely for notification messages that are not supported. Do not respond to this communication";
+            allRights = "All rights reserved";
+        }
+        String style1 = "style='font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;'";
+        String style2 = "style='background-color: #07b49c;color:#ffff;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px'";
+        String body = "";
+        body = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>";
+        body += "<html xmlns='http://www.w3.org/1999/xhtml'>";
+        body += "<head>";
+        body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
+                + "<table width='756' height='600' border='0'>"
+                + "<tr><th width='750' height='595'><p>"
+                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
+                + "<table  width='730' border='0' >"
+                + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
+                + "<tr><th width='728' height='5' bgcolor='#232323'></th></tr>"
+                + "</table>"
+                + "<table width='728' border='0'>"
+                + "<tr><th width='728'>"
+                + "<p align='left' class='Estilo11'><br/><br/>&iexcl;"
+                + hello + " "  + "&nbsp;"
+                + "!<br/><br/>"
+                + text1 + "<br><br></p>"
+                + "</th>"
+                + "</tr>"
+                + "<tr>"
+                + "<th><p align='left' style='font: 16px/1.8em Arial,Helvetica,sans-serif,lighter ; color: #666; font-weight:bold; display: table;  margin: 0; padding:0;' >"
+                + text2
+                + "</p></th></tr>"
+                + "<tr height='3px'><th width='728' bgcolor='#232323'></th></tr>"
+                + "<tr>"
+                + "<th>"
+                + "<div><table width='728' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
+                
+                + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
+                + amount_Payment + "" + amountPayment +"</div></td>"
+                + "</tr>"
+                
+                + "<tr height='30px'><td " + style2 + " width='305'><div align='left' >"
+                + concept_Transaction + "" + conceptTransaction +"</div></td>"
+
+                       
+                + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
+                + usuario_Destination + "" + userDestinationName + "</div></td>"
+                
+                + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
+                + date + new Timestamp(new java.util.Date().getTime()) + "</div></td>"
+                
+               
+                
+                + "<tr height='3px'><th width='728' bgcolor='#232323'></th></tr>"
+                + "<tr height='40px'>"
+                + "<th height='40px'><div class='Estilo11' align='left'>"
+                + moreInfo
+                + "<span style='font-size: 13px'> "
+                + "<a href='https://www.alodiga.com/'>  www.alodiga.com</a></span></div>"
+                + "</th>"
+                + "</tr>"
+                + "<tr>"
+                + "<th height='31' bordercolor='#999999'><div align='center'><p align='center' style='font: 10px/1.8em Arial,Helvetica,sans-serif,lighter ; color: #666; display: table;  margin: 0; padding:0;' >"
+                + thanks
+                + "</p>"
+                + " <p align='center' style='font: 10px/1.8em Arial,Helvetica,sans-serif,lighter ; color: #666; display: table;  margin: 0; padding:0;'>"
+                + messageFooter1
+                + "</p>"
+
+                + "</div>"
+                + "</th>"
+                + "</tr>"
+                + " </table>"
+                + "<div align='center'>"
+                + "<p align='center' style='font: 10px/1.8em Arial,Helvetica,sans-serif,lighter ; color: #666; display: table;  margin: 0; padding:0;'>&copy; Copyright 2013 - Alodiga, C.A. " + allRights + "<br> </div></th></tr></table></div></body></html>";
+
+        Mail mail = new Mail(subject,body);
+        mail.setSubject(subject);
+        mail.setFrom(ALODIGA_WALLET_ADDRESS);
+        mail.setBody(body);
+        ArrayList<String> recipients = new ArrayList<String>();
+        recipients.add(emailUser);
+        mail.setTo(recipients);
+        return mail;
+    }
 }

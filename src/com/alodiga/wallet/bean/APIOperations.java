@@ -1,5 +1,13 @@
 package com.alodiga.wallet.bean;
 
+import cardcredentialserviceclient.CardCredentialServiceClient;
+import com.alodiga.account.client.AccountCredentialServiceClient;
+import com.alodiga.account.credential.response.StatusAccountResponse;
+import com.alodiga.autorization.credential.client.AutorizationCredentialServiceClient;
+import com.alodiga.autorization.credential.response.CardToCardTransferResponse;
+
+import com.alodiga.card.credential.response.ChangeStatusCardResponse;
+import com.alodiga.card.credential.response.StatusCardResponse;
 import com.alodiga.transferto.integration.connection.RequestManager;
 import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
 import com.alodiga.transferto.integration.model.ReserveResponse;
@@ -32,6 +40,7 @@ import com.alodiga.wallet.model.Commission;
 import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.BankHasProduct;
+import com.alodiga.wallet.model.Card;
 import com.alodiga.wallet.model.Code;
 import com.alodiga.wallet.model.Cumplimient;
 import com.alodiga.wallet.model.CumplimientStatus;
@@ -39,10 +48,19 @@ import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
 import com.alodiga.wallet.model.Sms;
 import com.alodiga.wallet.model.TopUpCountry;
+import com.alodiga.wallet.model.UserHasCard;
 import com.alodiga.wallet.model.ValidationCollection;
 import com.alodiga.wallet.response.generic.BankGeneric;
+import com.alodiga.wallet.respuestas.ActivateCardResponses;
+import com.alodiga.wallet.respuestas.AddressResponse;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
+import com.alodiga.wallet.respuestas.CardResponse;
+import com.alodiga.wallet.respuestas.ChangeStatusCredentialCard;
+import com.alodiga.wallet.respuestas.CheckStatusAccountResponses;
+import com.alodiga.wallet.respuestas.CheckStatusCardResponses;
+import com.alodiga.wallet.respuestas.CheckStatusCredentialAccount;
+import com.alodiga.wallet.respuestas.CheckStatusCredentialCard;
 import com.alodiga.wallet.respuestas.CollectionListResponse;
 import java.sql.Connection;
 import java.text.DateFormat;
@@ -79,6 +97,7 @@ import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
 import com.alodiga.wallet.respuestas.CumplimientResponse;
+import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.PreferenceListResponse;
@@ -86,13 +105,17 @@ import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.TransactionResponse;
+import com.alodiga.wallet.respuestas.TransferCardToCardCredential;
+import com.alodiga.wallet.respuestas.TransferCardToCardResponses;
 import com.alodiga.wallet.topup.TopUpInfo;
 import com.alodiga.wallet.utils.AmazonSESSendMail;
 import com.alodiga.wallet.utils.Constante;
 import com.alodiga.wallet.utils.Constants;
+import static com.alodiga.wallet.utils.EncriptedRsa.encrypt;
 import com.alodiga.wallet.utils.Encryptor;
 import com.alodiga.wallet.utils.EnvioCorreo;
 import com.alodiga.wallet.utils.Mail;
+import com.alodiga.wallet.utils.S3cur1ty3Cryt3r;
 import com.alodiga.wallet.utils.SendCallRegister;
 import com.alodiga.wallet.utils.SendMailTherad;
 import com.alodiga.wallet.utils.SendSmsThread;
@@ -104,25 +127,34 @@ import com.ericsson.alodiga.ws.Usuario;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.sql.Timestamp;
 import com.alodiga.wallet.utils.Utils;
+import com.alodiga.wallet.utils.XTrustProvider;
 import com.alodiga.ws.cumpliments.services.OFACMethodWS;
 import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
 import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
 import com.alodiga.ws.cumpliments.services.WsLoginResponse;
 
 import com.ericsson.alodiga.ws.Cuenta;
-import com.sun.accessibility.internal.resources.accessibility;
-import com.sun.corba.se.impl.orbutil.closure.Constant;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import static javafx.scene.input.KeyCode.T;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 import javax.persistence.LockModeType;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import javax.xml.registry.RegistryException;
 import static jdk.nashorn.internal.objects.NativeMath.log;
+import oracle.jrockit.jfr.tools.ConCatRepository;
+import org.apache.commons.codec.binary.Base64;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
 @TransactionManagement(TransactionManagementType.CONTAINER)
@@ -188,12 +220,11 @@ public class APIOperations {
             userHasProduct1.setBeginningDate(new Timestamp(new Date().getTime()));
             entityManager.persist(userHasProduct1);
 
-            UserHasProduct userHasProduct2 = new UserHasProduct();
-            userHasProduct2.setProductId(Product.PREPAID_CARD);
-            userHasProduct2.setUserSourceId(userId);
-            userHasProduct2.setBeginningDate(new Timestamp(new Date().getTime()));
-            entityManager.persist(userHasProduct2);
-
+//            UserHasProduct userHasProduct2 = new UserHasProduct();
+//            userHasProduct2.setProductId(Product.PREPAID_CARD);
+//            userHasProduct2.setUserSourceId(userId);
+//            userHasProduct2.setBeginningDate(new Timestamp(new Date().getTime()));
+//            entityManager.persist(userHasProduct2);
         } catch (Exception e) {
             e.printStackTrace();
             return new UserHasProductResponse(ResponseCode.ERROR_INTERNO, "Error in process saving product_has_response");
@@ -205,7 +236,7 @@ public class APIOperations {
         List<UserHasProduct> userHasProducts = new ArrayList<UserHasProduct>();
         List<Product> products = new ArrayList<Product>();
         try {
-            userHasProducts = (List<UserHasProduct>) entityManager.createNamedQuery("UserHasProduct.findByUserSourceId", UserHasProduct.class).setParameter("userSourceId", userId).getResultList();
+            userHasProducts = (List<UserHasProduct>) entityManager.createNamedQuery("UserHasProduct.findByUserSourceIdAllProduct", UserHasProduct.class).setParameter("userSourceId", userId).getResultList();
 
             if (userHasProducts.size() <= 0) {
                 return new ProductListResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
@@ -467,7 +498,18 @@ public class APIOperations {
             for (Product p : products) {
                 Float amount = 0F;
                 try {
-                    amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                    if (p.getId().equals(Product.PREPAID_CARD)) {
+                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                        CardResponse cardResponse = getCardByUserId(userId);
+                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                        StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                        amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                    } else {
+
+                        amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                    }
                 } catch (NoResultException e) {
                     amount = 0F;
                 }
@@ -508,6 +550,7 @@ public class APIOperations {
         transactionResponse.setProducts(products);
         return transactionResponse;
 
+//        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
 
     /*
@@ -707,7 +750,18 @@ public class APIOperations {
             for (Product p : products) {
                 Float amount = 0F;
                 try {
-                    amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                    if (p.getId().equals(Product.PREPAID_CARD)) {
+                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                        CardResponse cardResponse = getCardByUserId(userId);
+                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                        StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                        amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                    } else {
+
+                        amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                    }
                 } catch (NoResultException e) {
                     amount = 0F;
                 }
@@ -742,6 +796,7 @@ public class APIOperations {
         transactionResponse.setIdTransaction(transfer.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
+//        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
 
     public TransactionResponse previewExchangeProduct(String emailUser, Long productSourceId, Long productDestinationId,
@@ -1014,7 +1069,18 @@ public class APIOperations {
                 for (Product p : products) {
                     Float amount_1 = 0F;
                     try {
-                        amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                        if (p.getId().equals(Product.PREPAID_CARD)) {
+                            AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                            CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                            CardResponse cardResponse = getCardByUserId(userId);
+                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                            amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                        } else {
+                            amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                        }
+
                     } catch (NoResultException e) {
                         amount_1 = 0F;
                     }
@@ -1024,7 +1090,6 @@ public class APIOperations {
 
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
             }
-
             ////////////////////////////////////////////////////////////
             /// se incorpora para delvolver el saldo actual del cliente///
             /////////////////////////////////////////////////////////////
@@ -1046,6 +1111,7 @@ public class APIOperations {
         transactionResponse.setIdTransaction(exchange.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
+//        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
 
     private List<Preference> getPreferences() {
@@ -1150,10 +1216,11 @@ public class APIOperations {
                 topUpInfo.setDestinationCurrency(inf.getDestinationCurrency());
 
                 topUpInfo.setSkuid(inf.getSkuid());
-                topUpInfo.setMinimumAmount(Float.parseFloat(inf.getOpen_range_minimum_amount_local_currency()));
-                topUpInfo.setMaximumAmount(Float.parseFloat(inf.getOpen_range_maximum_amount_local_currency()));
+                topUpInfo.setMinimumAmount(Float.parseFloat(inf.getOpen_range_minimum_amount_requested_currency()));
+                topUpInfo.setMaximumAmount(Float.parseFloat(inf.getOpen_range_maximum_amount_requested_currency()));
                 topUpInfo.setIncrement(Float.parseFloat(inf.getOpen_range_increment_local_currency()));
-                Float amount = Float.parseFloat(inf.getOpen_range_minimum_amount_local_currency()) + Float.parseFloat(inf.getOpen_range_increment_local_currency());
+                Float amount = Float.parseFloat(inf.getOpen_range_minimum_amount_requested_currency()) + Float.parseFloat(inf.getOpen_range_increment_local_currency());
+
                 TopUpResponse topUpResponse = RequestManager.simulationDoTopUp(phoneNumber, receiverNumber, inf.getOpen_range_minimum_amount_requested_currency(), inf.getSkuid());
                 Float wholesalePrice = Float.parseFloat(topUpResponse.getWholesalePrice());
                 topUpInfo.setWholesalePrice(wholesalePrice);
@@ -1230,8 +1297,8 @@ public class APIOperations {
             }
             if (skuidId.equals(skuidIdRequest)) {
                 ReserveResponse response2 = RequestManager.getReserve();
-                TopUpResponse topUpResponseExecute = RequestManager.simulationDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId);
-//             TopUpResponse topUpResponseExecute = RequestManager.newDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId, response2.getReserved_id());
+                //TopUpResponse topUpResponseExecute = RequestManager.simulationDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId);
+                TopUpResponse topUpResponseExecute = RequestManager.newDoTopUp(senderNumber, phoneNumber, amount.toString(), skuidId, response2.getReserved_id());
                 String code = topUpResponseExecute.getErrorCode();
                 if (!code.equals("0")) {//Cuando es 0 esta bien...
                     StringBuilder errorBuilder = new StringBuilder(TopUpResponseConstants.TRANSFER_TO_CODES.get(code));
@@ -1320,6 +1387,9 @@ public class APIOperations {
         short isPercentCommission = 0;
         Commission commissionWithdrawal = new Commission();
         Transaction withdrawal = new Transaction();
+        ArrayList<Product> products = new ArrayList<Product>();
+        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
 
         try {
             //Se obtiene el usuario de la API de Registro Unificado
@@ -1454,6 +1524,37 @@ public class APIOperations {
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
 
+            ////////////////////////////////////////////////////////////
+            /// se incorpora para delvolver el saldo actual del cliente///
+            /////////////////////////////////////////////////////////////
+            try {
+                products = getProductsListByUserId(userId);
+                for (Product p : products) {
+                    Float amount_1 = 0F;
+                    try {
+                        if (p.getId().equals(Product.PREPAID_CARD)) {
+                            CardResponse cardResponse = getCardByUserId(userId);
+                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                            amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                        } else {
+                            amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                        }
+
+                    } catch (NoResultException e) {
+                        amount_1 = 0F;
+                    }
+                    p.setCurrentBalance(amount_1);
+                }
+            } catch (Exception ex) {
+
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            }
+            ////////////////////////////////////////////////////////////
+            /// se incorpora para delvolver el saldo actual del cliente///
+            /////////////////////////////////////////////////////////////
+
             //Envío de Email
             SendMailTherad sendMailTherad = new SendMailTherad("ES", accountBank, amountWithdrawal, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("4"));
             sendMailTherad.run();
@@ -1465,10 +1566,12 @@ public class APIOperations {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
         }
-//        return new TransactionResponse(ResponseCode.EXITO);
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO");
+
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
         transactionResponse.setIdTransaction(withdrawal.getId().toString());
+        transactionResponse.setProducts(products);
         return transactionResponse;
+
     }
 
     /*
@@ -1492,6 +1595,9 @@ public class APIOperations {
         short isPercentCommission = 0;
         Commission commissionRecharge = new Commission();
         Transaction recharge = new Transaction();
+        ArrayList<Product> products = new ArrayList<Product>();
+        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
 
         try {
             //Se obtiene el usuario de la API de Registro Unificado
@@ -1625,6 +1731,37 @@ public class APIOperations {
 
             entityManager.merge(recharge);
 
+            ////////////////////////////////////////////////////////////
+            /// se incorpora para delvolver el saldo actual del cliente///
+            /////////////////////////////////////////////////////////////
+            try {
+                products = getProductsListByUserId(userId);
+                for (Product p : products) {
+                    Float amount_1 = 0F;
+                    try {
+                        if (p.getId().equals(Product.PREPAID_CARD)) {
+                            CardResponse cardResponse = getCardByUserId(userId);
+                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                            amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                        } else {
+                            amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                        }
+
+                    } catch (NoResultException e) {
+                        amount_1 = 0F;
+                    }
+                    p.setCurrentBalance(amount_1);
+                }
+            } catch (Exception ex) {
+
+                return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+            }
+            ////////////////////////////////////////////////////////////
+            /// se incorpora para delvolver el saldo actual del cliente///
+            /////////////////////////////////////////////////////////////
+
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
             SendMailTherad sendMailTherad = new SendMailTherad("ES", referenceNumberOperation, conceptTransaction, amountRecharge, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("2"));
@@ -1636,12 +1773,10 @@ public class APIOperations {
             e.printStackTrace();
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
         }
-
-//        return new TransactionResponse(ResponseCode.EXITO);
-        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO");
+        TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
         transactionResponse.setIdTransaction(recharge.getId().toString());
+        transactionResponse.setProducts(products);
         return transactionResponse;
-
     }
 
     public ProductListResponse getProductsByBankId(Long bankId, Long userId) {
@@ -1658,6 +1793,15 @@ public class APIOperations {
                 BalanceHistory balanceHistory = new BalanceHistory();
                 try {
                     balanceHistory = loadLastBalanceHistoryByAccount_(userId, product.getId());
+                    if (product.getId().equals(Constants.PREPAY_CARD_CREDENTIAL)) {
+                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                        CardResponse cardResponse = getCardByUserId(userId);
+                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                        StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                        balanceHistory.setCurrentAmount(Float.valueOf(accountResponse.getComprasDisponibles()));
+                    }
                     product.setCurrentBalance(balanceHistory.getCurrentAmount());
                 } catch (NoResultException e) {
                     product.setCurrentBalance(0F);
@@ -1702,9 +1846,20 @@ public class APIOperations {
         BalanceHistory balanceHistory = new BalanceHistory();
         try {
             balanceHistory = loadLastBalanceHistoryByAccount_(userId, productId);
+            if (productId.equals(Constants.PREPAY_CARD_CREDENTIAL)) {
+                AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                CardResponse cardResponse = getCardByUserId(userId);
+                String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                balanceHistory.setCurrentAmount(Float.valueOf(accountResponse.getComprasDisponibles()));
+            }
         } catch (NoResultException e) {
-            e.printStackTrace();
             return new BalanceHistoryResponse(ResponseCode.BALANCE_HISTORY_NOT_FOUND_EXCEPTION, "Error loading BalanceHistory");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new BalanceHistoryResponse(ResponseCode.ERROR_INTERNO, "Error loading BalanceHistory");
         }
         return new BalanceHistoryResponse(ResponseCode.EXITO, "", balanceHistory);
     }
@@ -1759,7 +1914,7 @@ public class APIOperations {
         List<UserHasProduct> userHasProducts = new ArrayList<UserHasProduct>();
         ArrayList<Product> products = new ArrayList<Product>();
         try {
-            userHasProducts = (List<UserHasProduct>) entityManager.createNamedQuery("UserHasProduct.findByUserSourceId", UserHasProduct.class).setParameter("userSourceId", userId).getResultList();
+            userHasProducts = (List<UserHasProduct>) entityManager.createNamedQuery("UserHasProduct.findByUserSourceIdAllProduct", UserHasProduct.class).setParameter("userSourceId", userId).getResultList();
 
             if (userHasProducts.size() <= 0) {
                 throw new NoResultException();
@@ -1774,6 +1929,35 @@ public class APIOperations {
             throw new Exception();
         }
         return products;
+    }
+
+    public Boolean hasPrepayCardAsociated(Long userId) throws Exception {
+        List<UserHasProduct> userHasProducts = new ArrayList<UserHasProduct>();
+        ArrayList<Product> products = new ArrayList<Product>();
+        try {
+            userHasProducts = (List<UserHasProduct>) entityManager.createNamedQuery("UserHasProduct.findByUserSourceId", UserHasProduct.class).setParameter("userSourceId", userId).getResultList();
+            if (userHasProducts.size() >= 1) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            throw new Exception();
+        }
+    }
+
+    public Boolean hasPrepayCard(Long userId) throws Exception {
+        List<UserHasCard> userHasCards = new ArrayList<UserHasCard>();
+        try {
+            userHasCards = (List<UserHasCard>) entityManager.createNamedQuery("UserHasCard.findByUserId", UserHasCard.class).setParameter("userId", userId).getResultList();
+            if (userHasCards.size() >= 1) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            throw new Exception();
+        }
     }
 
     public TransactionResponse saveRechargeTopUp(String emailUser, Long productId, String cryptogramUser,
@@ -2000,7 +2184,17 @@ public class APIOperations {
             for (Product p : productResponses) {
                 Float amount_1 = 0F;
                 try {
-                    amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                    if (p.getId().equals(Product.PREPAID_CARD)) {
+                        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                        CardResponse cardResponse = getCardByUserId(userId);
+                        String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                        StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                        StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                        amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                    } else {
+                        amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                    }
                 } catch (NoResultException e) {
                     amount_1 = 0F;
                 }
@@ -2153,57 +2347,6 @@ public class APIOperations {
         return new CollectionListResponse(ResponseCode.EXITO, "", validationCollections);
     }
 
-    public CollectionListResponse saveCumplimient(Long userId, byte[] imgDocument, byte[] imgProfile, String estado, String ciudad, String zipCode, String addres1) {
-        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
-        RespuestaUsuario responseUser = null;
-        Cumplimient cumplimient = new Cumplimient();
-        try {
-            responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
-        } catch (RemoteException ex) {
-            ex.printStackTrace();
-            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections 1");
-        }
-        userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-        cumplimient.setAdditional(null);
-        OFACMethodWSProxy aCMethodWSProxy = new OFACMethodWSProxy();
-        WsLoginResponse response;
-        WsExcludeListResponse response2;
-        try {
-            response = aCMethodWSProxy.loginWS("alodiga", "d6f80e647631bb4522392aff53370502");
-            response2 = aCMethodWSProxy.queryOFACList(response.getToken(), responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getNombre(), null, null, null, null, 0.5F);
-            cumplimient.setAMLPercent(Float.valueOf(response2.getPercentMatch()));
-            Country codeCountry = getCountryCode(responseUser.getDatosRespuesta().getMovil());
-            cumplimient.setImgDocumentDate(imgDocument);
-            cumplimient.setImgProfile(imgProfile);
-            cumplimient.setAgentComplientId(null);
-            cumplimient.setUserSourceId(userId);
-            cumplimient.setIsKYC(true);
-            cumplimient.setIsAML(true);
-            cumplimient.setBeginningDate(new Timestamp(new Date().getTime()));
-            CumplimientStatus cumplimientStatus = entityManager.find(CumplimientStatus.class, CumplimientStatus.IN_PROCESS);
-            cumplimient.setComplientStatusId(cumplimientStatus);
-            cumplimient.setAprovedDate(new Timestamp(new Date().getTime()));
-            Address address = new Address();
-            address.setStateName(estado);
-            address.setZipCode(zipCode);
-            address.setCityName(ciudad);
-            address.setAddress(addres1);
-            address.setCountryId(codeCountry);
-            entityManager.persist(address);
-            cumplimient.setAddressId(address);
-            entityManager.persist(cumplimient);
-        } catch (ConstraintViolationException e) {
-            log(Level.SEVERE, "Exception: ");
-            e.getConstraintViolations().forEach(err -> log(Level.SEVERE, err.toString()));
-        } catch (RemoteException ex) {
-            ex.printStackTrace();
-            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections");
-        }
-
-        return new CollectionListResponse(ResponseCode.EXITO);
-
-    }
-
     public Country getCountryCode(String strAni) {
         long ani = Long.parseLong(strAni);
 
@@ -2232,6 +2375,586 @@ public class APIOperations {
             return new LanguageListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
         }
         return new LanguageListResponse(ResponseCode.EXITO, "", languages);
+    }
+
+    public Address saveAddress(Long userId, String estado, String ciudad, String zipCode, String addres1) throws RemoteException, Exception {
+
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser = null;
+        try {
+            responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            Country codeCountry = getCountryCode(responseUser.getDatosRespuesta().getMovil());
+            Address address = new Address();
+            address.setId(null);
+            address.setCountryId(codeCountry);
+            address.setStateId(null);
+            address.setCityId(null);
+            address.setCountyId(null);
+            address.setAddress(addres1);
+            address.setZipCode(zipCode);
+            address.setStateName(estado);
+            address.setCountyName(null);
+            address.setCityName(ciudad);
+            entityManager.persist(address);
+            return address;
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            throw new RemoteException(ex.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new Exception(ex.getMessage());
+        }
+    }
+
+    public CollectionListResponse saveCumplimient(Long userId, byte[] imgDocument, byte[] imgProfile, String estado, String ciudad, String zipCode, String addres1) {
+
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser = null;
+        Cumplimient cumplimient = new Cumplimient();
+        try {
+            responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            Address address = saveAddress(userId, estado, ciudad, zipCode, addres1);
+            OFACMethodWSProxy aCMethodWSProxy = new OFACMethodWSProxy();
+            WsLoginResponse response;
+            WsExcludeListResponse response2;
+            response = aCMethodWSProxy.loginWS("alodiga", "d6f80e647631bb4522392aff53370502");
+            response2 = aCMethodWSProxy.queryOFACList(response.getToken(), responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getNombre(), null, null, null, null, 0.5F);
+            cumplimient.setUserSourceId(userId);
+            cumplimient.setIsKYC(true);
+            cumplimient.setIsAML(true);
+            cumplimient.setBeginningDate(new Timestamp(new Date().getTime()));
+            cumplimient.setEndingDate(null);
+            cumplimient.setAprovedDate(null);
+            cumplimient.setAMLPercent(Float.valueOf(response2.getPercentMatch()) * 100);
+            cumplimient.setImgDocumentDate(imgDocument);
+            cumplimient.setImgProfile(imgProfile);
+            CumplimientStatus cumplimientStatus = entityManager.find(CumplimientStatus.class, CumplimientStatus.IN_PROCESS);
+            cumplimient.setComplientStatusId(cumplimientStatus);
+            cumplimient.setAgentComplientId(null);
+            cumplimient.setAddressId(address);
+            cumplimient.setAdditional(null);
+            entityManager.persist(cumplimient);
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections 1");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new CollectionListResponse(ResponseCode.ERROR_INTERNO, "Error validating collections 1");
+        }
+
+        return new CollectionListResponse(ResponseCode.EXITO);
+
+    }
+
+    public ActivateCardResponses activateCard(Long userId, String card, String timeZone, String status) {
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser = null;
+        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+        ArrayList<Product> products = new ArrayList<Product>();
+        try {
+            responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            if (!isCardUnique(card)) {
+                return new ActivateCardResponses(
+                        ResponseCode.CARD_NUMBER_EXISTS, "CARD NUMBER EXISTS");
+            }
+            ignoreSSL();
+            String Card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+            String encryptedString = Base64.encodeBase64String(encrypt(Card, Constants.PUBLIC_KEY));
+            ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, status);
+
+            if (response.getCodigoRespuesta().equals("00") || response.getCodigoRespuesta().equals("-024")) {
+                //continua con la activaciòn va contra credencial y activa la tarjeta dependiendo de la respuesta
+                // Credencial aciva
+                //Validar si el producto esta asociado al usuario.
+                if (!hasPrepayCardAsociated(userId)) {
+                    //Si no lo tiene se debe afiliar 
+                    UserHasProduct userHasProduct2 = new UserHasProduct();
+                    userHasProduct2.setProductId(Product.PREPAID_CARD);
+                    userHasProduct2.setUserSourceId(userId);
+                    userHasProduct2.setBeginningDate(new Timestamp(new Date().getTime()));
+                    entityManager.persist(userHasProduct2);
+                }
+                //Guarda el numero de tarjeta asociado
+                if (!hasPrepayCard(userId)) {
+                    //Si no lo tiene se debe afiliar 
+                    Card card1 = new Card();
+                    card1.setNumberCard(Card);
+                    entityManager.persist(card1);
+                    entityManager.flush();
+                    UserHasCard userHasCard = new UserHasCard();
+                    userHasCard.setUserId(userId);
+                    userHasCard.setCardId(card1);
+                    entityManager.persist(userHasCard);
+                }
+
+                ////////////////////////////////////////////////////////////
+                /// se incorpora para delvolver el saldo actual del cliente///
+                /////////////////////////////////////////////////////////////
+                try {
+                    products = getProductsListByUserId(userId);
+                    for (Product p : products) {
+                        Float amount_1 = 0F;
+                        try {
+                            if (p.getId().equals(Product.PREPAID_CARD)) {
+                                CardResponse cardResponse = getCardByUserId(userId);
+                                String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                            }
+
+                        } catch (NoResultException e) {
+                            amount_1 = 0F;
+                        }
+                        p.setCurrentBalance(amount_1);
+                    }
+                } catch (Exception ex) {
+
+                    return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "Error loading products");
+                }
+                ////////////////////////////////////////////////////////////
+                /// se incorpora para delvolver el saldo actual del cliente///
+                /////////////////////////////////////////////////////////////
+//            
+//             TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+//        transactionResponse.setProducts(products);
+//        //return transactionResponse;
+                ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
+                ActivateCardResponses activateCardResponses = new ActivateCardResponses(changeStatusCredentialcardResponse, ResponseCode.EXITO, "", products);
+                activateCardResponses.setProducts(products);
+
+                CardResponse respuestaTarjeta = getCardByUserId(userId);
+                activateCardResponses.setNumberCard(respuestaTarjeta.getNumberCard());
+                return activateCardResponses;
+            } else if (response.getCodigoRespuesta().equals("-024")) {
+                return new ActivateCardResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
+            } else if (response.getCodigoRespuesta().equals("-011")) {
+                return new ActivateCardResponses(ResponseCode.AUTHENTICATE_IMPOSSIBLE, "Authenticate Impossible");
+            } else if (response.getCodigoRespuesta().equals("-13")) {
+                return new ActivateCardResponses(ResponseCode.SERVICE_NOT_ALLOWED, "Service Not Allowed");
+            } else if (response.getCodigoRespuesta().equals("-14")) {
+                return new ActivateCardResponses(ResponseCode.OPERATION_NOT_ALLOWED_FOR_THIS_SERVICE, "Operation Not Allowed For This Service");
+            } else if (response.getCodigoRespuesta().equals("-060")) {
+                return new ActivateCardResponses(ResponseCode.UNABLE_TO_ACCESS_DATA, "Unable to Access Data");
+            } else if (response.getCodigoRespuesta().equals("-120")) {
+                return new ActivateCardResponses(ResponseCode.THERE_ARE_NO_RECORDS_FOR_THE_REQUESTED_SEARCH, "There are no Records for the Requested Search");
+            } else if (response.getCodigoRespuesta().equals("-140")) {
+                return new ActivateCardResponses(ResponseCode.THE_REQUESTED_PRODUCT_DOES_NOT_EXIST, "The Requested Product does not Exist");
+            } else if (response.getCodigoRespuesta().equals("-160")) {
+                return new ActivateCardResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
+            }
+            return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+        }
+    }
+
+    public DesactivateCardResponses desactivateCard(Long userId, String card, String timeZone, String status) {
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser = null;
+        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+        try {
+            responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            ignoreSSL();
+            //card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+            String encryptedString = Base64.encodeBase64String(encrypt(card, Constants.PUBLIC_KEY));
+            ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, status);
+            System.out.println(response.getCodigoRespuesta());
+            if (response.getCodigoRespuesta().equals("00")) {
+                ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
+                return new DesactivateCardResponses(changeStatusCredentialcardResponse, ResponseCode.EXITO, "");
+            } else if (response.getCodigoRespuesta().equals("-024")) {
+                return new DesactivateCardResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
+            } else if (response.getCodigoRespuesta().equals("-011")) {
+                return new DesactivateCardResponses(ResponseCode.AUTHENTICATE_IMPOSSIBLE, "Authenticate Impossible");
+            } else if (response.getCodigoRespuesta().equals("-13")) {
+                return new DesactivateCardResponses(ResponseCode.SERVICE_NOT_ALLOWED, "Service Not Allowed");
+            } else if (response.getCodigoRespuesta().equals("-14")) {
+                return new DesactivateCardResponses(ResponseCode.OPERATION_NOT_ALLOWED_FOR_THIS_SERVICE, "Operation Not Allowed For This Service");
+            } else if (response.getCodigoRespuesta().equals("-060")) {
+                return new DesactivateCardResponses(ResponseCode.UNABLE_TO_ACCESS_DATA, "Unable to Access Data");
+            } else if (response.getCodigoRespuesta().equals("-120")) {
+                return new DesactivateCardResponses(ResponseCode.THERE_ARE_NO_RECORDS_FOR_THE_REQUESTED_SEARCH, "There are no Records for the Requested Search");
+            } else if (response.getCodigoRespuesta().equals("-140")) {
+                return new DesactivateCardResponses(ResponseCode.THE_REQUESTED_PRODUCT_DOES_NOT_EXIST, "The Requested Product does not Exist");
+            } else if (response.getCodigoRespuesta().equals("-160")) {
+                return new DesactivateCardResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
+            }
+            return new DesactivateCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new DesactivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new DesactivateCardResponses(ResponseCode.ERROR_INTERNO, "");
+        }
+    }
+
+    public CheckStatusCardResponses checkStatusCard(Long userId, String card, String timeZone) {
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser = null;
+        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+        try {
+            responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+            String encryptedString = Base64.encodeBase64String(encrypt(card, Constants.PUBLIC_KEY));
+            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString);
+            if (statusCardResponse.getCodigo().equals("00")) {
+                CheckStatusCredentialCard checkStatusCredentialCard = new CheckStatusCredentialCard(statusCardResponse.getCodigo(), statusCardResponse.getDescripcion(), statusCardResponse.getTicketWS(), statusCardResponse.getInicio(), statusCardResponse.getFin(), statusCardResponse.getTiempo(), statusCardResponse.getNumero(), statusCardResponse.getCuenta(), statusCardResponse.getCodigoEntidad(), statusCardResponse.getDescripcionEntidad(), statusCardResponse.getSucursal(), statusCardResponse.getCodigoProducto(), statusCardResponse.getDescripcionProducto(), statusCardResponse.getCodigoEstado(), statusCardResponse.getDescripcionEstado(), statusCardResponse.getActual(), statusCardResponse.getAnterior(), statusCardResponse.getDenominacion(), statusCardResponse.getTipo(), statusCardResponse.getIden(), statusCardResponse.getTelefono(), statusCardResponse.getDireccion(), statusCardResponse.getCodigoPostal(), statusCardResponse.getLocalidad(), statusCardResponse.getCodigoPais(), statusCardResponse.getDescripcionPais(), statusCardResponse.getMomentoUltimaActualizacion(), statusCardResponse.getMomentoUltimaOperacionAprobada(), statusCardResponse.getMomentoUltimaOperacionDenegada(), statusCardResponse.getMomentoUltimaBajaBoletin(), statusCardResponse.getContadorPinERR());
+                return new CheckStatusCardResponses(checkStatusCredentialCard, ResponseCode.EXITO, "");
+            } else if (statusCardResponse.getCodigo().equals("-120")) {
+                return new CheckStatusCardResponses(ResponseCode.THERE_IS_NO_SEARCH_RECORD, "There is not search record");
+            }
+            return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "");
+        }
+
+    }
+
+    public CheckStatusAccountResponses checkStatusAccount(Long userId, String numberAccount, String timeZone) {
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        RespuestaUsuario responseUser = null;
+        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+        try {
+            responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            numberAccount = S3cur1ty3Cryt3r.aloEncrpter(numberAccount, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, numberAccount);
+            accountResponse.setCodigo("00");
+            if (accountResponse.getCodigo().equals("00")) {
+                CheckStatusCredentialAccount checkStatusCredentialAccount = new CheckStatusCredentialAccount(accountResponse.getCodigo(), accountResponse.getDescripcion(), accountResponse.getNumero(), accountResponse.getCodigoEstado(), accountResponse.getDescripcionEstado(), accountResponse.getCodigoEntidad(), accountResponse.getDescripcionEntidad(), accountResponse.getSucursal(), accountResponse.getCodigoProducto(), accountResponse.getDescripcionProducto(), accountResponse.getCodigoPais(), accountResponse.getDescripcionPais(), accountResponse.getCodigoMoneda(), accountResponse.getDescripcionMoneda(), accountResponse.getVIP(), accountResponse.getHCC(), accountResponse.getULC(), accountResponse.getMCC(), accountResponse.getMomentoRenewal(), accountResponse.getMomentoUltimaActualizacion(), accountResponse.getMomentoUltimaOperacionAprobada(), accountResponse.getMomentoUltimaOperacionDenegada(), accountResponse.getMomentoUltimoBloqueo(), accountResponse.getMomentoUltimoDesbloqueo(), accountResponse.getComprasDisponibles(), accountResponse.getCuotasDisponibles(), accountResponse.getAdelantosDisponibles(), accountResponse.getPrestamosDisponibles(), accountResponse.getComprasLimites(), accountResponse.getCuotasLimites(), accountResponse.getAdelantosLimites(), accountResponse.getPrestamosLimites(), accountResponse.getFechaVencimiento(), accountResponse.getSaldo(), accountResponse.getPagoMinimo(), accountResponse.getSaldoDolar());
+                return new CheckStatusAccountResponses(checkStatusCredentialAccount, ResponseCode.EXITO, "");
+            } else if (accountResponse.getCodigo().equals("-030")) {
+                return new CheckStatusAccountResponses(ResponseCode.NON_EXISTENT_ACCOUNT, "Non-existent account");
+            }
+            return new CheckStatusAccountResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new CheckStatusAccountResponses(ResponseCode.ERROR_INTERNO, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new CheckStatusAccountResponses(ResponseCode.ERROR_INTERNO, "");
+        }
+
+    }
+
+    public TransferCardToCardResponses transferCardToCardAutorization(Long userId, String numberCardOrigin, String numberCardDestinate, String balance, Long idUserDestination, String conceptTransaction) {
+        APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+        AutorizationCredentialServiceClient autorizationCredentialServiceClient = new AutorizationCredentialServiceClient();
+        ArrayList<Product> products = new ArrayList<Product>();
+        CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+        AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        Transaction transfer = new Transaction();
+
+        try {
+
+            RespuestaUsuario responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
+            RespuestaUsuario userDestination = proxy.getUsuarioporId("usuarioWS", "passwordWS", idUserDestination.toString());
+            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+            ignoreSSL();
+
+            numberCardOrigin = S3cur1ty3Cryt3r.aloEncrpter(numberCardOrigin, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+            numberCardDestinate = S3cur1ty3Cryt3r.aloEncrpter(numberCardDestinate, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+            SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+            SimpleDateFormat sdg = new SimpleDateFormat("yyyyMMdd");
+            String hour = sdf.format(timestamp);
+            System.out.println(hour);
+            String date = sdg.format(timestamp);
+            System.out.println(date);
+            CardToCardTransferResponse cardToCardTransferResponse = autorizationCredentialServiceClient.cardToCardTransfer(date, hour, numberCardOrigin, numberCardDestinate, balance);
+
+            if (cardToCardTransferResponse.getCodigoError().equals("-1")) {
+                TransferCardToCardCredential cardCredential = new TransferCardToCardCredential(cardToCardTransferResponse.getCodigoError(), cardToCardTransferResponse.getMensajeError(), cardToCardTransferResponse.getCodigoRespuesta(), cardToCardTransferResponse.getMensajeRespuesta(), cardToCardTransferResponse.getCodigoAutorizacion(), cardToCardTransferResponse.getSaldoPosterior(), cardToCardTransferResponse.getSaldo(), cardToCardTransferResponse.getSaldoPosteriorCuentaDestino(), cardToCardTransferResponse.getSaldoCuentaDestino());
+
+                //Crear el objeto Transaction para registrar la transferencia del cliente
+                transfer.setId(null);
+                transfer.setUserSourceId(BigInteger.valueOf(userId));
+                transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
+                Product product = entityManager.find(Product.class, 3L);
+                transfer.setProductId(product);
+                TransactionType transactionType = entityManager.find(TransactionType.class, Constants.TRANSFER_CARD_TO_CARD);
+                transfer.setTransactionTypeId(transactionType);
+                TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constants.TRANSFER_CARD_TO_CARD_SOURCE);
+                transfer.setTransactionSourceId(transactionSource);
+                Date date_ = new Date();
+                Timestamp creationDate = new Timestamp(date_.getTime());
+                transfer.setCreationDate(creationDate);
+                //cambiar por valor de parÃ¡metro
+                transfer.setConcept(Constants.TRANSACTION_CONCEPT_TRANSFER_CARD_TO_CARD);
+                transfer.setAmount(Float.valueOf(balance));
+                transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
+                transfer.setTotalAmount(Float.valueOf(balance));
+                entityManager.persist(transfer);
+
+                //Balance History del usuario que transfiere el saldo
+                BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, 3L);
+                BalanceHistory balanceHistory = new BalanceHistory();
+                balanceHistory.setId(null);
+                balanceHistory.setUserId(userId);
+                if (balanceUserSource == null) {
+                    balanceHistory.setOldAmount(Float.valueOf(cardCredential.getRearBalanceAccountDestination()));
+                    balanceHistory.setCurrentAmount(Float.valueOf(cardCredential.getDestinationAccountBalance()));
+                } else {
+                    balanceHistory.setOldAmount(Float.valueOf(cardCredential.getRearBalanceAccountDestination()));
+                    balanceHistory.setCurrentAmount(Float.valueOf(cardCredential.getDestinationAccountBalance()));
+                    balanceHistory.setVersion(balanceUserSource.getId());
+                }
+                balanceHistory.setProductId(product);
+                balanceHistory.setTransactionId(transfer);
+                Date balanceDate = new Date();
+                Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+                balanceHistory.setDate(balanceHistoryDate);
+                entityManager.persist(balanceHistory);
+
+                //Balance History del usuario que recibe la transferencia
+                BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination, 3L);
+                balanceHistory = new BalanceHistory();
+                balanceHistory.setId(null);
+                balanceHistory.setUserId(idUserDestination);
+                if (balanceUserDestination == null) {
+                    balanceHistory.setOldAmount(Float.valueOf(cardCredential.getRearBalanceAccountDestination()));
+                    balanceHistory.setCurrentAmount(Float.valueOf(cardCredential.getDestinationAccountBalance()));
+                } else {
+                    balanceHistory.setOldAmount(Float.valueOf(cardCredential.getRearBalanceAccountDestination()));
+                    balanceHistory.setCurrentAmount(Float.valueOf(cardCredential.getDestinationAccountBalance()));
+                    balanceHistory.setVersion(balanceUserDestination.getId());
+                }
+                balanceHistory.setProductId(product);
+                balanceHistory.setTransactionId(transfer);
+                balanceDate = new Date();
+                balanceHistoryDate = new Timestamp(balanceDate.getTime());
+                balanceHistory.setDate(balanceHistoryDate);
+                entityManager.persist(balanceHistory);
+
+                ////////////////////////////////////////////////////////////
+                /// se incorpora para delvolver el saldo actual del cliente///
+                /////////////////////////////////////////////////////////////
+                try {
+                    products = getProductsListByUserId(userId);
+                    for (Product p : products) {
+                        Float amount_1 = 0F;
+                        try {
+                            if (p.getId().equals(Product.PREPAID_CARD)) {
+                                CardResponse cardResponse = getCardByUserId(userId);
+                                String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                            }
+
+                        } catch (NoResultException e) {
+                            amount_1 = 0F;
+                        }
+                        p.setCurrentBalance(amount_1);
+                    }
+                } catch (Exception ex) {
+
+                    return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "Error loading products");
+                }
+                ////////////////////////////////////////////////////////////
+                /// se incorpora para delvolver el saldo actual del cliente///
+                /////////////////////////////////////////////////////////////
+
+                //Envias notificaciones
+                //envias sms Y coreo
+                //correo a quien envia
+                SendMailTherad sendMailTherad = new SendMailTherad("ES", Float.valueOf(balance), conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getEmail(), Integer.valueOf("11"));
+                sendMailTherad.run();
+                //correo a quien recibe
+                SendMailTherad sendMailTherad1 = new SendMailTherad("ES", Float.valueOf(balance), conceptTransaction, userDestination.getDatosRespuesta().getNombre() + " " + userDestination.getDatosRespuesta().getApellido(), userDestination.getDatosRespuesta().getEmail(), Integer.valueOf("12"));
+                sendMailTherad1.run();
+
+                //Envia quien envia 
+                SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), Float.valueOf(balance), Integer.valueOf("30"), userId, entityManager);
+                sendSmsThread.run();
+
+                //Envia quien recibe
+                SendSmsThread sendSmsThread1 = new SendSmsThread(userDestination.getDatosRespuesta().getMovil(), Float.valueOf(balance), Integer.valueOf("31"), Long.valueOf(userDestination.getDatosRespuesta().getUsuarioID()), entityManager);
+                sendSmsThread1.run();
+
+                TransferCardToCardResponses cardResponses = new TransferCardToCardResponses(cardCredential, ResponseCode.EXITO, "", products);
+                cardResponses.setIdTransaction(transfer.getId().toString());
+                cardResponses.setProducts(products);
+                return cardResponses;
+            } else if (cardToCardTransferResponse.getCodigoError().equals("204")) {
+                return new TransferCardToCardResponses(ResponseCode.NON_EXISTENT_CARD, "NON EXISTENT CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("913")) {
+                return new TransferCardToCardResponses(ResponseCode.INVALID_AMOUNT, "INVALID AMOUNT");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("203")) {
+                return new TransferCardToCardResponses(ResponseCode.EXPIRATION_DATE_DIFFERS, "EXPIRATION DATE DIFFERS");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("205")) {
+                return new TransferCardToCardResponses(ResponseCode.EXPIRED_CARD, "EXPIRED CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("202")) {
+                return new TransferCardToCardResponses(ResponseCode.LOCKED_CARD, "LOCKED CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("201")) {
+                return new TransferCardToCardResponses(ResponseCode.LOCKED_CARD, "LOCKED CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("03")) {
+                return new TransferCardToCardResponses(ResponseCode.LOCKED_CARD, "LOCKED CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("28")) {
+                return new TransferCardToCardResponses(ResponseCode.LOCKED_CARD, "LOCKED_CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("211")) {
+                return new TransferCardToCardResponses(ResponseCode.BLOCKED_ACCOUNT, "BLOCKED ACCOUNT");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("210")) {
+                return new TransferCardToCardResponses(ResponseCode.INVALID_ACCOUNT, "INVALID ACCOUNT");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("998")) {
+                return new TransferCardToCardResponses(ResponseCode.INSUFFICIENT_BALANCE, "INSUFFICIENT BALANCE");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("986")) {
+                return new TransferCardToCardResponses(ResponseCode.INSUFFICIENT_LIMIT, "INSUFFICIENT LIMIT");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("987")) {
+                return new TransferCardToCardResponses(ResponseCode.CREDIT_LIMIT_0, "CREDIT LIMIT 0");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("988")) {
+                return new TransferCardToCardResponses(ResponseCode.CREDIT_LIMIT_0_OF_THE_DESTINATION_ACCOUNT, "CREDIT LIMIT 0 OF THE DESTINATION ACCOUNT");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("999")) {
+                return new TransferCardToCardResponses(ResponseCode.ERROR_PROCESSING_THE_TRANSACTION, "ERROR PROCESSING THE TRANSACTION");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("101")) {
+                return new TransferCardToCardResponses(ResponseCode.INVALID_TRANSACTION, "INVALID TRANSACTION");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("105")) {
+                return new TransferCardToCardResponses(ResponseCode.ERROR_VALIDATION_THE_TERMINAL, "ERROR VALIDATION THE TERMINAL");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("241")) {
+                return new TransferCardToCardResponses(ResponseCode.DESTINATION_ACCOUNT_LOCKED, "DESTINATION ACCOUNT LOCKED");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("230")) {
+                return new TransferCardToCardResponses(ResponseCode.INVALID_DESTINATION_CARD, "INVALID DESTINATION CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("240")) {
+                return new TransferCardToCardResponses(ResponseCode.INVALID_DESTINATION_ACCOUNT, "INVALID DESTINATION ACCOUNT");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("301")) {
+                return new TransferCardToCardResponses(ResponseCode.THE_AMOUNT_MUST_BE_POSITIVE_AND_THE_AMOUNT_IS_REPORTED, "THE AMOUNT MUST BE POSITIVE AND THE AMOUNT IS REPORTED");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("302")) {
+                return new TransferCardToCardResponses(ResponseCode.INVALID_TRANSACTION_DATE, "INVALID TRANSACTION DATE");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("303")) {
+                return new TransferCardToCardResponses(ResponseCode.INVALID_TRANSACTION_TIME, "INVALID TRANSACTION TIME");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("994")) {
+                return new TransferCardToCardResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_NN, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION NN");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("991")) {
+                return new TransferCardToCardResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_SN, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION SN");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("992")) {
+                return new TransferCardToCardResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_NS, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION NS");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("993")) {
+                return new TransferCardToCardResponses(ResponseCode.SOURCE_OR_DESTINATION_ACCOUNT_IS_NOT_COMPATIBLE_WITH_THIS_OPERATION_NS, "SOURCE OR DESTINATION ACCOUNT IS NOT COMPATIBLE WITH THIS OPERATION NS");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("990")) {
+                return new TransferCardToCardResponses(ResponseCode.TRASACTION_BETWEEN_ACCOUNTS_NOT_ALLOWED, "TRASACTION BETWEEN ACCOUNTS NOT ALLOWED");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("120")) {
+                return new TransferCardToCardResponses(ResponseCode.TRADE_VALIDATON_ERROR, "TRADE VALIDATON ERROR");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("110")) {
+                return new TransferCardToCardResponses(ResponseCode.DESTINATION_CARD_DOES_NOT_SUPPORT_TRANSACTION, "DESTINATION CARD DOES NOT SUPPORT TRANSACTION");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("111")) {
+                return new TransferCardToCardResponses(ResponseCode.OPERATION_NOT_ENABLED_FOR_THE_DESTINATION_CARD, "OPERATION NOT ENABLED FOR THE DESTINATION CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("206")) {
+                return new TransferCardToCardResponses(ResponseCode.BIN_NOT_ALLOWED, "BIN NOT ALLOWED");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("207")) {
+                return new TransferCardToCardResponses(ResponseCode.STOCK_CARD, "STOCK CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("205")) {
+                return new TransferCardToCardResponses(ResponseCode.THE_ACCOUNT_EXCEEDS_THE_MONTHLY_LIMIT, "THE ACCOUNT EXCEEDS THE MONTHLY LIMIT");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("101")) {
+                return new TransferCardToCardResponses(ResponseCode.THE_PAN_FIELD_IS_MANDATORY, "THE PAN FIELD IS MANDATORY");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("102")) {
+                return new TransferCardToCardResponses(ResponseCode.THE_AMOUNT_TO_BE_RECHARGE_IS_INCORRECT, "THE AMOUNT TO BE RECHARGE IS INCORRECT");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("3")) {
+                return new TransferCardToCardResponses(ResponseCode.EXPIRED_CARD, "EXPIRED CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("8")) {
+                return new TransferCardToCardResponses(ResponseCode.NON_EXISTENT_CARD, "NON EXISTENT CARD");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("33")) {
+                return new TransferCardToCardResponses(ResponseCode.THE_AMOUNT_MUST_BE_GREATER_THAN_0, "THE AMOUNT MUST BE GREATER THAN 0");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("1")) {
+                return new TransferCardToCardResponses(ResponseCode.SUCCESSFUL_RECHARGE, "SUCCESSFUL RECHARGE");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("410")) {
+                return new TransferCardToCardResponses(ResponseCode.ERROR_VALIDATING_PIN, "THE PAN FIELD IS MANDATORY");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("430")) {
+                return new TransferCardToCardResponses(ResponseCode.ERROR_VALIDATING_CVC1, "ERROR VALIDATING CVC1");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("400")) {
+                return new TransferCardToCardResponses(ResponseCode.ERROR_VALIDATING_CVC2, "ERROR VALIDATING CVC2");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("420")) {
+                return new TransferCardToCardResponses(ResponseCode.PIN_CHANGE_ERROR, "PIN CHANGE ERROR");
+            } else if (cardToCardTransferResponse.getCodigoError().equals("250")) {
+                return new TransferCardToCardResponses(ResponseCode.ERROR_VALIDATING_THE_ITEM, " ERROR VALIDATING THE ITEM");
+            }
+            return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "");
+        }
+
+    }
+
+    private boolean isCardUnique(String card) {
+        try {
+            entityManager
+                    .createNamedQuery("Card.findByNumberCard", Card.class)
+                    .setParameter("numberCard", card).getSingleResult();
+        } catch (NoResultException e) {
+            return true;
+        }
+        return false;
+    }
+
+    private void ignoreSSL() {
+        try {
+            ////////////////////////////////////////////////////////////////
+            //SE COLOCAR PARA IGNORAR SSL
+            ///////////////////////////////////////////////////////////////
+            XTrustProvider.install();
+            final String TEST_URL = "https://10.70.10.71:8000/CASA_SRTMX_TarjetaService?wsdl";
+            URL url = new URL(TEST_URL);
+            HttpsURLConnection httpsCon = (HttpsURLConnection) url.openConnection();
+            httpsCon.setHostnameVerifier(new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
+            httpsCon.connect();
+            InputStream is = httpsCon.getInputStream();
+            int nread = 0;
+            byte[] buf = new byte[8192];
+            while ((nread = is.read(buf)) != -1) {
+                //System.out.write(buf, 0, nread);
+            }
+            ////////////////////////////////////////////////////////////////
+            //SE COLOCAR PARA IGNORAR SSL
+            ///////////////////////////////////////////////////////////////
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+
+        }
+    }
+
+    public CardResponse getCardByUserId(Long userId) {
+        UserHasCard userHasCard = new UserHasCard();
+        try {
+            userHasCard = (UserHasCard) entityManager.createNamedQuery("UserHasCard.findByUserId", UserHasCard.class).setParameter("userId", userId).getSingleResult();
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return new CardResponse(ResponseCode.EMPTY_LIST_HAS_CARD, "Error loading cards");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CardResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+        }
+        return new CardResponse(ResponseCode.EXITO, "", userHasCard.getCardId().getNumberCard());
     }
 
 }

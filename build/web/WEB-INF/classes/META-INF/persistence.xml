@@ -58,7 +58,12 @@
                 <class>com.alodiga.wallet.model.UserHasProduct</class>
                 <class>com.alodiga.wallet.model.UserHasBank</class>
                 <class>com.alodiga.wallet.model.BankHasProduct</class>
-                               
+                <class>com.alodiga.wallet.model.Cumplimient</class>
+                <class>com.alodiga.wallet.model.CumplimientStatus</class>
+                <class>com.alodiga.wallet.model.ValidationCollection</class>
+                <class>com.alodiga.wallet.model.Card</class>
+                <class>com.alodiga.wallet.model.CardHasProduct</class>
+                <class>com.alodiga.wallet.model.UserHasCard</class>   
 		<properties>
 			<property name="eclipselink.logging.level" value="ALL" />
 			<property name="eclipselink.logging.parameters" value="true" />

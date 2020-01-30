@@ -1,7 +1,7 @@
 package com.alodiga.wallet.respuestas;
 
 import com.alodiga.wallet.model.Cumplimient;
-import com.alodiga.wallet.model.CumplimientStatus;
+
 import com.alodiga.wallet.model.Product;
 import java.util.Date;
 import java.util.List;

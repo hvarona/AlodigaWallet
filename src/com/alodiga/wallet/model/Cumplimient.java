@@ -11,6 +11,8 @@ import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
@@ -44,11 +46,11 @@ import javax.xml.bind.annotation.XmlRootElement;
     , @NamedQuery(name = "Cumplimient.findByAgentComplientId", query = "SELECT c FROM Cumplimient c WHERE c.agentComplientId = :agentComplientId")
     , @NamedQuery(name = "Cumplimient.findByAdditional", query = "SELECT c FROM Cumplimient c WHERE c.additional = :additional")})
 public class Cumplimient implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id")
     private Long id;
     @Basic(optional = false)
@@ -88,12 +90,12 @@ public class Cumplimient implements Serializable {
     @Size(max = 45)
     @Column(name = "additional")
     private String additional;
-    @JoinColumn(name = "complientStatusId", referencedColumnName = "id")
-    @ManyToOne(optional = false)
-    private CumplimientStatus complientStatusId;
     @JoinColumn(name = "addressId", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private Address addressId;
+    @JoinColumn(name = "complientStatusId", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    private CumplimientStatus complientStatusId;
 
     public Cumplimient() {
     }
@@ -206,14 +208,6 @@ public class Cumplimient implements Serializable {
         this.additional = additional;
     }
 
-    public CumplimientStatus getComplientStatusId() {
-        return complientStatusId;
-    }
-
-    public void setComplientStatusId(CumplimientStatus complientStatusId) {
-        this.complientStatusId = complientStatusId;
-    }
-
     public Address getAddressId() {
         return addressId;
     }
@@ -221,8 +215,14 @@ public class Cumplimient implements Serializable {
     public void setAddressId(Address addressId) {
         this.addressId = addressId;
     }
-    
-    
+
+    public CumplimientStatus getComplientStatusId() {
+        return complientStatusId;
+    }
+
+    public void setComplientStatusId(CumplimientStatus complientStatusId) {
+        this.complientStatusId = complientStatusId;
+    }
 
     @Override
     public int hashCode() {
@@ -247,10 +247,6 @@ public class Cumplimient implements Serializable {
     @Override
     public String toString() {
         return "com.alodiga.wallet.model.Cumplimient[ id=" + id + " ]";
-    }
-
-    public void setComplientStatusId(String VALIDATE) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }
