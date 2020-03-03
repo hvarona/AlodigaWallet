@@ -14,6 +14,7 @@ import com.alodiga.wallet.model.Country;
 import com.alodiga.wallet.respuestas.ActivateCardResponses;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
+import com.alodiga.wallet.respuestas.CardListResponse;
 import com.alodiga.wallet.respuestas.CardResponse;
 import com.alodiga.wallet.respuestas.CheckStatusAccountResponses;
 import com.alodiga.wallet.respuestas.CheckStatusCardResponses;
@@ -379,6 +380,16 @@ public class APIAlodigaWallet {
         return operations.transferCardToCardAutorization(userId, numberCardOrigin,  numberCardDestinate, balance,idUserDestination,conceptTransaction);
     }
     
+    @WebMethod
+    public CardListResponse getCardsListByUserId(
+            @WebParam(name = "userId") String userId) throws Exception {
+        return operations.getCardsListByUserId(Long.valueOf(userId));
+    }
     
+    @WebMethod
+    public ProductListResponse getProductsRemettenceByUserId(
+            @WebParam(name = "userId") String userId) {
+        return operations.getProductsRemettenceByUserId(Long.valueOf(userId));
+    }
     
 }

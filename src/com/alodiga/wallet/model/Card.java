@@ -6,6 +6,7 @@
 package com.alodiga.wallet.model;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -18,6 +19,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -32,7 +34,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @NamedQueries({
     @NamedQuery(name = "Card.findAll", query = "SELECT c FROM Card c")
     , @NamedQuery(name = "Card.findById", query = "SELECT c FROM Card c WHERE c.id = :id")
-    , @NamedQuery(name = "Card.findByNumberCard", query = "SELECT c FROM Card c WHERE c.numberCard = :numberCard")})
+    , @NamedQuery(name = "Card.findByNumberCard", query = "SELECT c FROM Card c WHERE c.numberCard = :numberCard")
+    , @NamedQuery(name = "Card.findByParentId", query = "SELECT c FROM Card c WHERE c.parentId = :parentId")})
 public class Card implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "cardId")
@@ -46,8 +49,15 @@ public class Card implements Serializable {
     private Long id;
     @Column(name = "numberCard")
     private String numberCard;
+    @Column(name = "parentId")
+    private BigInteger parentId;
+    @Column(name = "nameCard")
+    private String nameCard;
+    @Column(name = "userDestinationId")
+    private BigInteger userDestinationId;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "cardId")
     private Collection<CardHasProduct> cardHasProductCollection;
+    
 
     public Card() {
     }
@@ -70,8 +80,35 @@ public class Card implements Serializable {
 
     public void setNumberCard(String numberCard) {
         this.numberCard = numberCard;
+
     }
 
+    public BigInteger getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(BigInteger parentId) {
+        this.parentId = parentId;
+    }
+
+    public String getNameCard() {
+        return nameCard;
+    }
+
+    public void setNameCard(String nameCard) {
+        this.nameCard = nameCard;
+    }
+
+    public BigInteger getUserDestinationId() {
+        return userDestinationId;
+    }
+
+    public void setUserDestinationId(BigInteger userDestinationId) {
+        this.userDestinationId = userDestinationId;
+    }
+
+    
+    
     @XmlTransient
     @JsonIgnore
     public Collection<CardHasProduct> getCardHasProductCollection() {
@@ -81,6 +118,8 @@ public class Card implements Serializable {
     public void setCardHasProductCollection(Collection<CardHasProduct> cardHasProductCollection) {
         this.cardHasProductCollection = cardHasProductCollection;
     }
+
+   
 
     @Override
     public int hashCode() {
@@ -116,5 +155,7 @@ public class Card implements Serializable {
     public void setUserHasCardCollection(Collection<UserHasCard> userHasCardCollection) {
         this.userHasCardCollection = userHasCardCollection;
     }
+
+ 
     
 }

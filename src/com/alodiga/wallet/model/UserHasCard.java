@@ -32,7 +32,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "UserHasCard.findAll", query = "SELECT u FROM UserHasCard u")
     , @NamedQuery(name = "UserHasCard.findById", query = "SELECT u FROM UserHasCard u WHERE u.id = :id")
     , @NamedQuery(name = "UserHasCard.findByUserId", query = "SELECT u FROM UserHasCard u WHERE u.userId = :userId")
-    , @NamedQuery(name = "UserHasCard.findByUserIdAndCardNumber", query = "SELECT u FROM UserHasCard u WHERE u.userId = :userId AND u.cardId.id = :cardNumber")
+    , @NamedQuery(name = "UserHasCard.findByUserIdAndParentId", query = "SELECT u FROM UserHasCard u WHERE u.userId = :userId AND u.cardId.parentId = NULL")
+    , @NamedQuery(name = "UserHasCard.findByUserIdAndCardNumber", query = "SELECT u FROM UserHasCard u WHERE u.userId = :userId AND u.cardId.id = :cardNumber ")
     , @NamedQuery(name = "UserHasCard.findByAditional", query = "SELECT u FROM UserHasCard u WHERE u.aditional = :aditional")}) 
 public class UserHasCard implements Serializable {
 

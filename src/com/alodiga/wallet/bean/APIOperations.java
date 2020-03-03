@@ -51,10 +51,12 @@ import com.alodiga.wallet.model.TopUpCountry;
 import com.alodiga.wallet.model.UserHasCard;
 import com.alodiga.wallet.model.ValidationCollection;
 import com.alodiga.wallet.response.generic.BankGeneric;
+import com.alodiga.wallet.response.generic.remittance.RemittancesCountry;
 import com.alodiga.wallet.respuestas.ActivateCardResponses;
 import com.alodiga.wallet.respuestas.AddressResponse;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
+import com.alodiga.wallet.respuestas.CardListResponse;
 import com.alodiga.wallet.respuestas.CardResponse;
 import com.alodiga.wallet.respuestas.ChangeStatusCredentialCard;
 import com.alodiga.wallet.respuestas.CheckStatusAccountResponses;
@@ -132,6 +134,7 @@ import com.alodiga.ws.cumpliments.services.OFACMethodWS;
 import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
 import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
 import com.alodiga.ws.cumpliments.services.WsLoginResponse;
+import com.alodiga.ws.remittance.services.WSRemittenceMobile;
 
 import com.ericsson.alodiga.ws.Cuenta;
 import java.io.IOException;
@@ -504,8 +507,13 @@ public class APIOperations {
                         CardResponse cardResponse = getCardByUserId(userId);
                         String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
                         StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                        StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                        amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                        if (statusCardResponse.getCodigo().equals("00")) {
+                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                            amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                        } else {
+                            amount = Float.valueOf(0);
+                        }
+
                     } else {
 
                         amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
@@ -756,8 +764,13 @@ public class APIOperations {
                         CardResponse cardResponse = getCardByUserId(userId);
                         String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
                         StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                        StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                        amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                        if (statusCardResponse.getCodigo().equals("00")) {
+                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                            amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                        } else {
+                            amount = Float.valueOf(0);
+                        }
+
                     } else {
 
                         amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
@@ -1075,8 +1088,13 @@ public class APIOperations {
                             CardResponse cardResponse = getCardByUserId(userId);
                             String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
                             StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                            amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            if (statusCardResponse.getCodigo().equals("00")) {
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount_1 = Float.valueOf(0);
+                            }
+
                         } else {
                             amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
                         }
@@ -1536,8 +1554,13 @@ public class APIOperations {
                             CardResponse cardResponse = getCardByUserId(userId);
                             String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
                             StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                            amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            if (statusCardResponse.getCodigo().equals("00")) {
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount_1 = Float.valueOf(0);
+                            }
+
                         } else {
                             amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
                         }
@@ -1743,8 +1766,13 @@ public class APIOperations {
                             CardResponse cardResponse = getCardByUserId(userId);
                             String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
                             StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                            amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            if (statusCardResponse.getCodigo().equals("00")) {
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount_1 = Float.valueOf(0);
+                            }
+
                         } else {
                             amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
                         }
@@ -1852,8 +1880,13 @@ public class APIOperations {
                 CardResponse cardResponse = getCardByUserId(userId);
                 String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
                 StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                balanceHistory.setCurrentAmount(Float.valueOf(accountResponse.getComprasDisponibles()));
+                if (statusCardResponse.getCodigo().equals("00")) {
+                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                    balanceHistory.setCurrentAmount(Float.valueOf(accountResponse.getComprasDisponibles()));
+                } else {
+                    balanceHistory.setCurrentAmount(0);
+                }
+
             }
         } catch (NoResultException e) {
             return new BalanceHistoryResponse(ResponseCode.BALANCE_HISTORY_NOT_FOUND_EXCEPTION, "Error loading BalanceHistory");
@@ -2190,8 +2223,13 @@ public class APIOperations {
                         CardResponse cardResponse = getCardByUserId(userId);
                         String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
                         StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                        StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                        amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                        if (statusCardResponse.getCodigo().equals("00")) {
+                            StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                            amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                        } else {
+                            amount_1 = Float.valueOf(0);
+                        }
+
                     } else {
                         amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
                     }
@@ -2457,12 +2495,12 @@ public class APIOperations {
         try {
             responseUser = proxy.getUsuarioporId(Constants.ALODIGA_WALLET_USUARIO_API, Constants.ALODIGA_WALLET_PASSWORD_API, String.valueOf(userId));
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-            if (!isCardUnique(card)) {
+            String Card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+            if (!isCardUnique(Card)) {
                 return new ActivateCardResponses(
                         ResponseCode.CARD_NUMBER_EXISTS, "CARD NUMBER EXISTS");
             }
             ignoreSSL();
-            String Card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
             String encryptedString = Base64.encodeBase64String(encrypt(Card, Constants.PUBLIC_KEY));
             ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, status);
 
@@ -2483,6 +2521,7 @@ public class APIOperations {
                     //Si no lo tiene se debe afiliar 
                     Card card1 = new Card();
                     card1.setNumberCard(Card);
+                    card1.setNameCard(responseUser.getDatosRespuesta().getNombre() +  responseUser.getDatosRespuesta().getApellido());
                     entityManager.persist(card1);
                     entityManager.flush();
                     UserHasCard userHasCard = new UserHasCard();
@@ -2503,8 +2542,13 @@ public class APIOperations {
                                 CardResponse cardResponse = getCardByUserId(userId);
                                 String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
                                 StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                                if (statusCardResponse.getCodigo().equals("00")) {
+                                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                    amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                                } else {
+                                    amount_1 = Float.valueOf(0);
+                                }
+
                             } else {
                                 amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
                             }
@@ -2615,8 +2659,24 @@ public class APIOperations {
             if (statusCardResponse.getCodigo().equals("00")) {
                 CheckStatusCredentialCard checkStatusCredentialCard = new CheckStatusCredentialCard(statusCardResponse.getCodigo(), statusCardResponse.getDescripcion(), statusCardResponse.getTicketWS(), statusCardResponse.getInicio(), statusCardResponse.getFin(), statusCardResponse.getTiempo(), statusCardResponse.getNumero(), statusCardResponse.getCuenta(), statusCardResponse.getCodigoEntidad(), statusCardResponse.getDescripcionEntidad(), statusCardResponse.getSucursal(), statusCardResponse.getCodigoProducto(), statusCardResponse.getDescripcionProducto(), statusCardResponse.getCodigoEstado(), statusCardResponse.getDescripcionEstado(), statusCardResponse.getActual(), statusCardResponse.getAnterior(), statusCardResponse.getDenominacion(), statusCardResponse.getTipo(), statusCardResponse.getIden(), statusCardResponse.getTelefono(), statusCardResponse.getDireccion(), statusCardResponse.getCodigoPostal(), statusCardResponse.getLocalidad(), statusCardResponse.getCodigoPais(), statusCardResponse.getDescripcionPais(), statusCardResponse.getMomentoUltimaActualizacion(), statusCardResponse.getMomentoUltimaOperacionAprobada(), statusCardResponse.getMomentoUltimaOperacionDenegada(), statusCardResponse.getMomentoUltimaBajaBoletin(), statusCardResponse.getContadorPinERR());
                 return new CheckStatusCardResponses(checkStatusCredentialCard, ResponseCode.EXITO, "");
+            } else if (statusCardResponse.getCodigo().equals("-024")) {
+                return new CheckStatusCardResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
+            } else if (statusCardResponse.getCodigo().equals("-011")) {
+                return new CheckStatusCardResponses(ResponseCode.AUTHENTICATE_IMPOSSIBLE, "Authenticate Impossible");
+            } else if (statusCardResponse.getCodigo().equals("-13")) {
+                return new CheckStatusCardResponses(ResponseCode.SERVICE_NOT_ALLOWED, "Service Not Allowed");
+            } else if (statusCardResponse.getCodigo().equals("-14")) {
+                return new CheckStatusCardResponses(ResponseCode.OPERATION_NOT_ALLOWED_FOR_THIS_SERVICE, "Operation Not Allowed For This Service");
+            } else if (statusCardResponse.getCodigo().equals("-060")) {
+                return new CheckStatusCardResponses(ResponseCode.UNABLE_TO_ACCESS_DATA, "Unable to Access Data");
             } else if (statusCardResponse.getCodigo().equals("-120")) {
-                return new CheckStatusCardResponses(ResponseCode.THERE_IS_NO_SEARCH_RECORD, "There is not search record");
+                return new CheckStatusCardResponses(ResponseCode.THERE_ARE_NO_RECORDS_FOR_THE_REQUESTED_SEARCH, "There are no Records for the Requested Search");
+            } else if (statusCardResponse.getCodigo().equals("-140")) {
+                return new CheckStatusCardResponses(ResponseCode.THE_REQUESTED_PRODUCT_DOES_NOT_EXIST, "The Requested Product does not Exist");
+            } else if (statusCardResponse.getCodigo().equals("-160")) {
+                return new CheckStatusCardResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
+            } else if (statusCardResponse.getCodigo().equals("-030")) {
+                return new CheckStatusCardResponses(ResponseCode.NON_EXISTENT_ACCOUNT, "Non-existent account");
             }
             return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
         } catch (RemoteException ex) {
@@ -2644,6 +2704,22 @@ public class APIOperations {
                 return new CheckStatusAccountResponses(checkStatusCredentialAccount, ResponseCode.EXITO, "");
             } else if (accountResponse.getCodigo().equals("-030")) {
                 return new CheckStatusAccountResponses(ResponseCode.NON_EXISTENT_ACCOUNT, "Non-existent account");
+            } else if (accountResponse.getCodigo().equals("-024")) {
+                return new CheckStatusAccountResponses(ResponseCode.NOT_ALLOWED_TO_CHANGE_STATE, "NOT ALLOWED TO CHANGE STATE");
+            } else if (accountResponse.getCodigo().equals("-011")) {
+                return new CheckStatusAccountResponses(ResponseCode.AUTHENTICATE_IMPOSSIBLE, "Authenticate Impossible");
+            } else if (accountResponse.getCodigo().equals("-13")) {
+                return new CheckStatusAccountResponses(ResponseCode.SERVICE_NOT_ALLOWED, "Service Not Allowed");
+            } else if (accountResponse.getCodigo().equals("-14")) {
+                return new CheckStatusAccountResponses(ResponseCode.OPERATION_NOT_ALLOWED_FOR_THIS_SERVICE, "Operation Not Allowed For This Service");
+            } else if (accountResponse.getCodigo().equals("-060")) {
+                return new CheckStatusAccountResponses(ResponseCode.UNABLE_TO_ACCESS_DATA, "Unable to Access Data");
+            } else if (accountResponse.getCodigo().equals("-120")) {
+                return new CheckStatusAccountResponses(ResponseCode.THERE_ARE_NO_RECORDS_FOR_THE_REQUESTED_SEARCH, "There are no Records for the Requested Search");
+            } else if (accountResponse.getCodigo().equals("-140")) {
+                return new CheckStatusAccountResponses(ResponseCode.THE_REQUESTED_PRODUCT_DOES_NOT_EXIST, "The Requested Product does not Exist");
+            } else if (accountResponse.getCodigo().equals("-160")) {
+                return new CheckStatusAccountResponses(ResponseCode.THE_NUMBER_OF_ORDERS_ALLOWED_IS_EXCEEDED, "The Number of Orders Allowed is Exceeded");
             }
             return new CheckStatusAccountResponses(ResponseCode.ERROR_INTERNO, "ERROR INTERNO");
         } catch (RemoteException ex) {
@@ -2757,8 +2833,12 @@ public class APIOperations {
                                 CardResponse cardResponse = getCardByUserId(userId);
                                 String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
                                 StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                                amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                                if (statusCardResponse.getCodigo().equals("00")) {
+                                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                    amount_1 = Float.valueOf(accountResponse.getComprasDisponibles());
+                                } else {
+                                    amount_1 = Float.valueOf(0);
+                                }
                             } else {
                                 amount_1 = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
                             }
@@ -2956,5 +3036,106 @@ public class APIOperations {
         }
         return new CardResponse(ResponseCode.EXITO, "", userHasCard.getCardId().getNumberCard());
     }
+
+    public CardListResponse getCardsListByUserId(Long userId) throws NoResultException, Exception {
+        List<UserHasCard> userHasCards = new ArrayList<UserHasCard>();
+        Card card = new Card();
+        List<Card> cards = new ArrayList<Card>();
+        try {
+            userHasCards = (List<UserHasCard>) entityManager.createNamedQuery("UserHasCard.findByUserIdAndParentId", UserHasCard.class).setParameter("userId", userId).getResultList();
+
+            if (userHasCards.size() <= 0) {
+                return new CardListResponse(ResponseCode.USER_NOT_HAS_CARD, "They are not cards asociated");
+            }
+
+            for (UserHasCard uhc : userHasCards) {
+                
+                cards = (List<Card>) entityManager.createNamedQuery("Card.findByParentId", Card.class).setParameter("parentId", uhc.getCardId().getId()).getResultList();
+                
+                if (cards.size() <= 0) {
+                    return new CardListResponse(ResponseCode.DOES_NOT_HAVE_AN_ASSOCIATED_COMPANION_CARD, "Does not have an associated companion card");
+                }
+                
+                
+                
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CardListResponse(ResponseCode.ERROR_INTERNO, "Error loading cards");
+        }
+        return new CardListResponse(ResponseCode.EXITO, "", cards);
+    }
+    
+    
+//    public TopUpCountryListResponse getTopUpCountries() {
+//        List<TopUpCountry> topUpCountrys = null;
+//        try {
+//            topUpCountrys = entityManager.createNamedQuery("TopUpCountry.findAll", TopUpCountry.class).getResultList();
+//
+//        } catch (Exception e) {
+//            return new TopUpCountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
+//        }
+//        return new TopUpCountryListResponse(ResponseCode.EXITO, "", topUpCountrys);
+//    }
+//    
+    
+    public ProductListResponse getProductsRemettenceByUserId(Long userId) {
+        List<UserHasProduct> userHasProducts = new ArrayList<UserHasProduct>();
+        List<Product> products = new ArrayList<Product>();
+        List<Product> productFinals = new ArrayList<Product>();
+        try {
+            products = getProductsListByUserId(userId);
+            for (Product p : products) {
+                if (p.isIsRemettence()) {
+                    Float amount = 0F;
+                    try {
+                        amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                    } catch (NoResultException e) {
+                        amount = 0F;
+                    }
+                    p.setCurrentBalance(amount);
+                    productFinals.add(p);
+                }
+            }
+            if (productFinals.size() <= 0) {
+                return new ProductListResponse(ResponseCode.USER_NOT_HAS_PRODUCT, "They are not products asociated");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ProductListResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
+        }
+
+        return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
+    }
+    
+    
+//     public TransactionResponse processRemettenceAccount(String cryptograUserSource, String emailUser, Long productId, Float amountTransfer,
+//            String conceptTransaction, String cryptograUserDestination, Long idUserDestination) {
+//
+//      
+//         
+//         //Verifica que exista el person origen
+//          PersonData  personData = new PersonData();
+//         
+//         WSRemittenceMobile wSRemittenceMobile = new WSRemittenceMobile();
+//         wSRemittenceMobile.saverRemittance(emailUser, emailUser, amountTransfer, amountTransfer, Boolean.TRUE, amountTransfer, emailUser, emailUser, amountTransfer, conceptTransaction, emailUser, emailUser, conceptTransaction, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, documentImage, emailUser, emailUser, emailUser, emailUser, cryptograUserSource, emailUser, emailUser, cryptograUserSource, emailUser, emailUser, emailUser, conceptTransaction, emailUser, emailUser, emailUser, emailUser, emailUser, conceptTransaction, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, conceptTransaction, emailUser, conceptTransaction);
+//         
+//
+//         
+//         //TODO:Aprovisiona la Remesa
+//         
+//
+//         
+//     
+//        return transactionResponse;
+////        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
+//    }
+    
+    
+    
+    
+    
+    
 
 }

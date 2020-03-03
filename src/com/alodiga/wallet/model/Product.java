@@ -98,6 +98,8 @@ public class Product implements Serializable {
     private boolean isPayTopUp;
     @Column(name = "isExchangeProduct")
     private boolean isExchangeProduct;
+    @Column(name = "isRemettence")
+    private boolean isRemettence;
     @OneToMany(mappedBy = "productId")
     private Collection<Transaction> transactionCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
@@ -129,7 +131,7 @@ public class Product implements Serializable {
         this.id = id;
     }
 
-    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct,String symbol, boolean isPayTopUp, boolean isExchangeProduct) {
+    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct,String symbol, boolean isPayTopUp, boolean isExchangeProduct,boolean isRemettence_ ) {
         this.id = id;
         this.name = name;
         this.taxInclude = taxInclude;
@@ -140,6 +142,7 @@ public class Product implements Serializable {
         this.symbol = symbol;
         this.isPayTopUp = isPayTopUp;
         this.isExchangeProduct = isExchangeProduct;
+        this.isRemettence = isRemettence_;
     }
 
     public Long getId() {
@@ -231,7 +234,15 @@ public class Product implements Serializable {
         this.isExchangeProduct = isExchangeProduct;
     }
 
-   
+    public boolean isIsRemettence() {
+        return isRemettence;
+    }
+
+    public void setIsRemettence(boolean isRemettence) {
+        this.isRemettence = isRemettence;
+    }
+    
+    
     
     
     
@@ -364,6 +375,12 @@ public class Product implements Serializable {
     public void setSymbol(String symbol) {
         this.symbol = symbol;
     }
+
+
+    
+    
+    
+    
 
     @XmlTransient
     @JsonIgnore
