@@ -3110,117 +3110,117 @@ public class APIOperations {
         return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
     }
 
-//    public RemittanceResponse processRemettenceAccount(Long userId,
-//            Float amountOrigin,
-//            Float totalAmount,
-//            Float amountDestiny,
-//            String correspondentId,
-//            String exchangeRateId,
-//            String ratePaymentNetworkId,
-//            String originCurrentId,
-//            String destinyCurrentId,
-//            String paymentNetworkId,
-//            String deliveryFormId,
-//            String remittentStateName,
-//            String remittentCityName,
-//            String receiverFirstName,
-//            String receiverMiddleName,
-//            String receiverLastName,
-//            String receiverSecondSurname,
-//            String receiverPhoneNumber,
-//            String receiverEmail,
-//            String receiverCountryId,
-//            String receiverCityId,
-//            String receiverStateId,
-//            String receiverStateName,
-//            String receiverCityName,
-//            String receiverAddress,
-//            String receiverZipCode) {
-//        try {
-//            SimpleDateFormat sdg = new SimpleDateFormat("yyyy-MM-dd");
-//            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-//            String applicationDate = sdg.format(timestamp);
-//            //Se obtiene el usuario de la API de Registro Unificado
-//            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
-//            RespuestaUsuario userSource;
-//
-//            userSource = proxy.getUsuarioporId("usuarioWS", "passwordWS", userId.toString());
-//            String middleName = userSource.getDatosRespuesta().getNombre().split(" ")[0].trim();
-//            String secondSurname = userSource.getDatosRespuesta().getApellido().split(" ")[0].trim();
-//            
-//            WSRemittenceMobileProxy wSRemittenceMobileProxy = new WSRemittenceMobileProxy();
-//            wSRemittenceMobileProxy.saverRemittance(applicationDate, middleName, amountOrigin, totalAmount, Boolean.TRUE, amountDestiny, middleName, paymentNetworkId, totalAmount, correspondentId, receiverStateId, exchangeRateId, ratePaymentNetworkId, receiverStateId, exchangeRateId, originCurrentId, destinyCurrentId, middleName, paymentNetworkId, receiverStateId, paymentNetworkId, middleName, documentImage, middleName, middleName, middleName, deliveryFormId, remittentCityName, remittentCityName, remittentStateName, receiverSecondSurname, receiverPhoneNumber, receiverEmail, receiverCountryId, remittentCityName, remittentStateName, remittentStateName, remittentCityName, receiverAddress, receiverZipCode, receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber, receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName, receiverAddress, receiverZipCode);
-//            
-//            
-//            WSRemittenceMobile wSRemittenceMobile = new WSRemittenceMobile();
-//            WSRemittenceResponse wSRemittenceResponse =  wSRemittenceMobile.saverRemittance(applicationDate,
-//                    Constants.COMMENTARY_REMETTENCE,
-//                    amountOrigin,
-//                    totalAmount,
-//                    Constants.SENDING_OPTION_SMS_REMETTENCE,
-//                    amountDestiny,
-//                    Constants.BANK_REMETTENCE,
-//                    Constants.PAYMENT_SERVICE_REMETTENCE,
-//                    null,
-//                    correspondentId,
-//                    Constants.SALES_TYPE_REMETTENCE,
-//                    exchangeRateId,
-//                    ratePaymentNetworkId,
-//                    null,
-//                    Constants.LANGUAGE_REMETTENCE,
-//                    originCurrentId,
-//                    destinyCurrentId,
-//                    Constants.STORE_REMETTENCE,
-//                    Constants.PAYMENT_METHOD_REMITTANCE,
-//                    Constants.SERVICE_TYPE_REMITTANCE,
-//                    paymentNetworkId,
-//                    null,
-//                    null,
-//                    null,
-//                    Constants.USER_REMITTANCE,
-//                    Constants.CASH_BOX_REMITTANCE,
-//                    deliveryFormId,
-//                    userSource.getDatosRespuesta().getNombre(),
-//                    middleName,
-//                    userSource.getDatosRespuesta().getApellido(),
-//                    secondSurname,
-//                    userSource.getDatosRespuesta().getMovil(),
-//                    userSource.getDatosRespuesta().getEmail(),
-//                    String.valueOf(userSource.getDatosRespuesta().getDireccion().getPaisId()),
-//                    String.valueOf(userSource.getDatosRespuesta().getDireccion().getCiudadId()),
-//                    String.valueOf(userSource.getDatosRespuesta().getDireccion().getEstadoId()),
-//                    remittentStateName,
-//                    remittentCityName,
-//                    userSource.getDatosRespuesta().getDireccion().getDireccion(),
-//                    userSource.getDatosRespuesta().getDireccion().getCodigoPostal(),
-//                    receiverFirstName,
-//                    receiverMiddleName,
-//                    receiverLastName,
-//                    receiverSecondSurname,
-//                    receiverPhoneNumber,
-//                    receiverEmail,
-//                    receiverCountryId,
-//                    receiverCityId,
-//                    receiverStateId,
-//                    receiverStateName,
-//                    receiverCityName,
-//                    receiverAddress,
-//                    receiverZipCode);
-//             
-//            
-//            return new RemittanceResponse(wSRemittenceResponse.getRemittanceId(), wSRemittenceResponse.getRemittanceSingleResponse().getApplicationDate(), receiverEmail, paymentNetworkId, correspondentId, receiverAddress, receiverCityId, receiverEmail, paymentNetworkId, receiverCityId, remittentCityName, correspondentId, receiverEmail, exchangeRateId, receiverZipCode, remittentCityName, receiverEmail, correspondentId, receiverCityId, receiverStateId, receiverStateId, exchangeRateId, ratePaymentNetworkId, exchangeRateId, originCurrentId, destinyCurrentId, paymentNetworkId, receiverCityId, paymentNetworkId, destinyCurrentId, paymentNetworkId, receiverEmail, receiverEmail, receiverStateId, remittentCityName, paymentNetworkId, correspondentId, deliveryFormId);
-//
-//        } catch (RemoteException ex) {
-//            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-//        }catch(NullPointerException ex){
-//            ex.printStackTrace();
-//        } catch (NullParameterException ex) {
-//            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//
-//        //TODO:Aprovisiona la Remesa
-//        
-////        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
-//    }
+    public RemittanceResponse processRemettenceAccount(Long userId,
+            Float amountOrigin,
+            Float totalAmount,
+            Float amountDestiny,
+            String correspondentId,
+            String exchangeRateId,
+            String ratePaymentNetworkId,
+            String originCurrentId,
+            String destinyCurrentId,
+            String paymentNetworkId,
+            String deliveryFormId,
+            String remittentStateName,
+            String remittentCityName,
+            String receiverFirstName,
+            String receiverMiddleName,
+            String receiverLastName,
+            String receiverSecondSurname,
+            String receiverPhoneNumber,
+            String receiverEmail,
+            String receiverCountryId,
+            String receiverCityId,
+            String receiverStateId,
+            String receiverStateName,
+            String receiverCityName,
+            String receiverAddress,
+            String receiverZipCode) {
+        try {
+            SimpleDateFormat sdg = new SimpleDateFormat("yyyy-MM-dd");
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            String applicationDate = sdg.format(timestamp);
+            //Se obtiene el usuario de la API de Registro Unificado
+            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+            RespuestaUsuario userSource;
+
+            userSource = proxy.getUsuarioporId("usuarioWS", "passwordWS", userId.toString());
+            String middleName = userSource.getDatosRespuesta().getNombre().split(" ")[0].trim();
+            String secondSurname = userSource.getDatosRespuesta().getApellido().split(" ")[0].trim();
+            
+            WSRemittenceMobileProxy wSRemittenceMobileProxy = new WSRemittenceMobileProxy();
+            wSRemittenceMobileProxy.saverRemittance(applicationDate, middleName, amountOrigin, totalAmount, Boolean.TRUE, amountDestiny, middleName, paymentNetworkId, totalAmount, correspondentId, receiverStateId, exchangeRateId, ratePaymentNetworkId, receiverStateId, exchangeRateId, originCurrentId, destinyCurrentId, middleName, paymentNetworkId, receiverStateId, paymentNetworkId, middleName, documentImage, middleName, middleName, middleName, deliveryFormId, remittentCityName, remittentCityName, remittentStateName, receiverSecondSurname, receiverPhoneNumber, receiverEmail, receiverCountryId, remittentCityName, remittentStateName, remittentStateName, remittentCityName, receiverAddress, receiverZipCode, receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber, receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName, receiverAddress, receiverZipCode);
+            
+            
+            WSRemittenceMobile wSRemittenceMobile = new WSRemittenceMobile();
+            WSRemittenceResponse wSRemittenceResponse =  wSRemittenceMobile.saverRemittance(applicationDate,
+                    Constants.COMMENTARY_REMETTENCE,
+                    amountOrigin,
+                    totalAmount,
+                    Constants.SENDING_OPTION_SMS_REMETTENCE,
+                    amountDestiny,
+                    Constants.BANK_REMETTENCE,
+                    Constants.PAYMENT_SERVICE_REMETTENCE,
+                    null,
+                    correspondentId,
+                    Constants.SALES_TYPE_REMETTENCE,
+                    exchangeRateId,
+                    ratePaymentNetworkId,
+                    null,
+                    Constants.LANGUAGE_REMETTENCE,
+                    originCurrentId,
+                    destinyCurrentId,
+                    Constants.STORE_REMETTENCE,
+                    Constants.PAYMENT_METHOD_REMITTANCE,
+                    Constants.SERVICE_TYPE_REMITTANCE,
+                    paymentNetworkId,
+                    null,
+                    null,
+                    null,
+                    Constants.USER_REMITTANCE,
+                    Constants.CASH_BOX_REMITTANCE,
+                    deliveryFormId,
+                    userSource.getDatosRespuesta().getNombre(),
+                    middleName,
+                    userSource.getDatosRespuesta().getApellido(),
+                    secondSurname,
+                    userSource.getDatosRespuesta().getMovil(),
+                    userSource.getDatosRespuesta().getEmail(),
+                    String.valueOf(userSource.getDatosRespuesta().getDireccion().getPaisId()),
+                    String.valueOf(userSource.getDatosRespuesta().getDireccion().getCiudadId()),
+                    String.valueOf(userSource.getDatosRespuesta().getDireccion().getEstadoId()),
+                    remittentStateName,
+                    remittentCityName,
+                    userSource.getDatosRespuesta().getDireccion().getDireccion(),
+                    userSource.getDatosRespuesta().getDireccion().getCodigoPostal(),
+                    receiverFirstName,
+                    receiverMiddleName,
+                    receiverLastName,
+                    receiverSecondSurname,
+                    receiverPhoneNumber,
+                    receiverEmail,
+                    receiverCountryId,
+                    receiverCityId,
+                    receiverStateId,
+                    receiverStateName,
+                    receiverCityName,
+                    receiverAddress,
+                    receiverZipCode);
+             
+            
+            return new RemittanceResponse(wSRemittenceResponse.getRemittanceId(), wSRemittenceResponse.getRemittanceSingleResponse().getApplicationDate(), receiverEmail, paymentNetworkId, correspondentId, receiverAddress, receiverCityId, receiverEmail, paymentNetworkId, receiverCityId, remittentCityName, correspondentId, receiverEmail, exchangeRateId, receiverZipCode, remittentCityName, receiverEmail, correspondentId, receiverCityId, receiverStateId, receiverStateId, exchangeRateId, ratePaymentNetworkId, exchangeRateId, originCurrentId, destinyCurrentId, paymentNetworkId, receiverCityId, paymentNetworkId, destinyCurrentId, paymentNetworkId, receiverEmail, receiverEmail, receiverStateId, remittentCityName, paymentNetworkId, correspondentId, deliveryFormId);
+
+        } catch (RemoteException ex) {
+            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }catch(NullPointerException ex){
+            ex.printStackTrace();
+        } catch (NullParameterException ex) {
+            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        //TODO:Aprovisiona la Remesa
+        
+        return new RemittanceResponse();
+    }
 
 }
