@@ -25,6 +25,7 @@ import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.ProductResponse;
+import com.alodiga.wallet.respuestas.RemittanceResponse;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
@@ -392,4 +393,44 @@ public class APIAlodigaWallet {
         return operations.getProductsRemettenceByUserId(Long.valueOf(userId));
     }
     
+    
+//    @WebMethod
+//    public RemittanceResponse processRemettenceAccount(
+//            @WebParam(name = "userId") String userId,
+//            @WebParam(name = "amountOrigin") Float amountOrigin,
+//            @WebParam(name = "totalAmount") Float totalAmount,
+//            @WebParam(name = "amountDestiny") Float amountDestiny,
+//            @WebParam(name = "correspondentId") String correspondentId,
+//            @WebParam(name = "exchangeRateId") String exchangeRateId,
+//            @WebParam(name = "ratePaymentNetworkId") String ratePaymentNetworkId,
+//            @WebParam(name = "originCurrentId") String originCurrentId,
+//            @WebParam(name = "destinyCurrentId") String destinyCurrentId,
+//            @WebParam(name = "paymentNetworkId") String paymentNetworkId,            
+//            @WebParam(name = "deliveryFormId") String deliveryFormId,
+//            @WebParam(name = "remittentStateName") String remittentStateName,
+//            @WebParam(name = "remittentCityName") String remittentCityName,
+//            @WebParam(name = "receiverFirstName") String receiverFirstName,
+//            @WebParam(name = "receiverMiddleName") String receiverMiddleName,
+//            @WebParam(name = "receiverLastName") String receiverLastName,
+//            @WebParam(name = "receiverSecondSurname") String receiverSecondSurname,
+//            @WebParam(name = "receiverPhoneNumber") String receiverPhoneNumber,
+//            @WebParam(name = "receiverEmail") String receiverEmail,
+//            @WebParam(name = "receiverCountryId") String receiverCountryId,           
+//            @WebParam(name = "receiverCityId") String receiverCityId,
+//            @WebParam(name = "receiverStateId") String receiverStateId,
+//            @WebParam(name = "receiverStateName") String receiverStateName,
+//            @WebParam(name = "receiverCityName") String receiverCityName,
+//            @WebParam(name = "receiverAddress") String receiverAddress,
+//            @WebParam(name = "receiverZipCode") String receiverZipCode) {
+//        
+//        RemittanceResponse remittanceResponse = null ;
+//         try {
+//             remittanceResponse = operations.processRemettenceAccount(Long.valueOf(userId),amountOrigin, totalAmount, amountDestiny, correspondentId,exchangeRateId, ratePaymentNetworkId, originCurrentId, destinyCurrentId, paymentNetworkId, deliveryFormId, remittentStateName,remittentCityName, receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber,receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName,receiverAddress, receiverZipCode);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//            return remittanceResponse;
+//    }
+
+
 }
