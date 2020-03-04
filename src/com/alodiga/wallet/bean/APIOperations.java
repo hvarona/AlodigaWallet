@@ -9,6 +9,7 @@ import com.alodiga.autorization.credential.response.CardToCardTransferResponse;
 import com.alodiga.card.credential.response.ChangeStatusCardResponse;
 import com.alodiga.card.credential.response.StatusCardResponse;
 import com.alodiga.transferto.integration.connection.RequestManager;
+import com.alodiga.transferto.integration.exception.GeneralException;
 import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
 import com.alodiga.transferto.integration.model.ReserveResponse;
 import com.alodiga.transferto.integration.model.TopUpResponse;
@@ -103,6 +104,7 @@ import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.PreferenceListResponse;
+import com.alodiga.wallet.respuestas.RemittanceResponse;
 import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
@@ -134,9 +136,12 @@ import com.alodiga.ws.cumpliments.services.OFACMethodWS;
 import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
 import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
 import com.alodiga.ws.cumpliments.services.WsLoginResponse;
+import com.alodiga.ws.remittance.response.WSRemittenceResponse;
 import com.alodiga.ws.remittance.services.WSRemittenceMobile;
+import com.alodiga.ws.remittance.services.WSRemittenceMobileProxy;
 
 import com.ericsson.alodiga.ws.Cuenta;
+import com.remettence.commons.exceptions.NullParameterException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -2521,7 +2526,7 @@ public class APIOperations {
                     //Si no lo tiene se debe afiliar 
                     Card card1 = new Card();
                     card1.setNumberCard(Card);
-                    card1.setNameCard(responseUser.getDatosRespuesta().getNombre() +  responseUser.getDatosRespuesta().getApellido());
+                    card1.setNameCard(responseUser.getDatosRespuesta().getNombre() + responseUser.getDatosRespuesta().getApellido());
                     entityManager.persist(card1);
                     entityManager.flush();
                     UserHasCard userHasCard = new UserHasCard();
@@ -3049,15 +3054,13 @@ public class APIOperations {
             }
 
             for (UserHasCard uhc : userHasCards) {
-                
+
                 cards = (List<Card>) entityManager.createNamedQuery("Card.findByParentId", Card.class).setParameter("parentId", uhc.getCardId().getId()).getResultList();
-                
+
                 if (cards.size() <= 0) {
                     return new CardListResponse(ResponseCode.DOES_NOT_HAVE_AN_ASSOCIATED_COMPANION_CARD, "Does not have an associated companion card");
                 }
-                
-                
-                
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -3065,8 +3068,7 @@ public class APIOperations {
         }
         return new CardListResponse(ResponseCode.EXITO, "", cards);
     }
-    
-    
+
 //    public TopUpCountryListResponse getTopUpCountries() {
 //        List<TopUpCountry> topUpCountrys = null;
 //        try {
@@ -3078,7 +3080,6 @@ public class APIOperations {
 //        return new TopUpCountryListResponse(ResponseCode.EXITO, "", topUpCountrys);
 //    }
 //    
-    
     public ProductListResponse getProductsRemettenceByUserId(Long userId) {
         List<UserHasProduct> userHasProducts = new ArrayList<UserHasProduct>();
         List<Product> products = new ArrayList<Product>();
@@ -3108,34 +3109,118 @@ public class APIOperations {
 
         return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
     }
-    
-    
-//     public TransactionResponse processRemettenceAccount(String cryptograUserSource, String emailUser, Long productId, Float amountTransfer,
-//            String conceptTransaction, String cryptograUserDestination, Long idUserDestination) {
+
+//    public RemittanceResponse processRemettenceAccount(Long userId,
+//            Float amountOrigin,
+//            Float totalAmount,
+//            Float amountDestiny,
+//            String correspondentId,
+//            String exchangeRateId,
+//            String ratePaymentNetworkId,
+//            String originCurrentId,
+//            String destinyCurrentId,
+//            String paymentNetworkId,
+//            String deliveryFormId,
+//            String remittentStateName,
+//            String remittentCityName,
+//            String receiverFirstName,
+//            String receiverMiddleName,
+//            String receiverLastName,
+//            String receiverSecondSurname,
+//            String receiverPhoneNumber,
+//            String receiverEmail,
+//            String receiverCountryId,
+//            String receiverCityId,
+//            String receiverStateId,
+//            String receiverStateName,
+//            String receiverCityName,
+//            String receiverAddress,
+//            String receiverZipCode) {
+//        try {
+//            SimpleDateFormat sdg = new SimpleDateFormat("yyyy-MM-dd");
+//            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+//            String applicationDate = sdg.format(timestamp);
+//            //Se obtiene el usuario de la API de Registro Unificado
+//            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+//            RespuestaUsuario userSource;
 //
-//      
-//         
-//         //Verifica que exista el person origen
-//          PersonData  personData = new PersonData();
-//         
-//         WSRemittenceMobile wSRemittenceMobile = new WSRemittenceMobile();
-//         wSRemittenceMobile.saverRemittance(emailUser, emailUser, amountTransfer, amountTransfer, Boolean.TRUE, amountTransfer, emailUser, emailUser, amountTransfer, conceptTransaction, emailUser, emailUser, conceptTransaction, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, documentImage, emailUser, emailUser, emailUser, emailUser, cryptograUserSource, emailUser, emailUser, cryptograUserSource, emailUser, emailUser, emailUser, conceptTransaction, emailUser, emailUser, emailUser, emailUser, emailUser, conceptTransaction, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, emailUser, conceptTransaction, emailUser, conceptTransaction);
-//         
+//            userSource = proxy.getUsuarioporId("usuarioWS", "passwordWS", userId.toString());
+//            String middleName = userSource.getDatosRespuesta().getNombre().split(" ")[0].trim();
+//            String secondSurname = userSource.getDatosRespuesta().getApellido().split(" ")[0].trim();
+//            
+//            WSRemittenceMobileProxy wSRemittenceMobileProxy = new WSRemittenceMobileProxy();
+//            wSRemittenceMobileProxy.saverRemittance(applicationDate, middleName, amountOrigin, totalAmount, Boolean.TRUE, amountDestiny, middleName, paymentNetworkId, totalAmount, correspondentId, receiverStateId, exchangeRateId, ratePaymentNetworkId, receiverStateId, exchangeRateId, originCurrentId, destinyCurrentId, middleName, paymentNetworkId, receiverStateId, paymentNetworkId, middleName, documentImage, middleName, middleName, middleName, deliveryFormId, remittentCityName, remittentCityName, remittentStateName, receiverSecondSurname, receiverPhoneNumber, receiverEmail, receiverCountryId, remittentCityName, remittentStateName, remittentStateName, remittentCityName, receiverAddress, receiverZipCode, receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber, receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName, receiverAddress, receiverZipCode);
+//            
+//            
+//            WSRemittenceMobile wSRemittenceMobile = new WSRemittenceMobile();
+//            WSRemittenceResponse wSRemittenceResponse =  wSRemittenceMobile.saverRemittance(applicationDate,
+//                    Constants.COMMENTARY_REMETTENCE,
+//                    amountOrigin,
+//                    totalAmount,
+//                    Constants.SENDING_OPTION_SMS_REMETTENCE,
+//                    amountDestiny,
+//                    Constants.BANK_REMETTENCE,
+//                    Constants.PAYMENT_SERVICE_REMETTENCE,
+//                    null,
+//                    correspondentId,
+//                    Constants.SALES_TYPE_REMETTENCE,
+//                    exchangeRateId,
+//                    ratePaymentNetworkId,
+//                    null,
+//                    Constants.LANGUAGE_REMETTENCE,
+//                    originCurrentId,
+//                    destinyCurrentId,
+//                    Constants.STORE_REMETTENCE,
+//                    Constants.PAYMENT_METHOD_REMITTANCE,
+//                    Constants.SERVICE_TYPE_REMITTANCE,
+//                    paymentNetworkId,
+//                    null,
+//                    null,
+//                    null,
+//                    Constants.USER_REMITTANCE,
+//                    Constants.CASH_BOX_REMITTANCE,
+//                    deliveryFormId,
+//                    userSource.getDatosRespuesta().getNombre(),
+//                    middleName,
+//                    userSource.getDatosRespuesta().getApellido(),
+//                    secondSurname,
+//                    userSource.getDatosRespuesta().getMovil(),
+//                    userSource.getDatosRespuesta().getEmail(),
+//                    String.valueOf(userSource.getDatosRespuesta().getDireccion().getPaisId()),
+//                    String.valueOf(userSource.getDatosRespuesta().getDireccion().getCiudadId()),
+//                    String.valueOf(userSource.getDatosRespuesta().getDireccion().getEstadoId()),
+//                    remittentStateName,
+//                    remittentCityName,
+//                    userSource.getDatosRespuesta().getDireccion().getDireccion(),
+//                    userSource.getDatosRespuesta().getDireccion().getCodigoPostal(),
+//                    receiverFirstName,
+//                    receiverMiddleName,
+//                    receiverLastName,
+//                    receiverSecondSurname,
+//                    receiverPhoneNumber,
+//                    receiverEmail,
+//                    receiverCountryId,
+//                    receiverCityId,
+//                    receiverStateId,
+//                    receiverStateName,
+//                    receiverCityName,
+//                    receiverAddress,
+//                    receiverZipCode);
+//             
+//            
+//            return new RemittanceResponse(wSRemittenceResponse.getRemittanceId(), wSRemittenceResponse.getRemittanceSingleResponse().getApplicationDate(), receiverEmail, paymentNetworkId, correspondentId, receiverAddress, receiverCityId, receiverEmail, paymentNetworkId, receiverCityId, remittentCityName, correspondentId, receiverEmail, exchangeRateId, receiverZipCode, remittentCityName, receiverEmail, correspondentId, receiverCityId, receiverStateId, receiverStateId, exchangeRateId, ratePaymentNetworkId, exchangeRateId, originCurrentId, destinyCurrentId, paymentNetworkId, receiverCityId, paymentNetworkId, destinyCurrentId, paymentNetworkId, receiverEmail, receiverEmail, receiverStateId, remittentCityName, paymentNetworkId, correspondentId, deliveryFormId);
 //
-//         
-//         //TODO:Aprovisiona la Remesa
-//         
+//        } catch (RemoteException ex) {
+//            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+//        }catch(NullPointerException ex){
+//            ex.printStackTrace();
+//        } catch (NullParameterException ex) {
+//            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+//        }
 //
-//         
-//     
-//        return transactionResponse;
+//        //TODO:Aprovisiona la Remesa
+//        
 ////        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
 //    }
-    
-    
-    
-    
-    
-    
 
 }
