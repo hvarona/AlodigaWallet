@@ -1,20 +1,15 @@
 package com.alodiga.wallet.utils;
 
-import com.alodiga.massiva.sms.SendSmsMassiva;
+/*import com.alodiga.massiva.sms.SendSmsMassiva;
 import static com.alodiga.massiva.sms.SendSmsMassiva.sendSmsMassiva;
-import com.alodiga.twilio.sms.services.TwilioSmsSender;
-import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
-import com.alodiga.wallet.bean.APIOperations;
+import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;*/
 import com.alodiga.wallet.model.Sms;
-import com.alodiga.wallet.respuestas.Response;
 import java.math.BigInteger;
 
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 
 public class SendSmsThread extends Thread {
@@ -156,50 +151,50 @@ public class SendSmsThread extends Thread {
                 message = getLangujeByPhoneNumber((movil).toString()).equals(Constants.SPANISH_LANGUAGE) ? "Billetera Alodiga, Usted a recibido una transferencia el dia: " + sdf.format(timestamp) + " por un monto de: " + amountPayment + " Bs." : "Alodiga Wallet, You have received a transfer the day: " + sdf.format(timestamp) + " by a sum of: " + amountPayment + " $.";
                 break;
         }
-        try {
-            //String message = getLangujeByPhoneNumber(movil).equals(Constante.SPANISH_LANGUAGE) ? "Billetera Alodiga, Su codigo de seguridad para el registro es: " + codigo : "Alodiga Wallet, Your security code is: " + codigo ;
-            //Solo aplica para dos o tres pasises si se desea hacer dinamicamente se debe agregar un plan de numeraciòn
-            String countryCode = movil.substring(0, 2);
-            if (movil.substring(0, 1).equals("1")) {
-                //lo envia por USA
-                TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
-                proxy.sendTwilioSMS(movil, message);
-            } else if (movil.substring(0, 2).equals("58")) {
-                //Venezuela  integras con Massiva
-//                APIOperations aPIOperations = new APIOperations();
-                SendSmsMassiva sendSmsMassiva = new SendSmsMassiva();
-                try {
-                    //String response = aPIOperations.sendSmsSimbox(message, movil, userId);
-                    String response = sendSmsMassiva.sendSmsMassiva(message, movil);
-                    Sms sms = new Sms();
-                    sms.setUserId(BigInteger.valueOf(userId));
-                    //sms.setIntegratorName(Constants.INTEGRATOR_SIMBOX);
-                    sms.setIntegratorName(Constants.INTEGRATOR_MASSIVA);
-                    sms.setSender(movil);
-                    sms.setDestination(movil);
-                    sms.setContent(message);
-                    sms.setCreationDate(new Timestamp(new Date().getTime()));
-                    if (getelement(response, "status").equals("1")) {
-                        sms.setStatus(Constants.SEND_SMS);
-                        sms.setAdditional(getelementIntoLabel(response, "celular", "sid"));
-                    } else {
-                        sms.setStatus(Constants.SEND_SMS_FAILED);
-                        sms.setAdditional(null);
-                    }
-
-                    //sms.setAdditional(response);
-                    entityManager.flush();
-                    entityManager.persist(sms);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } else if (movil.substring(0, 2).equals("57")) {
-                //TODO:
-                //Colombia
-            }
-        } catch (RemoteException ex) {
-            ex.printStackTrace();
-        }
+//        try {
+//            //String message = getLangujeByPhoneNumber(movil).equals(Constante.SPANISH_LANGUAGE) ? "Billetera Alodiga, Su codigo de seguridad para el registro es: " + codigo : "Alodiga Wallet, Your security code is: " + codigo ;
+//            //Solo aplica para dos o tres pasises si se desea hacer dinamicamente se debe agregar un plan de numeraciòn
+//            String countryCode = movil.substring(0, 2);
+//            if (movil.substring(0, 1).equals("1")) {
+//                //lo envia por USA
+//                TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
+//                proxy.sendTwilioSMS(movil, message);
+//            } else if (movil.substring(0, 2).equals("58")) {
+//                //Venezuela  integras con Massiva
+////                APIOperations aPIOperations = new APIOperations();
+//                SendSmsMassiva sendSmsMassiva = new SendSmsMassiva();
+//                try {
+//                    //String response = aPIOperations.sendSmsSimbox(message, movil, userId);
+//                    String response = sendSmsMassiva.sendSmsMassiva(message, movil);
+//                    Sms sms = new Sms();
+//                    sms.setUserId(BigInteger.valueOf(userId));
+//                    //sms.setIntegratorName(Constants.INTEGRATOR_SIMBOX);
+//                    sms.setIntegratorName(Constants.INTEGRATOR_MASSIVA);
+//                    sms.setSender(movil);
+//                    sms.setDestination(movil);
+//                    sms.setContent(message);
+//                    sms.setCreationDate(new Timestamp(new Date().getTime()));
+//                    if (getelement(response, "status").equals("1")) {
+//                        sms.setStatus(Constants.SEND_SMS);
+//                        sms.setAdditional(getelementIntoLabel(response, "celular", "sid"));
+//                    } else {
+//                        sms.setStatus(Constants.SEND_SMS_FAILED);
+//                        sms.setAdditional(null);
+//                    }
+//
+//                    //sms.setAdditional(response);
+//                    entityManager.flush();
+//                    entityManager.persist(sms);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            } else if (movil.substring(0, 2).equals("57")) {
+//                //TODO:
+//                //Colombia
+//            }
+//        } catch (RemoteException ex) {
+//            ex.printStackTrace();
+//        }
     }
 
     private Long getLangujeByPhoneNumber(String phone) {
