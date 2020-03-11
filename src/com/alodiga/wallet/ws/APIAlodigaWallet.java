@@ -368,6 +368,46 @@ public class APIAlodigaWallet {
             @WebParam(name = "userId") String userId) {
         return operations.getProductsRemettenceByUserId(Long.valueOf(userId));
     }
+    
+    
+    @WebMethod
+    public RemittanceResponse processRemettenceAccount(
+            @WebParam(name = "userId") String userId,
+            @WebParam(name = "amountOrigin") Float amountOrigin,
+            @WebParam(name = "totalAmount") Float totalAmount,
+            @WebParam(name = "amountDestiny") Float amountDestiny,
+            @WebParam(name = "correspondentId") String correspondentId,
+            @WebParam(name = "exchangeRateId") String exchangeRateId,
+            @WebParam(name = "ratePaymentNetworkId") String ratePaymentNetworkId,
+            @WebParam(name = "originCurrentId") String originCurrentId,
+            @WebParam(name = "destinyCurrentId") String destinyCurrentId,
+            @WebParam(name = "paymentNetworkId") String paymentNetworkId,            
+            @WebParam(name = "deliveryFormId") String deliveryFormId,
+            @WebParam(name = "addressId") String addressId,
+            @WebParam(name = "remittentCountryId") String remittentCountryId,
+            @WebParam(name = "remittentStateName") String remittentStateName,
+            @WebParam(name = "remittentCityName") String remittentCityName,
+            @WebParam(name = "remittentAddress") String remittentAddress,
+            @WebParam(name = "remittentZipCode") String remittentZipCode,
+            @WebParam(name = "remittentStateId") String remittentStateId,
+            @WebParam(name = "remittentCityId") String remittentCityId,
+            @WebParam(name = "receiverFirstName") String receiverFirstName,
+            @WebParam(name = "receiverMiddleName") String receiverMiddleName,
+            @WebParam(name = "receiverLastName") String receiverLastName,
+            @WebParam(name = "receiverSecondSurname") String receiverSecondSurname,
+            @WebParam(name = "receiverPhoneNumber") String receiverPhoneNumber,
+            @WebParam(name = "receiverEmail") String receiverEmail,
+            @WebParam(name = "receiverCountryId") String receiverCountryId,           
+            @WebParam(name = "receiverCityId") String receiverCityId,
+            @WebParam(name = "receiverStateId") String receiverStateId,
+            @WebParam(name = "receiverStateName") String receiverStateName,
+            @WebParam(name = "receiverCityName") String receiverCityName,
+            @WebParam(name = "receiverAddress") String receiverAddress,
+            @WebParam(name = "receiverZipCode") String receiverZipCode) {
+ 
+             return operations.processRemettenceAccount(Long.valueOf(userId),amountOrigin, totalAmount, amountDestiny, correspondentId,exchangeRateId, ratePaymentNetworkId, originCurrentId, destinyCurrentId, paymentNetworkId, deliveryFormId, Long.valueOf(addressId),remittentCountryId, remittentStateName,remittentCityName,remittentAddress, remittentZipCode, Long.valueOf(remittentStateId),Long.valueOf(remittentCityId),receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber,receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName,receiverAddress, receiverZipCode);
+     
+    }
 
     @WebMethod(operationName = "validateRechargeProduct")
     public RechargeValidationResponse validateRechargeProduct(

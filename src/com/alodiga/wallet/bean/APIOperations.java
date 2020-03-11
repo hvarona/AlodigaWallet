@@ -42,6 +42,8 @@ import com.alodiga.wallet.model.Cumplimient;
 import com.alodiga.wallet.model.CumplimientStatus;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
+import com.alodiga.wallet.model.Sms;
+import com.alodiga.wallet.model.State;
 import com.alodiga.wallet.model.TopUpCountry;
 import com.alodiga.wallet.model.UserHasCard;
 import com.alodiga.wallet.model.ValidationCollection;
@@ -75,6 +77,7 @@ import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.respuestas.ProductResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
+import com.alodiga.wallet.respuestas.CountryResponse;
 import com.alodiga.wallet.respuestas.CumplimientResponse;
 import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
@@ -104,6 +107,10 @@ import com.alodiga.wallet.utils.XTrustProvider;
 import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
 import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
 import com.alodiga.ws.cumpliments.services.WsLoginResponse;
+import com.alodiga.ws.remittance.services.WSRemittenceMobile;
+import com.alodiga.ws.remittance.services.WSRemittenceMobileProxy;
+import com.alodiga.ws.remittance.services.WsAddressListResponse;
+import com.alodiga.ws.remittance.services.WsRemittenceResponse;
 
 import com.ericsson.alodiga.ws.Cuenta;
 import java.io.IOException;
@@ -2847,4 +2854,316 @@ public class APIOperations {
 
         return new ProductListResponse(ResponseCode.EXITO, "", productFinals);
     }
+
+    public RemittanceResponse processRemettenceAccount(Long userId,
+            Float amountOrigin,
+            Float totalAmount,
+            Float amountDestiny,
+            String correspondentId,
+            String exchangeRateId,
+            String ratePaymentNetworkId,
+            String originCurrentId,
+            String destinyCurrentId,
+            String paymentNetworkId,
+            String deliveryFormId,
+            Long addressId,
+            String remittentCountryId,
+            String remittentStateName,
+            String remittentCityName,
+            String remittentAddress,
+            String remittentZipCode,
+            Long remittentStateId,
+            Long remittentCityId,
+            String receiverFirstName,
+            String receiverMiddleName,
+            String receiverLastName,
+            String receiverSecondSurname,
+            String receiverPhoneNumber,
+            String receiverEmail,
+            String receiverCountryId,
+            String receiverCityId,
+            String receiverStateId,
+            String receiverStateName,
+            String receiverCityName,
+            String receiverAddress,
+            String receiverZipCode) {
+        try {
+            SimpleDateFormat sdg = new SimpleDateFormat("yyyy-MM-dd");
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+            String applicationDate = sdg.format(timestamp);
+            //Se obtiene el usuario de la API de Registro Unificado
+            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+            RespuestaUsuario userSource;
+            List<Commission> commissions = new ArrayList<Commission>();
+            List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
+            List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
+            Commission commissionTransfer = new Commission();
+            Float amountCommission = 0.00F;
+            short isPercentCommission = 0;
+            Timestamp begginingDateTime = new Timestamp(0);
+            Timestamp endingDateTime = new Timestamp(0);
+
+            int totalTransactionsByUser = 0;
+            Long totalTransactionsByProduct = 0L;
+            Double totalAmountByUser = 0.00D;
+            Long idTransaction = 0L;
+            Transaction transfer = new Transaction();
+            String remittentCountryId_ = null;
+            String remittentCityId_ = null;
+            String remittentStateId_ = null;
+            String remittentStateName_ = null;
+            String remittentCityName_ = null;
+            String remittentAddress_ = null;
+            String remittentZipCode_ = null;
+            
+            userSource = proxy.getUsuarioporId("usuarioWS", "passwordWS",String.valueOf(userId));
+            String middleName = userSource.getDatosRespuesta().getNombre().split(" ")[0].trim();
+            String secondSurname = userSource.getDatosRespuesta().getApellido().split(" ")[0].trim();
+
+            BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, Constants.PRODUCT_REMITTANCE);
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", Constants.PRODUCT_REMITTANCE).setParameter("transactionTypeId", Constante.sTransationTypeTA).getResultList();
+                if (commissions.size() < 1) {
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + Constants.PRODUCT_REMITTANCE + " and userId: " + userId);
+                }
+                for (Commission c : commissions) {
+                    commissionTransfer = (Commission) c;
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (totalAmount * amountCommission) / 100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                }
+            } catch (NoResultException e) {
+                e.printStackTrace();
+                return new RemittanceResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            }
+            Float amountTransferTotal = totalAmount + amountCommission;
+            if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountTransferTotal) {
+                return new RemittanceResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
+            }
+
+            //Validar preferencias
+            begginingDateTime = Utils.DateTransaction()[0];
+            endingDateTime = Utils.DateTransaction()[1];
+
+            //Obtiene las transacciones del dÃ­a para el usuario
+            totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+
+            //Obtiene la sumatoria de los montos de las transacciones del usuario
+            totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
+
+            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
+            totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(Constants.PRODUCT_REMITTANCE, userId, begginingDateTime, endingDateTime);
+
+            //Cotejar las preferencias vs las transacciones del usuario
+            List<Preference> preferences = getPreferences();
+            for (Preference p : preferences) {
+                if (p.getName().equals(Constante.sPreferenceTransaction)) {
+                    idTransaction = p.getId();
+                }
+            }
+            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+            for (PreferenceField pf : preferencesField) {
+                switch (pf.getName()) {
+                    case Constante.sValidatePreferenceTransaction1:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);
+                            for (PreferenceValue pv : preferencesValue) {
+                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
+                                    return new RemittanceResponse(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
+                                }
+                            }
+                        }
+                        break;
+                    case Constante.sValidatePreferenceTransaction2:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);
+                            for (PreferenceValue pv : preferencesValue) {
+                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
+                                    return new RemittanceResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
+                                }
+                            }
+                        }
+                        break;
+                    case Constante.sValidatePreferenceTransaction3:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);
+                            for (PreferenceValue pv : preferencesValue) {
+                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
+                                    return new RemittanceResponse(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+
+            //Crear el objeto Transaction para registrar la transferencia del cliente
+            transfer.setId(null);
+            transfer.setUserSourceId(BigInteger.valueOf(userSource.getDatosRespuesta().getUsuarioID()));
+            transfer.setUserDestinationId(null);
+            Product product = entityManager.find(Product.class, Constants.PRODUCT_REMITTANCE);
+            transfer.setProductId(product);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeTR);
+            transfer.setTransactionTypeId(transactionType);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            transfer.setTransactionSourceId(transactionSource);
+            Date date = new Date();
+            Timestamp creationDate = new Timestamp(date.getTime());
+            transfer.setCreationDate(creationDate);
+            //cambiar por valor de parÃ¡metro
+            transfer.setConcept(Constante.sTransactionConceptTranferRemmittance);
+            transfer.setAmount(totalAmount);
+            transfer.setTransactionStatus(TransactionStatus.CREATED.name());
+            transfer.setTotalAmount(totalAmount);
+            entityManager.persist(transfer);
+
+            //Se crea el objeto commissionItem y se persiste en BD
+            CommissionItem commissionItem = new CommissionItem();
+            commissionItem.setCommissionId(commissionTransfer);
+            commissionItem.setAmount(amountCommission);
+            Date commissionDate = new Date();
+            Timestamp processedDate = new Timestamp(commissionDate.getTime());
+            commissionItem.setProcessedDate(processedDate);
+            commissionItem.setTransactionId(transfer);
+            entityManager.persist(commissionItem);
+
+            //Se actualiza el estatus de la transaccion a IN_PROCESS
+            transfer.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(transfer);
+
+            //Se actualizan los saldos de los usuarios involucrados en la transferencia
+            //Balance History del usuario que transfiere el saldo
+            balanceUserSource = loadLastBalanceHistoryByAccount(userId, Constants.PRODUCT_REMITTANCE);
+            BalanceHistory balanceHistory = new BalanceHistory();
+            balanceHistory.setId(null);
+            balanceHistory.setUserId(userId);
+            balanceHistory.setOldAmount(balanceUserSource.getCurrentAmount());
+            Float currentAmountUserSource = balanceUserSource.getCurrentAmount() - amountTransferTotal;
+            balanceHistory.setCurrentAmount(currentAmountUserSource);
+            balanceHistory.setProductId(product);
+            balanceHistory.setTransactionId(transfer);
+            Date balanceDate = new Date();
+            Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+            balanceHistory.setDate(balanceHistoryDate);
+            balanceHistory.setVersion(balanceUserSource.getId());
+            entityManager.persist(balanceHistory);
+
+            //Se actualiza el estado de la transaccion a COMPLETED
+            transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
+            entityManager.merge(transfer);
+
+            WSRemittenceMobileProxy wSRemittenceMobileProxy = new WSRemittenceMobileProxy();
+            WsAddressListResponse addressListResponse = new WsAddressListResponse();
+            WsRemittenceResponse response = new WsRemittenceResponse();
+            if (addressId != 0) {
+                addressListResponse = wSRemittenceMobileProxy.getAddressById(addressId);
+                remittentCountryId_ = String.valueOf(addressListResponse.getAddresses(1).getCountry().getId());
+                remittentCityId_ = String.valueOf(addressListResponse.getAddresses(1).getCity().getId());
+                remittentStateId_ = String.valueOf(addressListResponse.getAddresses(1).getState().getId());
+                remittentStateName_ = addressListResponse.getAddresses(1).getStateName();
+                remittentCityName_ = addressListResponse.getAddresses(1).getCityName();
+                remittentAddress_ = addressListResponse.getAddresses(1).getAddress();
+                remittentZipCode_ = addressListResponse.getAddresses(1).getZipCode();
+            } else {
+                remittentCountryId_ = remittentCountryId;
+                if (remittentCityId != null) {
+                    remittentCityId_ = String.valueOf(remittentCityId);
+                } else {
+                    remittentCityId_ = null;
+                }
+
+                if (remittentStateId_ != null) {
+                    remittentStateId_ = String.valueOf(remittentStateId);
+                } else {
+                    remittentStateId_ = null;
+                }
+                
+                if (remittentStateName_ != null) {
+                    remittentStateName_ = remittentStateName;
+                } else {
+                    remittentStateName_ = null;
+                }
+
+                if (remittentCityName_ != null) {
+                    remittentCityName_ = remittentCityName; 
+                } else {
+                    remittentCityName_ = null;
+                }
+                
+                remittentAddress_ = remittentAddress;
+                remittentZipCode_ = remittentZipCode;
+            }
+            response = wSRemittenceMobileProxy.saverRemittence(applicationDate,
+                    Constants.COMMENTARY_REMETTENCE,
+                    amountOrigin,
+                    totalAmount,
+                    Constants.SENDING_OPTION_SMS_REMETTENCE,
+                    amountDestiny,
+                    Constants.BANK_REMETTENCE,
+                    Constants.PAYMENT_SERVICE_REMETTENCE,
+                    Constants.ADDITIONAL_CHANGES_REMITTANCE,
+                    correspondentId,
+                    Constants.SALES_TYPE_REMETTENCE,
+                    exchangeRateId,
+                    ratePaymentNetworkId,
+                    Constants.SALES_PRICE_REMITTANCE,
+                    Constants.LANGUAGE_REMETTENCE,
+                    originCurrentId,
+                    destinyCurrentId,
+                    Constants.STORE_REMETTENCE,
+                    Constants.PAYMENT_METHOD_REMITTANCE,
+                    Constants.SERVICE_TYPE_REMITTANCE,
+                    paymentNetworkId,
+                    Constants.POINT_REMITTANCE,
+                    Constants.USER_REMITTANCE,
+                    Constants.CASH_BOX_REMITTANCE,
+                    deliveryFormId,
+                    userSource.getDatosRespuesta().getNombre(),
+                    middleName,
+                    userSource.getDatosRespuesta().getApellido(),
+                    secondSurname,
+                    userSource.getDatosRespuesta().getMovil(),
+                    userSource.getDatosRespuesta().getEmail(),
+                    remittentCountryId_,
+                    remittentCityId_,
+                    remittentStateId_,
+                    remittentStateName_,
+                    remittentCityName_,
+                    remittentAddress_,
+                    remittentZipCode_,
+                    receiverFirstName,
+                    receiverMiddleName,
+                    receiverLastName,
+                    receiverSecondSurname,
+                    receiverPhoneNumber,
+                    receiverEmail,
+                    receiverCountryId,
+                    receiverCityId,
+                    receiverStateId,
+                    receiverStateName,
+                    receiverCityName,
+                    receiverAddress,
+                    receiverZipCode);
+            
+            proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), String.valueOf(response.getRemittanceSingleResponse().getAddressId()));
+            RemittanceResponse remittanceResponse = new RemittanceResponse(response.getRemittanceSingleResponse().getId(), response.getRemittanceSingleResponse().getApplicationDate(), response.getRemittanceSingleResponse().getCommentary(), response.getRemittanceSingleResponse().getAmountOrigin(), response.getRemittanceSingleResponse().getTotalAmount(), response.getRemittanceSingleResponse().getSendingOptionSMS(), response.getRemittanceSingleResponse().getAmountDestiny(), response.getRemittanceSingleResponse().getBank(), response.getRemittanceSingleResponse().getPaymentServiceId(), response.getRemittanceSingleResponse().getSecondaryKey(), response.getRemittanceSingleResponse().getAdditionalChanges(), response.getRemittanceSingleResponse().getCreationDate(), response.getRemittanceSingleResponse().getCreationHour(), response.getRemittanceSingleResponse().getLocalSales(), response.getRemittanceSingleResponse().getReserveField1(), response.getRemittanceSingleResponse().getRemittent(), response.getRemittanceSingleResponse().getReceiver(), response.getRemittanceSingleResponse().getCorrespondent(), response.getRemittanceSingleResponse().getAddressReciever(), response.getRemittanceSingleResponse().getSalesType(), response.getRemittanceSingleResponse().getAddressRemittent(), response.getRemittanceSingleResponse().getExchangeRate(), response.getRemittanceSingleResponse().getRatePaymentNetwork(), response.getRemittanceSingleResponse().getLanguage(), response.getRemittanceSingleResponse().getOriginCurrent(), response.getRemittanceSingleResponse().getDestinyCurrent(), response.getRemittanceSingleResponse().getPaymentMethod(), response.getRemittanceSingleResponse().getServiceType(), response.getRemittanceSingleResponse().getPaymentNetwork(), response.getRemittanceSingleResponse().getPaymentNetworkPoint(), response.getRemittanceSingleResponse().getCashBox(), response.getRemittanceSingleResponse().getCashier(), response.getRemittanceSingleResponse().getStatus(), response.getRemittanceSingleResponse().getRemittanceNumber(), response.getRemittanceSingleResponse().getPaymentKey(), response.getRemittanceSingleResponse().getCorrelative(), response.getRemittanceSingleResponse().getDeliveryForm(), ResponseCode.EXITO, "");
+            remittanceResponse.setAmountTransferTotal(String.valueOf(amountTransferTotal));
+            return remittanceResponse;
+
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new RemittanceResponse(ResponseCode.ERROR_INTERNO, "");
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+            return new RemittanceResponse(ResponseCode.ERROR_INTERNO, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new RemittanceResponse(ResponseCode.ERROR_INTERNO, "");
+        }
+
+    }
+
 }
