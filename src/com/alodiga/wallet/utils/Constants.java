@@ -202,9 +202,14 @@ public class Constants {
     public static final String PAYMENT_SERVICE_REMETTENCE = "1";
     public static final String SALES_TYPE_REMETTENCE = "1";
     public static final String LANGUAGE_REMETTENCE = "1";
-    public static final String STORE_REMETTENCE = "8";
+    public static final String STORE_REMETTENCE = "1";
     public static final String PAYMENT_METHOD_REMITTANCE = "3";
     public static final String SERVICE_TYPE_REMITTANCE = "1";
     public static final String USER_REMITTANCE = "1";
     public static final String CASH_BOX_REMITTANCE = "CAJERO";
+    public static final Float ADDITIONAL_CHANGES_REMITTANCE = 1F;
+    public static final String SALES_PRICE_REMITTANCE = "1";
+    public static final String POINT_REMITTANCE = "1";
+    public static final Long PRODUCT_REMITTANCE = 2L;
+    
 }
