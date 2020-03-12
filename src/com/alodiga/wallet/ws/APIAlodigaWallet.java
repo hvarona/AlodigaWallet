@@ -25,6 +25,7 @@ import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.ProductResponse;
 import com.alodiga.wallet.respuestas.RechargeValidationResponse;
+import com.alodiga.wallet.respuestas.RemittanceResponse;
 import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
