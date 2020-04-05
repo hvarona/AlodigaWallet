@@ -211,5 +211,10 @@ public class Constants {
     public static final String SALES_PRICE_REMITTANCE = "1";
     public static final String POINT_REMITTANCE = "1";
     public static final Long PRODUCT_REMITTANCE = 2L;
+    public static final String CORRESPONDENT_REMITTANCE = "1";
+    
+    
+    //AFINITAS
+    public static final Long PRODUCT_AFINITAS = 2L;
     
 }

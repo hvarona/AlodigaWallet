@@ -144,8 +144,12 @@ public class Constante {
         public static final Long sTransactionSourceTopUP = 2l;
         public static final String sTransactionConceptTopUp = "Recharge TopUp";
         
-        //Transferencias entre cuentas
+        //REMESAS
         public static final Long sTransationTypeTR = 9l;
         public static final String sTransactionConceptTranferRemmittance = "Transfer Remittance";
+        
+        //AFINITAS
+        public static final Long sTransationTypeAF = 10l;
+        public static final String sTransactionConceptPurchaseBalance = "Purchase Balance Afinitas";
         
 }
