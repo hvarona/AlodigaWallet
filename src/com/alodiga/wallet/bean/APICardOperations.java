@@ -21,6 +21,7 @@ import com.alodiga.wallet.respuestas.ResponseCode;
 import com.alodiga.wallet.utils.Constants;
 import static com.alodiga.wallet.utils.EncriptedRsa.encrypt;
 import com.alodiga.wallet.utils.S3cur1ty3Cryt3r;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
@@ -195,7 +196,10 @@ public class APICardOperations {
             }
         } catch (RemoteException ex) {
             ex.printStackTrace();
-            return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "");
+            return new CheckStatusCardResponses(ResponseCode.CREDENTIALS_WS_INAVAILABLE, "Credentials Web Service Inavailable");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return new CheckStatusCardResponses(ResponseCode.CREDENTIALS_WS_INAVAILABLE, "Credentials Web Service Inavailable");
         } catch (Exception ex) {
             ex.printStackTrace();
             return new CheckStatusCardResponses(ResponseCode.ERROR_INTERNO, "");

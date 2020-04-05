@@ -104,7 +104,8 @@ public enum ResponseCode {
     ERROR_VALIDATING_CVC2("139"),
     PIN_CHANGE_ERROR("140"),
     ERROR_VALIDATING_THE_ITEM("141"),
-    INVALID_AMOUNT("142");
+    INVALID_AMOUNT("142"),
+    CREDENTIALS_WS_INAVAILABLE("143");
    
 
     private String codigo; 

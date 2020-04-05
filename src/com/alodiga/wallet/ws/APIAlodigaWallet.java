@@ -1,5 +1,6 @@
 package com.alodiga.wallet.ws;
 
+import com.alodiga.wallet.bean.APICardOperations;
 import javax.ejb.EJB;
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
@@ -44,6 +45,9 @@ public class APIAlodigaWallet {
 
     @EJB
     private APIRechargeOperations rechargeOperations;
+
+    @EJB
+    private APICardOperations cardOperations;
 
     @WebMethod
     public ProductResponse saveProduct(
@@ -369,8 +373,7 @@ public class APIAlodigaWallet {
             @WebParam(name = "userId") String userId) {
         return operations.getProductsRemettenceByUserId(Long.valueOf(userId));
     }
-    
-    
+
     @WebMethod
     public RemittanceResponse processRemettenceAccount(
             @WebParam(name = "userId") String userId,
@@ -382,7 +385,7 @@ public class APIAlodigaWallet {
             @WebParam(name = "ratePaymentNetworkId") String ratePaymentNetworkId,
             @WebParam(name = "originCurrentId") String originCurrentId,
             @WebParam(name = "destinyCurrentId") String destinyCurrentId,
-            @WebParam(name = "paymentNetworkId") String paymentNetworkId,            
+            @WebParam(name = "paymentNetworkId") String paymentNetworkId,
             @WebParam(name = "deliveryFormId") String deliveryFormId,
             @WebParam(name = "addressId") String addressId,
             @WebParam(name = "remittentCountryId") String remittentCountryId,
@@ -398,16 +401,16 @@ public class APIAlodigaWallet {
             @WebParam(name = "receiverSecondSurname") String receiverSecondSurname,
             @WebParam(name = "receiverPhoneNumber") String receiverPhoneNumber,
             @WebParam(name = "receiverEmail") String receiverEmail,
-            @WebParam(name = "receiverCountryId") String receiverCountryId,           
+            @WebParam(name = "receiverCountryId") String receiverCountryId,
             @WebParam(name = "receiverCityId") String receiverCityId,
             @WebParam(name = "receiverStateId") String receiverStateId,
             @WebParam(name = "receiverStateName") String receiverStateName,
             @WebParam(name = "receiverCityName") String receiverCityName,
             @WebParam(name = "receiverAddress") String receiverAddress,
             @WebParam(name = "receiverZipCode") String receiverZipCode) {
- 
-             return operations.processRemettenceAccount(Long.valueOf(userId),amountOrigin, totalAmount, amountDestiny, correspondentId,exchangeRateId, ratePaymentNetworkId, originCurrentId, destinyCurrentId, paymentNetworkId, deliveryFormId, Long.valueOf(addressId),remittentCountryId, remittentStateName,remittentCityName,remittentAddress, remittentZipCode, Long.valueOf(remittentStateId),Long.valueOf(remittentCityId),receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber,receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName,receiverAddress, receiverZipCode);
-     
+
+        return operations.processRemettenceAccount(Long.valueOf(userId), amountOrigin, totalAmount, amountDestiny, correspondentId, exchangeRateId, ratePaymentNetworkId, originCurrentId, destinyCurrentId, paymentNetworkId, deliveryFormId, Long.valueOf(addressId), remittentCountryId, remittentStateName, remittentCityName, remittentAddress, remittentZipCode, Long.valueOf(remittentStateId), Long.valueOf(remittentCityId), receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber, receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName, receiverAddress, receiverZipCode);
+
     }
 
     @WebMethod(operationName = "validateRechargeProduct")
@@ -445,6 +448,29 @@ public class APIAlodigaWallet {
             @WebParam(name = "rechargeAmount") Double rechargeAmount,
             @WebParam(name = "includeFee") boolean includeFee) {
         return rechargeOperations.rechargeCard(businessId, eCardNumber, rechargeAmount, includeFee);
+    }
+
+    @WebMethod(operationName = "activateCardbyBusiness")
+    public ActivateCardResponses activateCardbyBusiness(
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "card") String card,
+            @WebParam(name = "timeZone") String timeZone) {
+        return cardOperations.activateCardByBusiness(businessId, card, timeZone);
+    }
+
+    @WebMethod(operationName = "desactivateCardByBusiness")
+    public DesactivateCardResponses desactivateCardByBusiness(
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "card") String card,
+            @WebParam(name = "timeZone") String timeZone) {
+        return cardOperations.deactivateCardByBusiness(businessId, card, timeZone);
+    }
+
+    @WebMethod(operationName = "checkStatusCardByBusiness")
+    public CheckStatusCardResponses checkStatusCardbyBusiness(
+            @WebParam(name = "card") String card,
+            @WebParam(name = "timeZone") String timeZone) {
+        return cardOperations.checkStatusCard(card, timeZone);
     }
 
 }
