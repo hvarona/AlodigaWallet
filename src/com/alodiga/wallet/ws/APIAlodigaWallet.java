@@ -435,17 +435,17 @@ public class APIAlodigaWallet {
     }
 
    
-//    @WebMethod
-//    public RechargeAfinitasResponses saveRechargeAfinitas(
-//            @WebParam(name = "emailUser") String emailUser,
-//            @WebParam(name = "amountRecharge") Float amountRecharge,
-//            @WebParam(name = "currency") String currency,
-//            @WebParam(name = "cardNumber") String cardNumber,
-//            @WebParam(name = "expirationYear") String expirationYear,
-//            @WebParam(name = "expirationMonth") String expirationMonth,
-//            @WebParam(name = "cvv") String cvv,
-//            @WebParam(name = "cardHolderName") String cardHolderName) {
-//        return operations.saveRechargeAfinitas(emailUser,amountRecharge,currency,cardNumber,expirationYear,expirationMonth,cvv,cardHolderName);
-//    }
+    @WebMethod
+    public RechargeAfinitasResponses saveRechargeAfinitas(
+            @WebParam(name = "emailUser") String emailUser,
+            @WebParam(name = "amountRecharge") Float amountRecharge,
+            @WebParam(name = "currency") String currency,
+            @WebParam(name = "cardNumber") String cardNumber,
+            @WebParam(name = "expirationYear") String expirationYear,
+            @WebParam(name = "expirationMonth") String expirationMonth,
+            @WebParam(name = "cvv") String cvv,
+            @WebParam(name = "cardHolderName") String cardHolderName) {
+        return operations.saveRechargeAfinitas(emailUser,amountRecharge,currency,cardNumber,expirationYear,expirationMonth,cvv,cardHolderName);
+    }
 
 }
