@@ -25,6 +25,7 @@ import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.ProductResponse;
+import com.alodiga.wallet.respuestas.RechargeAfinitasResponses;
 import com.alodiga.wallet.respuestas.RemittanceResponse;
 import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
@@ -400,7 +401,6 @@ public class APIAlodigaWallet {
             @WebParam(name = "amountOrigin") Float amountOrigin,
             @WebParam(name = "totalAmount") Float totalAmount,
             @WebParam(name = "amountDestiny") Float amountDestiny,
-            @WebParam(name = "correspondentId") String correspondentId,
             @WebParam(name = "exchangeRateId") String exchangeRateId,
             @WebParam(name = "ratePaymentNetworkId") String ratePaymentNetworkId,
             @WebParam(name = "originCurrentId") String originCurrentId,
@@ -408,31 +408,44 @@ public class APIAlodigaWallet {
             @WebParam(name = "paymentNetworkId") String paymentNetworkId,            
             @WebParam(name = "deliveryFormId") String deliveryFormId,
             @WebParam(name = "addressId") String addressId,
-            @WebParam(name = "remittentCountryId") String remittentCountryId,
-            @WebParam(name = "remittentStateName") String remittentStateName,
-            @WebParam(name = "remittentCityName") String remittentCityName,
-            @WebParam(name = "remittentAddress") String remittentAddress,
-            @WebParam(name = "remittentZipCode") String remittentZipCode,
-            @WebParam(name = "remittentStateId") String remittentStateId,
-            @WebParam(name = "remittentCityId") String remittentCityId,
+            @WebParam(name = "remittentCountryId") String remittentCountryId,/**/
+            @WebParam(name = "remittentStateName") String remittentStateName,/**/
+            @WebParam(name = "remittentCityName") String remittentCityName,/**/
+            @WebParam(name = "remittentAddress") String remittentAddress,/**/
+            @WebParam(name = "remittentZipCode") String remittentZipCode,/**/
+            @WebParam(name = "remittentStateId") String remittentStateId,/**/
+            @WebParam(name = "remittentCityId") String remittentCityId,/**/
             @WebParam(name = "receiverFirstName") String receiverFirstName,
             @WebParam(name = "receiverMiddleName") String receiverMiddleName,
             @WebParam(name = "receiverLastName") String receiverLastName,
             @WebParam(name = "receiverSecondSurname") String receiverSecondSurname,
             @WebParam(name = "receiverPhoneNumber") String receiverPhoneNumber,
             @WebParam(name = "receiverEmail") String receiverEmail,
-            @WebParam(name = "receiverCountryId") String receiverCountryId,           
-            @WebParam(name = "receiverCityId") String receiverCityId,
-            @WebParam(name = "receiverStateId") String receiverStateId,
+            @WebParam(name = "receiverCountryId") String receiverCountryId,/**/           
+            @WebParam(name = "receiverCityId") String receiverCityId,/**/
+            @WebParam(name = "receiverStateId") String receiverStateId,/**/
             @WebParam(name = "receiverStateName") String receiverStateName,
             @WebParam(name = "receiverCityName") String receiverCityName,
             @WebParam(name = "receiverAddress") String receiverAddress,
-            @WebParam(name = "receiverZipCode") String receiverZipCode) {
- 
-             return operations.processRemettenceAccount(Long.valueOf(userId),amountOrigin, totalAmount, amountDestiny, correspondentId,exchangeRateId, ratePaymentNetworkId, originCurrentId, destinyCurrentId, paymentNetworkId, deliveryFormId, Long.valueOf(addressId),remittentCountryId, remittentStateName,remittentCityName,remittentAddress, remittentZipCode, Long.valueOf(remittentStateId),Long.valueOf(remittentCityId),receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber,receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName,receiverAddress, receiverZipCode);
+            @WebParam(name = "receiverZipCode") String receiverZipCode,
+            @WebParam(name = "languageId") String languageId) {
+        
+         return operations.processRemettenceAccount(Long.valueOf(userId),amountOrigin, totalAmount, amountDestiny,exchangeRateId, ratePaymentNetworkId, originCurrentId, destinyCurrentId, paymentNetworkId, deliveryFormId, Long.valueOf(addressId),remittentCountryId, remittentStateName,remittentCityName,remittentAddress, remittentZipCode,remittentStateId,remittentCityId,receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber,receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName,receiverAddress, receiverZipCode, languageId);
      
     }
 
    
+    @WebMethod
+    public RechargeAfinitasResponses saveRechargeAfinitas(
+            @WebParam(name = "emailUser") String emailUser,
+            @WebParam(name = "amountRecharge") Float amountRecharge,
+            @WebParam(name = "currency") String currency,
+            @WebParam(name = "cardNumber") String cardNumber,
+            @WebParam(name = "expirationYear") String expirationYear,
+            @WebParam(name = "expirationMonth") String expirationMonth,
+            @WebParam(name = "cvv") String cvv,
+            @WebParam(name = "cardHolderName") String cardHolderName) {
+        return operations.saveRechargeAfinitas(emailUser,amountRecharge,currency,cardNumber,expirationYear,expirationMonth,cvv,cardHolderName);
+    }
 
 }
