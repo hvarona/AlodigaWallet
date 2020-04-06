@@ -1,8 +1,11 @@
 package com.alodiga.wallet.bean;
 
+
+import afinitaspaymentintegration.AfinitasPaymentIntegration;
 import cardcredentialserviceclient.CardCredentialServiceClient;
 import com.alodiga.account.client.AccountCredentialServiceClient;
 import com.alodiga.account.credential.response.StatusAccountResponse;
+import com.alodiga.afinitas.json.charge.object.ChargeResponse;
 import com.alodiga.autorization.credential.client.AutorizationCredentialServiceClient;
 import com.alodiga.autorization.credential.response.CardToCardTransferResponse;
 
@@ -79,6 +82,7 @@ import com.alodiga.wallet.respuestas.CumplimientResponse;
 import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
+import com.alodiga.wallet.respuestas.RechargeAfinitasResponses;
 import com.alodiga.wallet.respuestas.RemittanceResponse;
 import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
@@ -1041,12 +1045,36 @@ public class APIOperations {
         return result.size();
     }
 
+    public int TransactionsByUserByTransactionByProductCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime, Long productId, Long transactionTypeId) {
+        StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3 AND t.productId = ?4 AND t.transactionTypeId = ?5");
+        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
+        query.setParameter("1", begginingDateTime);
+        query.setParameter("2", endingDateTime);
+        query.setParameter("3", userId);
+        query.setParameter("4", productId);
+        query.setParameter("5", transactionTypeId);
+        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
+        return result.size();
+    }
+
     public Double AmountMaxByUserCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime) {
         StringBuilder sqlBuilder = new StringBuilder("SELECT SUM(t.totalAmount) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3");
         Query query = entityManager.createNativeQuery(sqlBuilder.toString());
         query.setParameter("1", begginingDateTime);
         query.setParameter("2", endingDateTime);
         query.setParameter("3", userId);
+        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
+        return result.get(0) != null ? (double) result.get(0) : 0f;
+    }
+
+    public Double AmountMaxByUserByUserByTransactionByProductCurrentDate(Long userId, Timestamp begginingDateTime, Timestamp endingDateTime, Long productId, Long transactionTypeId) {
+        StringBuilder sqlBuilder = new StringBuilder("SELECT SUM(t.totalAmount) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3 AND t.productId = ?4 AND t.transactionTypeId = ?5");
+        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
+        query.setParameter("1", begginingDateTime);
+        query.setParameter("2", endingDateTime);
+        query.setParameter("3", userId);
+        query.setParameter("4", productId);
+        query.setParameter("5", transactionTypeId);
         List result = (List) query.setHint("toplink.refresh", "true").getResultList();
         return result.get(0) != null ? (double) result.get(0) : 0f;
     }
@@ -1058,6 +1086,18 @@ public class APIOperations {
         query.setParameter("2", endingDateTime);
         query.setParameter("3", userId);
         query.setParameter("4", productId);
+        List result = (List) query.setHint("toplink.refresh", "true").getResultList();
+        return result.get(0) != null ? (Long) result.get(0) : 0l;
+    }
+
+    public Long TransactionsByProductByUserByTransactionCurrentDate(Long productId, Long userId, Timestamp begginingDateTime, Timestamp endingDateTime, Long transactionTypeId) {
+        StringBuilder sqlBuilder = new StringBuilder("SELECT COUNT(t.productId) FROM transaction t WHERE t.creationDate between ?1 AND ?2 AND t.userSourceId = ?3 AND t.productId = ?4 AND t.transactionTypeId = ?5");
+        Query query = entityManager.createNativeQuery(sqlBuilder.toString());
+        query.setParameter("1", begginingDateTime);
+        query.setParameter("2", endingDateTime);
+        query.setParameter("3", userId);
+        query.setParameter("4", productId);
+        query.setParameter("5", transactionTypeId);
         List result = (List) query.setHint("toplink.refresh", "true").getResultList();
         return result.get(0) != null ? (Long) result.get(0) : 0l;
     }
@@ -2856,7 +2896,6 @@ public class APIOperations {
             Float amountOrigin,
             Float totalAmount,
             Float amountDestiny,
-            String correspondentId,
             String exchangeRateId,
             String ratePaymentNetworkId,
             String originCurrentId,
@@ -2869,8 +2908,8 @@ public class APIOperations {
             String remittentCityName,
             String remittentAddress,
             String remittentZipCode,
-            Long remittentStateId,
-            Long remittentCityId,
+            String remittentStateId,
+            String remittentCityId,
             String receiverFirstName,
             String receiverMiddleName,
             String receiverLastName,
@@ -2883,7 +2922,8 @@ public class APIOperations {
             String receiverStateName,
             String receiverCityName,
             String receiverAddress,
-            String receiverZipCode) {
+            String receiverZipCode,
+            String languageId) {
         try {
             SimpleDateFormat sdg = new SimpleDateFormat("yyyy-MM-dd");
             Timestamp timestamp = new Timestamp(System.currentTimeMillis());
@@ -2912,8 +2952,8 @@ public class APIOperations {
             String remittentCityName_ = null;
             String remittentAddress_ = null;
             String remittentZipCode_ = null;
-            
-            userSource = proxy.getUsuarioporId("usuarioWS", "passwordWS",String.valueOf(userId));
+
+            userSource = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
             String middleName = userSource.getDatosRespuesta().getNombre().split(" ")[0].trim();
             String secondSurname = userSource.getDatosRespuesta().getApellido().split(" ")[0].trim();
 
@@ -3057,27 +3097,27 @@ public class APIOperations {
             WsRemittenceResponse response = new WsRemittenceResponse();
             if (addressId != 0) {
                 addressListResponse = wSRemittenceMobileProxy.getAddressById(addressId);
-                remittentCountryId_ = String.valueOf(addressListResponse.getAddresses(1).getCountry().getId());
-                remittentCityId_ = String.valueOf(addressListResponse.getAddresses(1).getCity().getId());
-                remittentStateId_ = String.valueOf(addressListResponse.getAddresses(1).getState().getId());
-                remittentStateName_ = addressListResponse.getAddresses(1).getStateName();
-                remittentCityName_ = addressListResponse.getAddresses(1).getCityName();
-                remittentAddress_ = addressListResponse.getAddresses(1).getAddress();
-                remittentZipCode_ = addressListResponse.getAddresses(1).getZipCode();
+                remittentCountryId_ = String.valueOf(addressListResponse.getAddresses(0).getCountry().getId());
+                remittentCityId_ = String.valueOf(addressListResponse.getAddresses(0).getCity().getId());
+                remittentStateId_ = String.valueOf(addressListResponse.getAddresses(0).getState().getId());
+                remittentStateName_ = addressListResponse.getAddresses(0).getStateName();
+                remittentCityName_ = addressListResponse.getAddresses(0).getCityName();
+                remittentAddress_ = addressListResponse.getAddresses(0).getAddress();
+                remittentZipCode_ = addressListResponse.getAddresses(0).getZipCode();
             } else {
                 remittentCountryId_ = remittentCountryId;
                 if (remittentCityId != null) {
-                    remittentCityId_ = String.valueOf(remittentCityId);
+                    remittentCityId_ = remittentCityId;
                 } else {
                     remittentCityId_ = null;
                 }
 
                 if (remittentStateId_ != null) {
-                    remittentStateId_ = String.valueOf(remittentStateId);
+                    remittentStateId_ = remittentStateId;
                 } else {
                     remittentStateId_ = null;
                 }
-                
+
                 if (remittentStateName_ != null) {
                     remittentStateName_ = remittentStateName;
                 } else {
@@ -3085,13 +3125,13 @@ public class APIOperations {
                 }
 
                 if (remittentCityName_ != null) {
-                    remittentCityName_ = remittentCityName; 
+                    remittentCityName_ = remittentCityName;
                 } else {
                     remittentCityName_ = null;
                 }
-                
-                remittentAddress_ = remittentAddress;
-                remittentZipCode_ = remittentZipCode;
+
+                remittentAddress_ = addressListResponse.getAddresses(0).getAddress();
+                remittentZipCode_ = addressListResponse.getAddresses(0).getZipCode();
             }
             response = wSRemittenceMobileProxy.saverRemittence(applicationDate,
                     Constants.COMMENTARY_REMETTENCE,
@@ -3102,12 +3142,12 @@ public class APIOperations {
                     Constants.BANK_REMETTENCE,
                     Constants.PAYMENT_SERVICE_REMETTENCE,
                     Constants.ADDITIONAL_CHANGES_REMITTANCE,
-                    correspondentId,
+                    Constants.CORRESPONDENT_REMITTANCE,
                     Constants.SALES_TYPE_REMETTENCE,
                     exchangeRateId,
                     ratePaymentNetworkId,
                     Constants.SALES_PRICE_REMITTANCE,
-                    Constants.LANGUAGE_REMETTENCE,
+                    languageId,
                     originCurrentId,
                     destinyCurrentId,
                     Constants.STORE_REMETTENCE,
@@ -3144,8 +3184,9 @@ public class APIOperations {
                     receiverCityName,
                     receiverAddress,
                     receiverZipCode);
-            
-            proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), String.valueOf(response.getRemittanceSingleResponse().getAddressId()));
+            if (addressId == 0) {
+                proxy.actualizarUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId), String.valueOf(response.getRemittanceSingleResponse().getAddressId()));
+            }
             RemittanceResponse remittanceResponse = new RemittanceResponse(response.getRemittanceSingleResponse().getId(), response.getRemittanceSingleResponse().getApplicationDate(), response.getRemittanceSingleResponse().getCommentary(), response.getRemittanceSingleResponse().getAmountOrigin(), response.getRemittanceSingleResponse().getTotalAmount(), response.getRemittanceSingleResponse().getSendingOptionSMS(), response.getRemittanceSingleResponse().getAmountDestiny(), response.getRemittanceSingleResponse().getBank(), response.getRemittanceSingleResponse().getPaymentServiceId(), response.getRemittanceSingleResponse().getSecondaryKey(), response.getRemittanceSingleResponse().getAdditionalChanges(), response.getRemittanceSingleResponse().getCreationDate(), response.getRemittanceSingleResponse().getCreationHour(), response.getRemittanceSingleResponse().getLocalSales(), response.getRemittanceSingleResponse().getReserveField1(), response.getRemittanceSingleResponse().getRemittent(), response.getRemittanceSingleResponse().getReceiver(), response.getRemittanceSingleResponse().getCorrespondent(), response.getRemittanceSingleResponse().getAddressReciever(), response.getRemittanceSingleResponse().getSalesType(), response.getRemittanceSingleResponse().getAddressRemittent(), response.getRemittanceSingleResponse().getExchangeRate(), response.getRemittanceSingleResponse().getRatePaymentNetwork(), response.getRemittanceSingleResponse().getLanguage(), response.getRemittanceSingleResponse().getOriginCurrent(), response.getRemittanceSingleResponse().getDestinyCurrent(), response.getRemittanceSingleResponse().getPaymentMethod(), response.getRemittanceSingleResponse().getServiceType(), response.getRemittanceSingleResponse().getPaymentNetwork(), response.getRemittanceSingleResponse().getPaymentNetworkPoint(), response.getRemittanceSingleResponse().getCashBox(), response.getRemittanceSingleResponse().getCashier(), response.getRemittanceSingleResponse().getStatus(), response.getRemittanceSingleResponse().getRemittanceNumber(), response.getRemittanceSingleResponse().getPaymentKey(), response.getRemittanceSingleResponse().getCorrelative(), response.getRemittanceSingleResponse().getDeliveryForm(), ResponseCode.EXITO, "");
             remittanceResponse.setAmountTransferTotal(String.valueOf(amountTransferTotal));
             return remittanceResponse;
@@ -3161,6 +3202,366 @@ public class APIOperations {
             return new RemittanceResponse(ResponseCode.ERROR_INTERNO, "");
         }
 
+    }
+
+    public RechargeAfinitasResponses saveRechargeAfinitas(String emailUser, Float amountRecharge, String currency, String cardNumber, String expirationYear, String expirationMonth, String cvv, String cardHolderName) {
+
+        Long idTransaction = 0L;
+        Long idPreferenceField = 0L;
+        int totalTransactionsByUser = 0;
+        Long totalTransactionsByProduct = 0L;
+        Double totalAmountByUser = 0.00D;
+        List<Transaction> transactionsByUser = new ArrayList<Transaction>();
+        List<PreferenceField> preferencesField = new ArrayList<PreferenceField>();
+        List<PreferenceValue> preferencesValue = new ArrayList<PreferenceValue>();
+        List<Commission> commissions = new ArrayList<Commission>();
+        Timestamp begginingDateTime = new Timestamp(0);
+        Timestamp endingDateTime = new Timestamp(0);
+        Float amountCommission = 0.00F;
+        short isPercentCommission = 0;
+        Commission commissionRecharge = new Commission();
+        ArrayList<Product> products = new ArrayList<Product>();
+        Transaction transfer = new Transaction();
+        AfinitasPaymentIntegration afinitasPaymentIntegration = new AfinitasPaymentIntegration();
+        try {
+
+            //Se obtiene el usuario de la API de Registro Unificado
+            APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
+            RespuestaUsuario userSource_ = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
+            Long userId = Long.valueOf(userSource_.getDatosRespuesta().getUsuarioID());
+
+            //Validar preferencias
+            begginingDateTime = Utils.DateTransaction()[0];
+            endingDateTime = Utils.DateTransaction()[1];
+
+            //Obtiene la cantidad de transacciones del dÃ­a para el usuario pasarle el 
+            totalTransactionsByUser = TransactionsByUserByTransactionByProductCurrentDate(userId, begginingDateTime, endingDateTime, Constants.PRODUCT_AFINITAS, Constante.sTransationTypeAF);
+
+            //Obtiene la sumatoria de los montos de las transacciones del usuario
+            totalAmountByUser = AmountMaxByUserByUserByTransactionByProductCurrentDate(userId, begginingDateTime, endingDateTime, Constants.PRODUCT_AFINITAS, Constante.sTransationTypeAF);
+
+            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
+            totalTransactionsByProduct = TransactionsByProductByUserByTransactionCurrentDate(Constants.PRODUCT_AFINITAS, userId, begginingDateTime, endingDateTime, Constante.sTransationTypeAF);
+
+            //Cotejar las preferencias vs las transacciones del usuario
+            List<Preference> preferences = getPreferences();
+            for (Preference p : preferences) {
+                if (p.getName().equals(Constante.sPreferenceTransaction)) {
+                    idTransaction = p.getId();
+                }
+            }
+            preferencesField = (List<PreferenceField>) entityManager.createNamedQuery("PreferenceField.findByPreference", PreferenceField.class).setParameter("preferenceId", idTransaction).getResultList();
+            for (PreferenceField pf : preferencesField) {
+                switch (pf.getName()) {
+                    case Constante.sValidatePreferenceTransaction1:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);
+                            for (PreferenceValue pv : preferencesValue) {
+                                if (totalAmountByUser >= Double.parseDouble(pv.getValue())) {
+                                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_AMOUNT_LIMIT, "The user exceeded the maximum amount per day");
+                                }
+                            }
+                        }
+                        break;
+                    case Constante.sValidatePreferenceTransaction2:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);
+                            for (PreferenceValue pv : preferencesValue) {
+                                if (totalTransactionsByProduct >= Integer.parseInt(pv.getValue())) {
+                                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_MAX_NUMBER_BY_ACCOUNT, "The user exceeded the maximum number of transactions per product");
+                                }
+                            }
+                        }
+                        break;
+                    case Constante.sValidatePreferenceTransaction3:
+                        if (pf.getEnabled() == 1) {
+                            preferencesValue = getPreferenceValuePayment(pf);
+                            for (PreferenceValue pv : preferencesValue) {
+                                if (totalTransactionsByUser >= Integer.parseInt(pv.getValue())) {
+                                    return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_MAX_NUMBER_BY_CUSTOMER, "The user exceeded the maximum number of transactions per day");
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+
+            //Crear el objeto Transaction para registrar la transferencia del cliente
+            transfer.setId(null);
+            transfer.setUserSourceId(BigInteger.valueOf(userSource_.getDatosRespuesta().getUsuarioID()));
+            transfer.setUserDestinationId(BigInteger.valueOf(userSource_.getDatosRespuesta().getUsuarioID()));
+            Product product = entityManager.find(Product.class, Constants.PRODUCT_AFINITAS);
+            transfer.setProductId(product);
+            TransactionType transactionType = entityManager.find(TransactionType.class, Constante.sTransationTypeAF);
+            transfer.setTransactionTypeId(transactionType);
+            TransactionSource transactionSource = entityManager.find(TransactionSource.class, Constante.sTransactionSource);
+            transfer.setTransactionSourceId(transactionSource);
+            Date date = new Date();
+            Timestamp creationDate = new Timestamp(date.getTime());
+            transfer.setCreationDate(creationDate);
+            //cambiar por valor de parÃ¡metro
+            transfer.setConcept(Constante.sTransactionConceptPurchaseBalance);
+            transfer.setAmount(amountRecharge);
+            transfer.setTransactionStatus(TransactionStatus.CREATED.name());
+            transfer.setTotalAmount(amountRecharge);
+            entityManager.persist(transfer);
+
+            //Revisar si la transaccion esta sujeta a comisiones
+            try {
+                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", Constants.PRODUCT_AFINITAS).setParameter("transactionTypeId", Constante.sTransationTypeAF).getResultList();
+                if (commissions.size() < 1) {
+                    throw new NoResultException(Constante.sProductNotCommission + " in productId:" + Constants.PRODUCT_AFINITAS + " and userId: " + userId);
+                }
+                for (Commission c : commissions) {
+                    commissionRecharge = (Commission) c;
+                    amountCommission = c.getValue();
+                    isPercentCommission = c.getIsPercentCommision();
+                    if (isPercentCommission == 1 && amountCommission > 0) {
+                        amountCommission = (amountRecharge * amountCommission) / 100;
+                    }
+                    amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
+                }
+
+                //Se crea el objeto commissionItem y se persiste en BD
+                CommissionItem commissionItem = new CommissionItem();
+                commissionItem.setCommissionId(commissionRecharge);
+                commissionItem.setAmount(amountCommission);
+                Date commissionDate = new Date();
+                Timestamp processedDate = new Timestamp(commissionDate.getTime());
+                commissionItem.setProcessedDate(processedDate);
+                commissionItem.setTransactionId(transfer);
+                entityManager.persist(commissionItem);
+            } catch (NoResultException e) {
+                e.printStackTrace();
+                return new RechargeAfinitasResponses(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+            }
+            //Se actualiza el estatus de la transaccion a IN_PROCESS
+            transfer.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
+            entityManager.merge(transfer);
+
+            ChargeResponse chargeResponse = afinitasPaymentIntegration.afinitasCharge(String.valueOf(amountRecharge), currency, cardNumber, expirationYear, expirationMonth, cvv, cardHolderName);
+            if (chargeResponse.getStatus().equals("true")) {
+                //Se actualizan los saldos de los usuarios involucrados en la transferencia
+                //Balance History del usuario que transfiere el saldo
+                BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, Constants.PRODUCT_AFINITAS);
+                BalanceHistory balanceHistory = new BalanceHistory();
+                balanceHistory.setId(null);
+                balanceHistory.setUserId(userId);
+                balanceHistory.setOldAmount(balanceUserSource.getCurrentAmount());
+                Float currentAmountUserSource = balanceUserSource.getCurrentAmount() - amountRecharge;
+                balanceHistory.setCurrentAmount(currentAmountUserSource);
+                balanceHistory.setProductId(product);
+                balanceHistory.setTransactionId(transfer);
+                Date balanceDate = new Date();
+                Timestamp balanceHistoryDate = new Timestamp(balanceDate.getTime());
+                balanceHistory.setDate(balanceHistoryDate);
+                balanceHistory.setVersion(balanceUserSource.getId());
+                entityManager.persist(balanceHistory);
+                //Se actualiza el estado de la transaccion a COMPLETED
+                transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
+                entityManager.merge(transfer);
+
+                //Envias notificaciones
+                //envias sms
+                ////////////////////////////////////////////////////////////
+                /// se incorpora para delvolver el saldo actual del cliente///
+                /////////////////////////////////////////////////////////////
+                products = getProductsListByUserId(userId);
+                for (Product p : products) {
+                    Float amount = 0F;
+                    try {
+                        if (p.getId().equals(Product.ALODIGA_BALANCE)) {
+                            AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+                            CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+                            CardResponse cardResponse = getCardByUserId(userId);
+                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+                            if (statusCardResponse.getCodigo().equals("00")) {
+                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+                                amount = Float.valueOf(accountResponse.getComprasDisponibles());
+                            } else {
+                                amount = Float.valueOf(0);
+                            }
+
+                        } else {
+
+                            amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
+                        }
+                    } catch (NoResultException e) {
+                        amount = 0F;
+                    }
+                    p.setCurrentBalance(amount);
+                }
+
+                ////////////////////////////////////////////////////////////
+                /// se incorpora para delvolver el saldo actual del cliente///
+                /////////////////////////////////////////////////////////////
+                //Envias notificaciones
+                //envias sms Y coreo
+                //correo a quien envia
+//            SendMailTherad sendMailTherad = new SendMailTherad("ES", amountTransfer, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("8"));
+//            sendMailTherad.run();
+//            
+//
+//            //Envia quien envia 
+//            SendSmsThread sendSmsThread = new SendSmsThread(userSource_.getDatosRespuesta().getMovil(), amountTransfer, Integer.valueOf("27"), userId, entityManager);
+//            sendSmsThread.run();
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("000000")) {
+                return new RechargeAfinitasResponses(ResponseCode.NOT_AUTHORIZED, "NOT AUTHORIZED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1")) {
+                return new RechargeAfinitasResponses(ResponseCode.CALL_ISSUER, "CALL ISSUER");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("2")) {
+                return new RechargeAfinitasResponses(ResponseCode.CALL_ISSUER, "CALL ISSUER");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("3")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_TRADE, "INVALID TRADE");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("4")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("5")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_TRANSACTION_AFINITAS, "INVALID TRANSACTION");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("6")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETRY_AFINITAS, "RETRY");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("12")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("13")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("14")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("30")) {
+                return new RechargeAfinitasResponses(ResponseCode.FORMAT_ERROR, "FORMAT ERROR");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("31")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("36")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("41")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("43")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETAIN_CARD, "RETAIN CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("51")) {
+                return new RechargeAfinitasResponses(ResponseCode.INSUFFICIENT_FUNDS, "INSUFFICIENT FUNDS");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("54")) {
+                return new RechargeAfinitasResponses(ResponseCode.EXPIRED_CARD_AFINITAS, "EXPIRED CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("55")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_PIN, "INVALID PIN");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("56")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("57")) {
+                return new RechargeAfinitasResponses(ResponseCode.DEFERRED_PAYMENT_NOT_PERMITTED, "DEFERRED PAYMENT NOT PERMITTED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("61")) {
+                return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("62")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("65")) {
+                return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("68")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETRY_AFINITAS, "RETRY");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("75")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_PIN, "INVALID PIN");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("82")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("83")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("87")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("89")) {
+                return new RechargeAfinitasResponses(ResponseCode.TYPE_OF_PLAN_TERM_INVALID, "TYPE OF PLAN / TERM INVALID");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("94")) {
+                return new RechargeAfinitasResponses(ResponseCode.DUPLICATED_TRANSACTION, "DUPLICATED TRANSACTION");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N0")) {
+                return new RechargeAfinitasResponses(ResponseCode.RETRY_AFINITAS, "RETRY");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N2")) {
+                return new RechargeAfinitasResponses(ResponseCode.EXCESSED_AUTHORIZATIONS, "RETRY");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N5")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N6")) {
+                return new RechargeAfinitasResponses(ResponseCode.CP_NOT_PERMITTED_BY_TH, "CP NOT PERMITTED BY TH");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N7")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("N7")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("O4")) {
+                return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("O6")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("O8")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("P1")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("P9")) {
+                return new RechargeAfinitasResponses(ResponseCode.LIMIT_EXCEEDED, "LIMIT EXCEEDED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("Q1")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T2")) {
+                return new RechargeAfinitasResponses(ResponseCode.TERMINAL_ERROR, "TERMINAL ERROR");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T3")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_NOT_PERMITTED, "TRANSACTION NOT PERMITTED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T5")) {
+                return new RechargeAfinitasResponses(ResponseCode.UNACTIVATED_CARD, "UNACTIVATED CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("T9")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_COIN, "INVALID COIN");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1001")) {
+                return new RechargeAfinitasResponses(ResponseCode.CHIP_READING_ERROR, "CHIP READING ERROR");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1002")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CHIP, "INVALID CHIP");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("1003")) {
+                return new RechargeAfinitasResponses(ResponseCode.CHIP_NOT_SUPPORTED, "CHIP NOT SUPPORTED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("11")) {
+                return new RechargeAfinitasResponses(ResponseCode.UNKNOWN, "UNKNOWN");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("DV_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_DEVICE_IS_NOT_ACTIVE, "THE DEVICE IS NOT ACTIVE");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("BR_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_BRANCH_IS_NOT_ACTIVE, "THE BRANCH IS NOT ACTIVE");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("BS_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRADE_IS_NOT_ACTIVE, "TRADE IS NOT ACTIVE");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_001")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_REQUEST_IS_EMPTY, "THE REQUEST IS EMPTY");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.MISSING_PARAMETER_ON_REQUEST, "MISSING PARAMETER ON REQUEST");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_003")) {
+                return new RechargeAfinitasResponses(ResponseCode.RESOURCE_NOT_FOUND, "RESOURCE NOT FOUND");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("RQ_004")) {
+                return new RechargeAfinitasResponses(ResponseCode.ANSWER_EMPTY, "ANSWER EMPTY");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_001")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_TRANSACTION_EXCEEDS_THE_PERMITTED_AMOUNT, "THE TRANSACTION EXCEEDS THE PERMITTED AMOUNT");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_EXCEEDS_THE_ALLOWED_DAILY_AMOUNT, "TRANSACTION EXCEEDS THE ALLOWED DAILY AMOUNT");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_003")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_EXCEEDS_THE_MONTHLY_AMOUNT_ALLOWED, "TRANSACTION EXCEEDS THE MONTHLY AMOUNT ALLOWED");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_005")) {
+                return new RechargeAfinitasResponses(ResponseCode.NON_ACTIVE_PROMOTIONS, "NON ACTIVE PROMOTIONS");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_006")) {
+                return new RechargeAfinitasResponses(ResponseCode.PROMOTION_NOT_ACTIVE, "PROMOTION NOT ACTIVE");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_007")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_TRANSACTION_IS_NOT_WITHIN_THE_PERMITTED_SCHEDULE, "THE TRANSACTION IS NOT WITHIN THE PERMITTED SCHEDULE");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_008")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_TRANSACTION_DOES_NOT_EXIST, "THE TRANSACTION DOES NOT EXIST");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_009")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_WITH_NOT_APPROVED_SOURCE, "TRANSACTION WITH NOT APPROVED SOURCE");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_010")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_CARD, "INVALID CARD");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_011")) {
+                return new RechargeAfinitasResponses(ResponseCode.INVALID_MEMBERSHIP, "INVALID MEMBERSHIP");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_013")) {
+                return new RechargeAfinitasResponses(ResponseCode.TRANSACTION_CANCELED_PREVIOUSLY, "TRANSACTION CANCELED PREVIOUSLY");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_014")) {
+                return new RechargeAfinitasResponses(ResponseCode.PREVIOUSLY_REVERSED_TRANSACTION, "PREVIOUSLY REVERSED TRANSACTION");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_015")) {
+                return new RechargeAfinitasResponses(ResponseCode.EXCEED_PERMITTED_DAILY_TRANSACTIONS, "EXCEED PERMITTED DAILY TRANSACTIONS");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("CRP_002")) {
+                return new RechargeAfinitasResponses(ResponseCode.THE_CORPORATE_IS_NOT_ACTIVE, "THE CORPORATE IS NOT ACTIVE");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("NF_001")) {
+                return new RechargeAfinitasResponses(ResponseCode.ANSWER_NOT_FOUND, "ANSWER NOT FOUND");
+            }else if (chargeResponse.getStatus().equals("false") && chargeResponse.getError().getCode().equals("TX_024")) {
+                return new RechargeAfinitasResponses(ResponseCode.TIME_EXCEEDED_TO_PERFORM_CANCELLATION, "TIME EXCEEDED TO PERFORM CANCELLATION");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new RechargeAfinitasResponses(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
+        }
+        RechargeAfinitasResponses rechargeAfinitasResponses = new RechargeAfinitasResponses(ResponseCode.EXITO, "EXITO", products);
+        rechargeAfinitasResponses.setProducts(products);
+        return rechargeAfinitasResponses;
+//        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
 
 }
