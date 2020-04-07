@@ -1,9 +1,11 @@
+package com.alodiga.wallet.model;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.alodiga.wallet.model;
+
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -42,9 +44,16 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Product.findByRatesUrl", query = "SELECT p FROM Product p WHERE p.ratesUrl = :ratesUrl"),
     @NamedQuery(name = "Product.findByAccessNumberUrl", query = "SELECT p FROM Product p WHERE p.accessNumberUrl = :accessNumberUrl"),
     @NamedQuery(name = "Product.findByIsFree", query = "SELECT p FROM Product p WHERE p.isFree = :isFree"),
-    @NamedQuery(name = "Product.findByIsAlocashProduct", query = "SELECT p FROM Product p WHERE p.isAlocashProduct = :isAlocashProduct")})
+    @NamedQuery(name = "Product.findByIsAlocashProduct", query = "SELECT p FROM Product p WHERE p.isAlocashProduct = :isAlocashProduct"),
+    @NamedQuery(name = "Product.findByIsPayTopUp", query = "SELECT p FROM Product p WHERE p.isPayTopUp = :isPayTopUp"),
+    @NamedQuery(name = "Product.findByIsExchangeProduct", query = "SELECT p FROM Product p WHERE p.isExchangeProduct = :isExchangeProduct")})
 public class Product implements Serializable {
-    
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
+    private Collection<CardHasProduct> cardHasProductCollection;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
+    private Collection<BankOperation> bankOperationCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
     private Collection<ExchangeDetail> exchangeDetailCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
@@ -54,8 +63,6 @@ public class Product implements Serializable {
     public static final Long ALODIGA_BALANCE = 2L ;
     public static final Long PREPAID_CARD = 3L ;
     
-    @OneToMany(mappedBy = "productId")
-    private Collection<Withdrawal> withdrawalCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -74,6 +81,9 @@ public class Product implements Serializable {
     @Basic(optional = false)
     @Column(name = "referenceCode")
     private String referenceCode;
+    @Basic(optional = false)
+    @Column(name = "symbol")
+    private String symbol;
     @Column(name = "ratesUrl")
     private String ratesUrl;
     @Column(name = "accessNumberUrl")
@@ -84,6 +94,12 @@ public class Product implements Serializable {
     @Basic(optional = false)
     @Column(name = "isAlocashProduct")
     private boolean isAlocashProduct;
+    @Column(name = "isPayTopUp")
+    private boolean isPayTopUp;
+    @Column(name = "isExchangeProduct")
+    private boolean isExchangeProduct;
+    @Column(name = "isRemettence")
+    private boolean isRemettence;
     @OneToMany(mappedBy = "productId")
     private Collection<Transaction> transactionCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
@@ -105,6 +121,8 @@ public class Product implements Serializable {
     private Collection<BalanceHistory> balanceHistoryCollection;
     @Transient
     private Float currentBalance;
+    
+    
 
     public Product() {
     }
@@ -113,7 +131,7 @@ public class Product implements Serializable {
         this.id = id;
     }
 
-    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct) {
+    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct,String symbol, boolean isPayTopUp, boolean isExchangeProduct,boolean isRemettence_ ) {
         this.id = id;
         this.name = name;
         this.taxInclude = taxInclude;
@@ -121,6 +139,10 @@ public class Product implements Serializable {
         this.referenceCode = referenceCode;
         this.isFree = isFree;
         this.isAlocashProduct = isAlocashProduct;
+        this.symbol = symbol;
+        this.isPayTopUp = isPayTopUp;
+        this.isExchangeProduct = isExchangeProduct;
+        this.isRemettence = isRemettence_;
     }
 
     public Long getId() {
@@ -193,8 +215,37 @@ public class Product implements Serializable {
 
     public void setIsAlocashProduct(boolean isAlocashProduct) {
         this.isAlocashProduct = isAlocashProduct;
+             
     }
 
+    public boolean isIsPayTopUp() {
+        return isPayTopUp;
+    }
+
+    public void setIsPayTopUp(boolean isPayTopUp) {
+        this.isPayTopUp = isPayTopUp;
+    }
+
+    public boolean isIsExchangeProduct() {
+        return isExchangeProduct;
+    }
+
+    public void setIsExchangeProduct(boolean isExchangeProduct) {
+        this.isExchangeProduct = isExchangeProduct;
+    }
+
+    public boolean isIsRemettence() {
+        return isRemettence;
+    }
+
+    public void setIsRemettence(boolean isRemettence) {
+        this.isRemettence = isRemettence;
+    }
+    
+    
+    
+    
+    
     @XmlTransient
     public Collection<Transaction> getTransactionCollection() {
         return transactionCollection;
@@ -289,16 +340,6 @@ public class Product implements Serializable {
     public String toString() {
         return "dto.Product[ id=" + id + " ]";
     }
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<Withdrawal> getWithdrawalCollection() {
-        return withdrawalCollection;
-    }
-
-    public void setWithdrawalCollection(Collection<Withdrawal> withdrawalCollection) {
-        this.withdrawalCollection = withdrawalCollection;
-    }
     
     @XmlTransient
     @JsonIgnore
@@ -326,8 +367,40 @@ public class Product implements Serializable {
     public Float getCurrentBalance() {
         return currentBalance;
     }
+    
+     public String getSymbol() {
+        return symbol;
+    }
 
-   
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
+
     
     
+    
+    
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<BankOperation> getBankOperationCollection() {
+        return bankOperationCollection;
+    }
+
+    public void setBankOperationCollection(Collection<BankOperation> bankOperationCollection) {
+        this.bankOperationCollection = bankOperationCollection;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<CardHasProduct> getCardHasProductCollection() {
+        return cardHasProductCollection;
+    }
+
+    public void setCardHasProductCollection(Collection<CardHasProduct> cardHasProductCollection) {
+        this.cardHasProductCollection = cardHasProductCollection;
+    }
+
 }
+
