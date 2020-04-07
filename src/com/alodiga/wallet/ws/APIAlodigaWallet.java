@@ -1,3 +1,4 @@
+
 package com.alodiga.wallet.ws;
 
 import com.alodiga.wallet.bean.APICardOperations;
@@ -10,6 +11,7 @@ import com.alodiga.wallet.bean.APIOperations;
 import com.alodiga.wallet.bean.APIRechargeOperations;
 import com.alodiga.wallet.model.Address;
 import com.alodiga.wallet.model.Country;
+import com.alodiga.wallet.model.PaymentInfo;
 
 import com.alodiga.wallet.respuestas.ActivateCardResponses;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
@@ -20,9 +22,11 @@ import com.alodiga.wallet.respuestas.CheckStatusAccountResponses;
 import com.alodiga.wallet.respuestas.CheckStatusCardResponses;
 import com.alodiga.wallet.respuestas.CollectionListResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
+import com.alodiga.wallet.respuestas.CreditCardListResponse;
 import com.alodiga.wallet.respuestas.CumplimientResponse;
 import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
+import com.alodiga.wallet.respuestas.PaymentInfoListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.ProductResponse;
 import com.alodiga.wallet.respuestas.RechargeAfinitasResponses;
@@ -486,6 +490,34 @@ public class APIAlodigaWallet {
             @WebParam(name = "card") String card,
             @WebParam(name = "timeZone") String timeZone) {
         return cardOperations.checkStatusCard(card, timeZone);
+    }
+    
+    @WebMethod
+    public PaymentInfoListResponse getPaymentInfo(
+            @WebParam(name = "userId") String userId) {
+        return operations.getPaymentInfo(Long.valueOf(userId));
+    }
+    
+    @WebMethod
+    public CreditCardListResponse getCreditCardType() {
+        return operations.getCreditCardType();
+    }
+
+    @WebMethod
+    public PaymentInfo savePaymentInfo(
+            @WebParam(name = "userId") Long userId,
+            @WebParam(name = "estado") String estado,
+            @WebParam(name = "ciudad") String ciudad,
+            @WebParam(name = "zipCode") String zipCode,
+            @WebParam(name = "addres1") String addres1,
+            @WebParam(name = "paymentPatnerId") Long paymentPatnerId,
+            @WebParam(name = "paymentTypeId") Long paymentTypeId,
+            @WebParam(name = "creditCardTypeId") Long creditCardTypeId,
+            @WebParam(name = "creditCardName") String creditCardName,
+            @WebParam(name = "creditCardNumber") String creditCardNumber,
+            @WebParam(name = "creditCardCVV") String creditCardCVV,
+            @WebParam(name = "creditCardDate") String creditCardDate) throws Exception {
+        return operations.savePaymentInfo(Long.valueOf(userId), estado,ciudad,zipCode,addres1, paymentPatnerId, paymentTypeId,creditCardTypeId,creditCardName,creditCardNumber, creditCardCVV, creditCardDate);
     }
 
 }

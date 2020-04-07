@@ -31,7 +31,8 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "CreditcardType.findAll", query = "SELECT c FROM CreditcardType c"),
     @NamedQuery(name = "CreditcardType.findById", query = "SELECT c FROM CreditcardType c WHERE c.id = :id"),
     @NamedQuery(name = "CreditcardType.findByName", query = "SELECT c FROM CreditcardType c WHERE c.name = :name"),
-    @NamedQuery(name = "CreditcardType.findByEnabled", query = "SELECT c FROM CreditcardType c WHERE c.enabled = :enabled")})
+    @NamedQuery(name = "CreditcardType.findByEnabled", query = "SELECT c FROM CreditcardType c WHERE c.enabled = :enabled"),
+    @NamedQuery(name = "CreditcardType.findByEnabledTrue", query = "SELECT c FROM CreditcardType c WHERE c.enabled = 1")})
 public class CreditcardType implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
