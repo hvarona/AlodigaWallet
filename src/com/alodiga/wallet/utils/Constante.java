@@ -108,6 +108,9 @@ public class Constante {
         public static final String sCLIENTE_RRP = "ProgramRRP";
         public static final String socialNetworkPassword = "Alo+123";
         
+        //Transacciones
+        public static final Float sOldAmountUserDestination = 0.00F;
+
         //Pago a Comercios (Transacciones)
         public static final String sPreferenceTransaction = "transaction";
         public static final String sValidatePreferenceTransaction1 = "MAX_TRANSACTION_AMOUNT_LIMIT";
@@ -125,5 +128,28 @@ public class Constante {
         //Intercambio de productos
         public static final Long sTransationTypeEP = 4l;
         public static final String sTransactionConceptExchangeProducts = "Exchange Products";
+        
+        //Retiro Manual
+        public static final Long sTransationTypeManualWithdrawal = 5l;
+        public static final Long sBankOperationModeManual = 1L;
+        public static final Long sBankOperationTypeWithdrawal = 1L;
+        public static final String sProductNotCommission = "Not commission configured for this product";
+        
+        //Recarga Manual
+        public static final Long sTransationTypeManualRecharge = 6l;
+        public static final Long sBankOperationTypeRecharge = 2L;
+        
+        //Recargas de TopUp
+        public static final Long sTransationTypeTopUP = 7l;
+        public static final Long sTransactionSourceTopUP = 2l;
+        public static final String sTransactionConceptTopUp = "Recharge TopUp";
+        
+        //REMESAS
+        public static final Long sTransationTypeTR = 9l;
+        public static final String sTransactionConceptTranferRemmittance = "Transfer Remittance";
+        
+        //AFINITAS
+        public static final Long sTransationTypeAF = 10l;
+        public static final String sTransactionConceptPurchaseBalance = "Purchase Balance Afinitas";
         
 }
