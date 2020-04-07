@@ -1,20 +1,20 @@
 package com.alodiga.wallet.bean;
 
 
+import afinitaspaymentintegration.AfinitasPaymentIntegration;
 import cardcredentialserviceclient.CardCredentialServiceClient;
 import com.alodiga.account.client.AccountCredentialServiceClient;
 import com.alodiga.account.credential.response.StatusAccountResponse;
+import com.alodiga.afinitas.json.charge.object.ChargeResponse;
 import com.alodiga.autorization.credential.client.AutorizationCredentialServiceClient;
 import com.alodiga.autorization.credential.response.CardToCardTransferResponse;
 
 import com.alodiga.card.credential.response.ChangeStatusCardResponse;
 import com.alodiga.card.credential.response.StatusCardResponse;
 import com.alodiga.transferto.integration.connection.RequestManager;
-import com.alodiga.transferto.integration.exception.GeneralException;
 import com.alodiga.transferto.integration.model.MSIDN_INFOResponse;
 import com.alodiga.transferto.integration.model.ReserveResponse;
 import com.alodiga.transferto.integration.model.TopUpResponse;
-import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
 import com.alodiga.wallet.model.Address;
 import com.alodiga.wallet.model.Bank;
 import com.alodiga.wallet.model.BankOperation;
@@ -25,14 +25,12 @@ import com.alodiga.wallet.model.Country;
 import com.alodiga.wallet.model.Enterprise;
 import com.alodiga.wallet.model.Language;
 import com.alodiga.wallet.model.Product;
-import com.alodiga.wallet.model.ProductHasProvider;
 import com.alodiga.wallet.model.ProductIntegrationType;
 import com.alodiga.wallet.model.UserHasProduct;
 import com.alodiga.wallet.model.Transaction;
 import com.alodiga.wallet.model.Preference;
 import com.alodiga.wallet.model.PreferenceField;
 import com.alodiga.wallet.model.PreferenceValue;
-import com.alodiga.wallet.model.PaymentInfo;
 import com.alodiga.wallet.model.Provider;
 import com.alodiga.wallet.model.TopUpResponseConstants;
 import com.alodiga.wallet.model.TransactionType;
@@ -43,20 +41,15 @@ import com.alodiga.wallet.model.CommissionItem;
 import com.alodiga.wallet.model.BalanceHistory;
 import com.alodiga.wallet.model.BankHasProduct;
 import com.alodiga.wallet.model.Card;
-import com.alodiga.wallet.model.Code;
 import com.alodiga.wallet.model.Cumplimient;
 import com.alodiga.wallet.model.CumplimientStatus;
 import com.alodiga.wallet.model.ExchangeRate;
 import com.alodiga.wallet.model.ExchangeDetail;
-import com.alodiga.wallet.model.Sms;
-import com.alodiga.wallet.model.State;
 import com.alodiga.wallet.model.TopUpCountry;
 import com.alodiga.wallet.model.UserHasCard;
 import com.alodiga.wallet.model.ValidationCollection;
 import com.alodiga.wallet.response.generic.BankGeneric;
-import com.alodiga.wallet.response.generic.remittance.RemittancesCountry;
 import com.alodiga.wallet.respuestas.ActivateCardResponses;
-import com.alodiga.wallet.respuestas.AddressResponse;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
 import com.alodiga.wallet.respuestas.BankListResponse;
 import com.alodiga.wallet.respuestas.CardListResponse;
@@ -67,18 +60,10 @@ import com.alodiga.wallet.respuestas.CheckStatusCardResponses;
 import com.alodiga.wallet.respuestas.CheckStatusCredentialAccount;
 import com.alodiga.wallet.respuestas.CheckStatusCredentialCard;
 import com.alodiga.wallet.respuestas.CollectionListResponse;
-import java.sql.Connection;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Random;
-import java.util.UUID;
-import java.util.Iterator;
 import java.math.BigInteger;
 
 import javax.ejb.Stateless;
@@ -88,25 +73,15 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.validation.ConstraintViolationException;
-
-import org.apache.axis.utils.StringUtils;
-import org.apache.commons.dbutils.DbUtils;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.log4j.Logger;
 import com.alodiga.wallet.respuestas.ResponseCode;
-import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.ProductResponse;
-import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
-import com.alodiga.wallet.respuestas.CountryResponse;
 import com.alodiga.wallet.respuestas.CumplimientResponse;
 import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
-import com.alodiga.wallet.respuestas.PreferenceListResponse;
 import com.alodiga.wallet.respuestas.RechargeAfinitasResponses;
 import com.alodiga.wallet.respuestas.RemittanceResponse;
 import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
@@ -120,27 +95,20 @@ import com.alodiga.wallet.utils.AmazonSESSendMail;
 import com.alodiga.wallet.utils.Constante;
 import com.alodiga.wallet.utils.Constants;
 import static com.alodiga.wallet.utils.EncriptedRsa.encrypt;
-import com.alodiga.wallet.utils.Encryptor;
-import com.alodiga.wallet.utils.EnvioCorreo;
 import com.alodiga.wallet.utils.Mail;
 import com.alodiga.wallet.utils.S3cur1ty3Cryt3r;
-import com.alodiga.wallet.utils.SendCallRegister;
 import com.alodiga.wallet.utils.SendMailTherad;
 import com.alodiga.wallet.utils.SendSmsThread;
 import java.rmi.RemoteException;
-import java.text.DecimalFormat;
-import java.util.logging.Level;
 import com.ericsson.alodiga.ws.APIRegistroUnificadoProxy;
 import com.ericsson.alodiga.ws.Usuario;
 import com.ericsson.alodiga.ws.RespuestaUsuario;
 import java.sql.Timestamp;
 import com.alodiga.wallet.utils.Utils;
 import com.alodiga.wallet.utils.XTrustProvider;
-import com.alodiga.ws.cumpliments.services.OFACMethodWS;
 import com.alodiga.ws.cumpliments.services.OFACMethodWSProxy;
 import com.alodiga.ws.cumpliments.services.WsExcludeListResponse;
 import com.alodiga.ws.cumpliments.services.WsLoginResponse;
-import com.alodiga.ws.remittance.services.WSRemittenceMobile;
 import com.alodiga.ws.remittance.services.WSRemittenceMobileProxy;
 import com.alodiga.ws.remittance.services.WsAddressListResponse;
 import com.alodiga.ws.remittance.services.WsRemittenceResponse;
@@ -151,21 +119,9 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import static javafx.scene.input.KeyCode.T;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
-import javax.persistence.LockModeType;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.xml.registry.RegistryException;
-import static jdk.nashorn.internal.objects.NativeMath.log;
-import oracle.jrockit.jfr.tools.ConCatRepository;
 import org.apache.commons.codec.binary.Base64;
 
 @Stateless(name = "FsProcessorWallet", mappedName = "ejb/FsProcessorWallet")
@@ -174,6 +130,7 @@ public class APIOperations {
 
     @PersistenceContext(unitName = "AlodigaWalletPU")
     private EntityManager entityManager;
+
     private static final Logger logger = Logger.getLogger(APIOperations.class);
 
     public ProductResponse saveProduct(Long enterpriseId, Long categoryId, Long productIntegrationTypeId, String name, boolean taxInclude, boolean status, String referenceCode, String rateUrl, String accesNumberURL, boolean isFree, boolean isAlocashProduct, String symbol) {
@@ -232,11 +189,6 @@ public class APIOperations {
             userHasProduct1.setBeginningDate(new Timestamp(new Date().getTime()));
             entityManager.persist(userHasProduct1);
 
-//            UserHasProduct userHasProduct2 = new UserHasProduct();
-//            userHasProduct2.setProductId(Product.PREPAID_CARD);
-//            userHasProduct2.setUserSourceId(userId);
-//            userHasProduct2.setBeginningDate(new Timestamp(new Date().getTime()));
-//            entityManager.persist(userHasProduct2);
         } catch (Exception e) {
             e.printStackTrace();
             return new UserHasProductResponse(ResponseCode.ERROR_INTERNO, "Error in process saving product_has_response");
@@ -346,26 +298,20 @@ public class APIOperations {
             RespuestaUsuario userDestination = proxy.getUsuarioporId("usuarioWS", "passwordWS", idUserDestination.toString());
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
-            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountPayment) {
                 return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
             }
 
-            //Validar preferencias
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
 
-            //Obtiene las transacciones del dÃ­a para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
 
-            //Cotejar las preferencias vs las transacciones del usuario
             List<Preference> preferences = getPreferences();
             for (Preference p : preferences) {
                 if (p.getName().equals(Constants.sPreferenceTransaction)) {
@@ -408,7 +354,6 @@ public class APIOperations {
                 }
             }
 
-            //Crear el objeto Transaction para registrar el pago al comercio
             paymentShop.setId(null);
             paymentShop.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             paymentShop.setUserDestinationId(BigInteger.valueOf(idUserDestination));
@@ -421,14 +366,13 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             paymentShop.setCreationDate(creationDate);
-            //cambiar por valor de parÃ¡metro
+
             paymentShop.setConcept(Constante.sTransactionConceptPaymentShop);
             paymentShop.setAmount(amountPayment);
             paymentShop.setTransactionStatus(TransactionStatus.CREATED.name());
             paymentShop.setTotalAmount(amountPayment);
             entityManager.persist(paymentShop);
 
-            //Revisar si la transacciÃ³n estÃ¡ sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypePS).getResultList();
                 if (commissions.size() < 1) {
@@ -441,7 +385,7 @@ public class APIOperations {
                         amountCommission = (amountPayment * amountCommission) / 100;
                     }
                     amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
-                    //Se crea el objeto commissionItem y se persiste en BD
+
                     CommissionItem commissionItem = new CommissionItem();
                     commissionItem.setCommissionId(c);
                     commissionItem.setAmount(amountCommission);
@@ -456,12 +400,9 @@ public class APIOperations {
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
             }
 
-            //Se actualiza el estatus de la transacciÃ³n a IN_PROCESS
             paymentShop.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(paymentShop);
 
-            //Se actualizan los saldos del cliente y de la tienda en la BD
-            //Balance History del cliente
             balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
             BalanceHistory balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
@@ -477,7 +418,6 @@ public class APIOperations {
             balanceHistory.setVersion(balanceUserSource.getId());
             entityManager.persist(balanceHistory);
 
-            //Balance History de la Tienda
             BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination, productId);
             balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
@@ -499,13 +439,9 @@ public class APIOperations {
 
             entityManager.persist(balanceHistory);
 
-            //Se actualiza el estado de la transacciÃ³n a COMPLETED
             paymentShop.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(paymentShop);
 
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
             products = getProductsListByUserId(userId);
             for (Product p : products) {
                 Float amount = 0F;
@@ -533,28 +469,21 @@ public class APIOperations {
                 p.setCurrentBalance(amount);
             }
 
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
-            //Envias notificaciones
 
-            //envias sms Y coreo
-            //correo a quien envia
             SendMailTherad sendMailTherad = new SendMailTherad("ES", amountPayment, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("3"));
             sendMailTherad.run();
-            //correo a quien recibe
+
             SendMailTherad sendMailTherad1 = new SendMailTherad("ES", amountPayment, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), userDestination.getDatosRespuesta().getEmail(), Integer.valueOf("7"));
             sendMailTherad1.run();
 
             System.out.println(responseUser.getDatosRespuesta().getMovil());
             System.out.println(userDestination.getDatosRespuesta().getMovil());
-            //Envia quien envia 
+
             SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), amountPayment, Integer.valueOf("22"), userId, entityManager);
             sendSmsThread.run();
 
-//            //Envia quien recibe
             SendSmsThread sendSmsThread1 = new SendSmsThread(userDestination.getDatosRespuesta().getMovil(), amountPayment, Integer.valueOf("26"), Long.valueOf(userDestination.getDatosRespuesta().getUsuarioID()), entityManager);
             sendSmsThread1.run();
 
@@ -566,13 +495,8 @@ public class APIOperations {
         transactionResponse.setIdTransaction(paymentShop.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
-
-//        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
 
-    /*
-     *
-     */
     public TransactionResponse saveTransferBetweenAccount(String cryptograUserSource, String emailUser, Long productId, Float amountTransfer,
             String conceptTransaction, String cryptograUserDestination, Long idUserDestination) {
 
@@ -595,13 +519,11 @@ public class APIOperations {
         Transaction transfer = new Transaction();
         try {
 
-            //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
             RespuestaUsuario userDestination = proxy.getUsuarioporId("usuarioWS", "passwordWS", idUserDestination.toString());
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
-            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeTA).getResultList();
@@ -626,20 +548,15 @@ public class APIOperations {
                 return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
             }
 
-            //Validar preferencias
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
 
-            //Obtiene las transacciones del dÃ­a para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
 
-            //Cotejar las preferencias vs las transacciones del usuario
             List<Preference> preferences = getPreferences();
             for (Preference p : preferences) {
                 if (p.getName().equals(Constante.sPreferenceTransaction)) {
@@ -682,7 +599,6 @@ public class APIOperations {
                 }
             }
 
-            //Crear el objeto Transaction para registrar la transferencia del cliente
             transfer.setId(null);
             transfer.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
@@ -695,14 +611,13 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             transfer.setCreationDate(creationDate);
-            //cambiar por valor de parÃ¡metro
+
             transfer.setConcept(Constante.sTransactionConceptTranferAccounts);
             transfer.setAmount(amountTransfer);
             transfer.setTransactionStatus(TransactionStatus.CREATED.name());
             transfer.setTotalAmount(amountTransfer);
             entityManager.persist(transfer);
 
-            //Se crea el objeto commissionItem y se persiste en BD
             CommissionItem commissionItem = new CommissionItem();
             commissionItem.setCommissionId(commissionTransfer);
             commissionItem.setAmount(amountCommission);
@@ -712,12 +627,9 @@ public class APIOperations {
             commissionItem.setTransactionId(transfer);
             entityManager.persist(commissionItem);
 
-            //Se actualiza el estatus de la transaccion a IN_PROCESS
             transfer.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(transfer);
 
-            //Se actualizan los saldos de los usuarios involucrados en la transferencia
-            //Balance History del usuario que transfiere el saldo
             balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
             BalanceHistory balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
@@ -733,7 +645,6 @@ public class APIOperations {
             balanceHistory.setVersion(balanceUserSource.getId());
             entityManager.persist(balanceHistory);
 
-            //Balance History del usuario que recibe la transferencia
             BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination, productId);
             balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
@@ -754,15 +665,9 @@ public class APIOperations {
             balanceHistory.setDate(balanceHistoryDate);
             entityManager.persist(balanceHistory);
 
-            //Se actualiza el estado de la transaccion a COMPLETED
             transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(transfer);
-            //Envias notificaciones
-            //envias sms
 
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
             products = getProductsListByUserId(userId);
             for (Product p : products) {
                 Float amount = 0F;
@@ -790,23 +695,15 @@ public class APIOperations {
                 p.setCurrentBalance(amount);
             }
 
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
-            //Envias notificaciones
-            //envias sms Y coreo
-            //correo a quien envia
             SendMailTherad sendMailTherad = new SendMailTherad("ES", amountTransfer, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("8"));
             sendMailTherad.run();
-            //correo a quien recibe
+
             SendMailTherad sendMailTherad1 = new SendMailTherad("ES", amountTransfer, conceptTransaction, userDestination.getDatosRespuesta().getNombre() + " " + userDestination.getDatosRespuesta().getApellido(), userDestination.getDatosRespuesta().getEmail(), Integer.valueOf("9"));
             sendMailTherad1.run();
 
-            //Envia quien envia 
             SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), amountTransfer, Integer.valueOf("27"), userId, entityManager);
             sendSmsThread.run();
 
-            //Envia quien recibe
             SendSmsThread sendSmsThread1 = new SendSmsThread(userDestination.getDatosRespuesta().getMovil(), amountTransfer, Integer.valueOf("28"), Long.valueOf(userDestination.getDatosRespuesta().getUsuarioID()), entityManager);
             sendSmsThread1.run();
 
@@ -818,7 +715,6 @@ public class APIOperations {
         transactionResponse.setIdTransaction(transfer.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
-//        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
 
     public TransactionResponse previewExchangeProduct(String emailUser, Long productSourceId, Long productDestinationId,
@@ -835,12 +731,10 @@ public class APIOperations {
         Float valueRateByProductDestination = 0.00F;
 
         try {
-            //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
-            // Validar que el cliente disponga de saldo para hacer la operacion
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, productSourceId);
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productSourceId).setParameter("transactionTypeId", Constante.sTransationTypeEP).getResultList();
@@ -863,7 +757,6 @@ public class APIOperations {
                 return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
             }
 
-            //Se calcula el monto de la conversion entre los productos y el total a debitar
             ExchangeRate RateByProductSource = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productSourceId).getSingleResult();
             valueRateByProductSource = RateByProductSource.getValue();
             ExchangeRate RateByProductDestination = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productDestinationId).getSingleResult();
@@ -885,9 +778,6 @@ public class APIOperations {
                 amountConversion, valueRateByProductSource, valueRateByProductDestination, isPercentCommission);
     }
 
-    /*
-     *
-     */
     public TransactionResponse exchangeProduct(String emailUser, Long productSourceId, Long productDestinationId,
             Float amountExchange, String conceptTransaction, int includedAmount) {
 
@@ -910,25 +800,19 @@ public class APIOperations {
         Transaction exchange = new Transaction();
 
         try {
-            //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
-            //Validar preferencias
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
 
-            //Obtiene las transacciones del dÃ­a para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productSourceId, userId, begginingDateTime, endingDateTime);
 
-            //Cotejar las preferencias vs las transacciones del usuario
             List<Preference> preferences = getPreferences();
             for (Preference p : preferences) {
                 if (p.getName().equals(Constante.sPreferenceTransaction)) {
@@ -971,7 +855,6 @@ public class APIOperations {
                 }
             }
 
-            //Registrar el intercambio de los productos (producto de origen)
             exchange.setId(null);
             exchange.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             exchange.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -990,7 +873,6 @@ public class APIOperations {
             exchange.setTotalAmount(amountExchange);
             entityManager.persist(exchange);
 
-            //Se calcula la comision asociada al producto de origen
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productSourceId).setParameter("transactionTypeId", Constante.sTransationTypeEP).getResultList();
                 if (commissions.size() < 1) {
@@ -1003,7 +885,6 @@ public class APIOperations {
                         amountCommission = (amountExchange * amountCommission) / 100;
                     }
                     amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
-                    //Se crea el objeto commissionItem y se persiste en BD
                     CommissionItem commissionItem = new CommissionItem();
                     commissionItem.setCommissionId(c);
                     commissionItem.setAmount(amountCommission);
@@ -1018,7 +899,6 @@ public class APIOperations {
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
             }
 
-            //Se calcula el monto de la conversion entre los productos
             ExchangeRate RateByProductSource = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productSourceId).getSingleResult();
             ExchangeRate RateByProductDestination = (ExchangeRate) entityManager.createNamedQuery("ExchangeRate.findByProduct", ExchangeRate.class).setParameter("productId", productDestinationId).getSingleResult();
             if (includedAmount == 0) {
@@ -1029,11 +909,9 @@ public class APIOperations {
             }
             Float amountConversion = (amountExchange * RateByProductSource.getValue()) / RateByProductDestination.getValue();
 
-            //Se actualiza el estatus de la transaccion a IN_PROCESS
             exchange.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(exchange);
 
-            //Guardar los detalles del intercambio entre los productos (para producto destino)
             ExchangeDetail detailProductDestination = new ExchangeDetail();
             detailProductDestination.setId(null);
             detailProductDestination.setExchangeRateId(RateByProductDestination);
@@ -1042,7 +920,6 @@ public class APIOperations {
             detailProductDestination.setTransactionId(exchange);
             entityManager.persist(detailProductDestination);
 
-            //Se actualiza el saldo del usuario para el producto de origen
             BalanceHistory balanceProductSource = loadLastBalanceHistoryByAccount(userId, productSourceId);
             BalanceHistory balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
@@ -1058,7 +935,6 @@ public class APIOperations {
             balanceHistory.setVersion(balanceProductSource.getId());
             entityManager.persist(balanceHistory);
 
-            //Se actualiza el saldo del usuario para el producto de destino
             BalanceHistory balanceProductDestination = loadLastBalanceHistoryByAccount(userId, productDestinationId);
             balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
@@ -1079,13 +955,9 @@ public class APIOperations {
             balanceHistory.setDate(balanceHistoryDate);
             entityManager.persist(balanceHistory);
 
-            //Se actualiza el estado de la transaccion a COMPLETED
             exchange.setTransactionStatus(TransactionStatus.COMPLETED.name());
             entityManager.merge(exchange);
 
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
             try {
                 products = getProductsListByUserId(userId);
                 for (Product p : products) {
@@ -1117,16 +989,9 @@ public class APIOperations {
 
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
             }
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
-            //Envias notificaciones
-            //envias sms            
-            //correo a quien envia
             SendMailTherad sendMailTherad = new SendMailTherad("ES", productSource.getName(), productDestination.getName(), amountExchange, emailUser, conceptTransaction, emailUser, Integer.valueOf("10"));
             sendMailTherad.run();
 
-            //Envia quien envia 
             SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), productSource.getName(), productDestination.getName(), amountExchange, Integer.valueOf("29"), userId, entityManager);
             sendSmsThread.run();
 
@@ -1138,7 +1003,6 @@ public class APIOperations {
         transactionResponse.setIdTransaction(exchange.getId().toString());
         transactionResponse.setProducts(products);
         return transactionResponse;
-//        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
 
     private List<Preference> getPreferences() {
@@ -1455,25 +1319,19 @@ public class APIOperations {
         AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
 
         try {
-            //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
 
-            //Validar preferencias
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
 
-            //Obtiene las transacciones del día para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene las transacciones del día para el producto que se está comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
 
-            //Cotejar las preferencias vs las transacciones del usuario
             List<Preference> preferences = getPreferences();
             for (Preference p : preferences) {
                 if (p.getName().equals(Constante.sPreferenceTransaction)) {
@@ -1516,7 +1374,6 @@ public class APIOperations {
                 }
             }
 
-            //Registrar la transacción
             withdrawal.setId(null);
             withdrawal.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             withdrawal.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -1535,7 +1392,6 @@ public class APIOperations {
             withdrawal.setTotalAmount(amountWithdrawal);
             entityManager.persist(withdrawal);
 
-            //Revisar si la transaccion esta sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeManualWithdrawal).getResultList();
                 if (commissions.size() < 1) {
@@ -1550,7 +1406,7 @@ public class APIOperations {
                     }
                     amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
                 }
-                //Se crea el objeto commissionItem y se persiste en BD
+
                 CommissionItem commissionItem = new CommissionItem();
                 commissionItem.setCommissionId(commissionWithdrawal);
                 commissionItem.setAmount(amountCommission);
@@ -1564,7 +1420,6 @@ public class APIOperations {
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
             }
 
-            //Guardar los datos del retiro          
             BankOperation manualWithdrawal = new BankOperation();
             manualWithdrawal.setId(null);
             manualWithdrawal.setUserSourceId(BigInteger.valueOf(userId));
@@ -1580,16 +1435,10 @@ public class APIOperations {
             manualWithdrawal.setBankOperationNumber(accountBank);
             entityManager.persist(manualWithdrawal);
 
-            //Se actualiza el estatus de la transacción a IN_PROCESS
             withdrawal.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(withdrawal);
-//            Usuario usuario = new Usuario();
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
-
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
             try {
                 products = getProductsListByUserId(userId);
                 for (Product p : products) {
@@ -1619,15 +1468,9 @@ public class APIOperations {
 
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
             }
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
-
-            //Envío de Email
             SendMailTherad sendMailTherad = new SendMailTherad("ES", accountBank, amountWithdrawal, conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("4"));
             sendMailTherad.run();
 
-            //Envío de SMS
             SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), Integer.valueOf("23"), amountWithdrawal, userId, entityManager);
             sendSmsThread.run();
         } catch (Exception e) {
@@ -1642,9 +1485,6 @@ public class APIOperations {
 
     }
 
-    /*
-     *
-     */
     public TransactionResponse manualRecharge(Long bankId, String emailUser, String referenceNumberOperation,
             Float amountRecharge, Long productId, String conceptTransaction) {
 
@@ -1680,13 +1520,10 @@ public class APIOperations {
             //Obtiene las transacciones del día para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene las transacciones del día para el producto que se está comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
 
-            //Cotejar las preferencias vs las transacciones del usuario
             List<Preference> preferences = getPreferences();
             for (Preference p : preferences) {
                 if (p.getName().equals(Constante.sPreferenceTransaction)) {
@@ -1729,7 +1566,6 @@ public class APIOperations {
                 }
             }
 
-            //Registrar la transacción en la BD
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             recharge.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
@@ -1748,7 +1584,6 @@ public class APIOperations {
             recharge.setTotalAmount(amountRecharge);
             entityManager.persist(recharge);
 
-            //Revisar si la transaccion esta sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeManualRecharge).getResultList();
                 if (commissions.size() < 1) {
@@ -1763,7 +1598,6 @@ public class APIOperations {
                     }
                     amountCommission = (amountCommission <= 0) ? 0.00F : amountCommission;
                 }
-                //Se crea el objeto commissionItem y se persiste en BD
                 CommissionItem commissionItem = new CommissionItem();
                 commissionItem.setCommissionId(commissionRecharge);
                 commissionItem.setAmount(amountCommission);
@@ -1776,8 +1610,6 @@ public class APIOperations {
                 e.printStackTrace();
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
             }
-
-            //Guardar los datos de la recarga          
             BankOperation manualRecharge = new BankOperation();
             manualRecharge.setId(null);
             manualRecharge.setUserSourceId(BigInteger.valueOf(userId));
@@ -1794,14 +1626,10 @@ public class APIOperations {
 
             entityManager.persist(manualRecharge);
 
-            //Se actualiza el estatus de la transacción a IN_PROCESS
             recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
 
             entityManager.merge(recharge);
 
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
             try {
                 products = getProductsListByUserId(userId);
                 for (Product p : products) {
@@ -1831,10 +1659,6 @@ public class APIOperations {
 
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error loading products");
             }
-            ////////////////////////////////////////////////////////////
-            /// se incorpora para delvolver el saldo actual del cliente///
-            /////////////////////////////////////////////////////////////
-
             Usuario usuario = new Usuario();
             usuario.setEmail(emailUser);
             SendMailTherad sendMailTherad = new SendMailTherad("ES", referenceNumberOperation, conceptTransaction, amountRecharge, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("2"));
@@ -1914,7 +1738,6 @@ public class APIOperations {
         return new CountryListResponse(ResponseCode.EXITO, "", countrys);
     }
 
-    //Desarrollador por kerwin 2-10-2019 modificaciòn solicitada por adira
     public BalanceHistoryResponse getBalanceHistoryByUserAndProduct(Long userId, Long productId) {
         BalanceHistory balanceHistory = new BalanceHistory();
         try {
@@ -1979,10 +1802,7 @@ public class APIOperations {
         Mail mail = Utils.SendMailUserChangePassword("ES", usuario);
         System.out.println("body: " + mail.getBody());
         try {
-//            EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
-//                    mail.getSubject(), mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
             AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
-            //Envio de Correo Electronico
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -2059,32 +1879,21 @@ public class APIOperations {
 
         TransactionResponse response = null;
         try {
-            //Se obtiene el usuario de la API de Registro Unificado
             APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
             RespuestaUsuario responseUser = proxy.getUsuarioporemail("usuarioWS", "passwordWS", emailUser);
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-//            userId = Long.valueOf("402");//para test
-
-            // Validar que el balance history del cliente disponga de saldo para hacer la operacion
             BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
             if (balanceUserSource == null || balanceUserSource.getCurrentAmount() < amountRecharge) {
                 return new TransactionResponse(ResponseCode.USER_HAS_NOT_BALANCE, "The user has no balance available to complete the transaction");
             }
-
-            //Validar preferencias
             begginingDateTime = Utils.DateTransaction()[0];
             endingDateTime = Utils.DateTransaction()[1];
-
-            //Obtiene las transacciones del dÃ­a para el usuario
             totalTransactionsByUser = TransactionsByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene la sumatoria de los montos de las transacciones del usuario
             totalAmountByUser = AmountMaxByUserCurrentDate(userId, begginingDateTime, endingDateTime);
 
-            //Obtiene las transacciones del dÃ­a para el producto que se estÃ¡ comprando
             totalTransactionsByProduct = TransactionsByProductByUserCurrentDate(productId, userId, begginingDateTime, endingDateTime);
 
-            //Cotejar las preferencias vs las transacciones del usuario
             List<Preference> preferences = getPreferences();
             for (Preference p : preferences) {
                 if (p.getName().equals(Constants.sPreferenceTransaction)) {
@@ -2127,12 +1936,10 @@ public class APIOperations {
                 }
             }
 
-            //Crear el objeto Transaction para registrar el pago del topUp
             Transaction recharge = new Transaction();
             recharge.setId(null);
             recharge.setUserSourceId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
             recharge.setUserDestinationId(BigInteger.valueOf(responseUser.getDatosRespuesta().getUsuarioID()));
-//            recharge.setUserSourceId(BigInteger.valueOf(402));//para test
             recharge.setTopUpDescription("Destination:" + destinationNumber + " SkuidID:" + skudId);
             Product product = entityManager.find(Product.class, productId);
             recharge.setProductId(product);
@@ -2143,7 +1950,6 @@ public class APIOperations {
             Date date = new Date();
             Timestamp creationDate = new Timestamp(date.getTime());
             recharge.setCreationDate(creationDate);
-            //cambiar por valor de parametro
             recharge.setConcept(Constante.sTransactionConceptTopUp);
             recharge.setAmount(amountRecharge);
             recharge.setTransactionStatus(TransactionStatus.CREATED.name());
@@ -2151,7 +1957,6 @@ public class APIOperations {
             recharge.setId(recharge.getId());
             entityManager.persist(recharge);
 
-            //Revisar si la transaccion esta sujeta a comisiones
             try {
                 commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", productId).setParameter("transactionTypeId", Constante.sTransationTypeTopUP).getResultList();
                 if (commissions.size() < 1) {
@@ -2180,13 +1985,10 @@ public class APIOperations {
                 return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
             }
 
-            //Se actualiza el monto total monto del topUp + comision
             amountPayment = amountRecharge + amountCommission;
             recharge.setTotalAmount(amountPayment);
             entityManager.merge(recharge);
 
-            //Se actualizan los saldos del cliente en la BD
-            //Balance History del cliente
             balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
             BalanceHistory balanceHistory = new BalanceHistory();
             balanceHistory.setId(null);
@@ -2202,32 +2004,23 @@ public class APIOperations {
             balanceHistory.setVersion(balanceUserSource.getId());
             entityManager.persist(balanceHistory);
 
-            //Se actualiza el estatus de la transaccion a IN_PROCESS
             recharge.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(recharge);
 
-            //ejecuta la recarga de TopUp
             response = this.executeTopUp(skudId, amountRecharge, destinationNumber, senderNumber, emailUser);
             if (response.getCodigoRespuesta().equals(ResponseCode.EXITO.getCodigo())) {
 
-                //Se actualiza el estado de la transaccion a COMPLETED
                 recharge.setTransactionStatus(TransactionStatus.COMPLETED.name());
                 entityManager.merge(recharge);
                 response.setIdTransaction(recharge.getId().toString());
 
-                //Envias notificaciones
-                //envias sms
                 SendMailTherad sendMailTherad = new SendMailTherad("ES", destinationNumber, senderNumber, amountRecharge, amountPayment, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), emailUser, Integer.valueOf("6"));
                 sendMailTherad.run();
 
-                //Envia quien enviar
                 SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), destinationNumber, amountRecharge, Integer.valueOf("25"), userId, entityManager);
                 sendSmsThread.run();
 
             } else {
-                //Fallo el topUp devolver el saldo
-                //Se actualizan los saldos del cliente en la BD
-                //Balance History del cliente FAILED
                 balanceUserSource = loadLastBalanceHistoryByAccount(userId, productId);
                 balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -2253,9 +2046,6 @@ public class APIOperations {
             return new TransactionResponse(ResponseCode.ERROR_INTERNO, "Error in process saving transaction saveRechargeTopUp");
         }
 
-        ////////////////////////////////////////////////////////////
-        /// se incorpora para delvolver el saldo actual del cliente///
-        /////////////////////////////////////////////////////////////
         ArrayList<Product> productResponses = new ArrayList<Product>();
         try {
             productResponses = getProductsListByUserId(userId);
@@ -2290,10 +2080,6 @@ public class APIOperations {
         }
 
         response.setProducts(productResponses);
-
-        ////////////////////////////////////////////////////////////
-        /// se incorpora para delvolver el saldo actual del cliente///
-        /////////////////////////////////////////////////////////////
         return response;
     }
 
@@ -2550,9 +2336,6 @@ public class APIOperations {
             ChangeStatusCardResponse response = cardCredentialServiceClient.changeStatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString, status);
 
             if (response.getCodigoRespuesta().equals("00") || response.getCodigoRespuesta().equals("-024")) {
-                //continua con la activaciòn va contra credencial y activa la tarjeta dependiendo de la respuesta
-                // Credencial aciva
-                //Validar si el producto esta asociado al usuario.
                 if (!hasPrepayCardAsociated(userId)) {
                     //Si no lo tiene se debe afiliar 
                     UserHasProduct userHasProduct2 = new UserHasProduct();
@@ -2561,9 +2344,8 @@ public class APIOperations {
                     userHasProduct2.setBeginningDate(new Timestamp(new Date().getTime()));
                     entityManager.persist(userHasProduct2);
                 }
-                //Guarda el numero de tarjeta asociado
                 if (!hasPrepayCard(userId)) {
-                    //Si no lo tiene se debe afiliar 
+
                     Card card1 = new Card();
                     card1.setNumberCard(Card);
                     card1.setNameCard(responseUser.getDatosRespuesta().getNombre() + responseUser.getDatosRespuesta().getApellido());
@@ -2575,9 +2357,6 @@ public class APIOperations {
                     entityManager.persist(userHasCard);
                 }
 
-                ////////////////////////////////////////////////////////////
-                /// se incorpora para delvolver el saldo actual del cliente///
-                /////////////////////////////////////////////////////////////
                 try {
                     products = getProductsListByUserId(userId);
                     for (Product p : products) {
@@ -2607,13 +2386,7 @@ public class APIOperations {
 
                     return new ActivateCardResponses(ResponseCode.ERROR_INTERNO, "Error loading products");
                 }
-                ////////////////////////////////////////////////////////////
-                /// se incorpora para delvolver el saldo actual del cliente///
-                /////////////////////////////////////////////////////////////
-//            
-//             TransactionResponse transactionResponse = new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
-//        transactionResponse.setProducts(products);
-//        //return transactionResponse;
+
                 ChangeStatusCredentialCard changeStatusCredentialcardResponse = new ChangeStatusCredentialCard(response.getInicio(), response.getFin(), response.getTiempo(), response.getCodigoRespuesta(), response.getDescripcion(), response.getTicketWS());
                 ActivateCardResponses activateCardResponses = new ActivateCardResponses(changeStatusCredentialcardResponse, ResponseCode.EXITO, "", products);
                 activateCardResponses.setProducts(products);
@@ -2700,6 +2473,7 @@ public class APIOperations {
             userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
             card = S3cur1ty3Cryt3r.aloEncrpter(card, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
             String encryptedString = Base64.encodeBase64String(encrypt(card, Constants.PUBLIC_KEY));
+            System.out.println("encryptedString " + encryptedString);
             StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, timeZone, encryptedString);
             if (statusCardResponse.getCodigo().equals("00")) {
                 CheckStatusCredentialCard checkStatusCredentialCard = new CheckStatusCredentialCard(statusCardResponse.getCodigo(), statusCardResponse.getDescripcion(), statusCardResponse.getTicketWS(), statusCardResponse.getInicio(), statusCardResponse.getFin(), statusCardResponse.getTiempo(), statusCardResponse.getNumero(), statusCardResponse.getCuenta(), statusCardResponse.getCodigoEntidad(), statusCardResponse.getDescripcionEntidad(), statusCardResponse.getSucursal(), statusCardResponse.getCodigoProducto(), statusCardResponse.getDescripcionProducto(), statusCardResponse.getCodigoEstado(), statusCardResponse.getDescripcionEstado(), statusCardResponse.getActual(), statusCardResponse.getAnterior(), statusCardResponse.getDenominacion(), statusCardResponse.getTipo(), statusCardResponse.getIden(), statusCardResponse.getTelefono(), statusCardResponse.getDireccion(), statusCardResponse.getCodigoPostal(), statusCardResponse.getLocalidad(), statusCardResponse.getCodigoPais(), statusCardResponse.getDescripcionPais(), statusCardResponse.getMomentoUltimaActualizacion(), statusCardResponse.getMomentoUltimaOperacionAprobada(), statusCardResponse.getMomentoUltimaOperacionDenegada(), statusCardResponse.getMomentoUltimaBajaBoletin(), statusCardResponse.getContadorPinERR());
@@ -2806,7 +2580,6 @@ public class APIOperations {
             if (cardToCardTransferResponse.getCodigoError().equals("-1")) {
                 TransferCardToCardCredential cardCredential = new TransferCardToCardCredential(cardToCardTransferResponse.getCodigoError(), cardToCardTransferResponse.getMensajeError(), cardToCardTransferResponse.getCodigoRespuesta(), cardToCardTransferResponse.getMensajeRespuesta(), cardToCardTransferResponse.getCodigoAutorizacion(), cardToCardTransferResponse.getSaldoPosterior(), cardToCardTransferResponse.getSaldo(), cardToCardTransferResponse.getSaldoPosteriorCuentaDestino(), cardToCardTransferResponse.getSaldoCuentaDestino());
 
-                //Crear el objeto Transaction para registrar la transferencia del cliente
                 transfer.setId(null);
                 transfer.setUserSourceId(BigInteger.valueOf(userId));
                 transfer.setUserDestinationId(BigInteger.valueOf(idUserDestination));
@@ -2819,14 +2592,13 @@ public class APIOperations {
                 Date date_ = new Date();
                 Timestamp creationDate = new Timestamp(date_.getTime());
                 transfer.setCreationDate(creationDate);
-                //cambiar por valor de parÃ¡metro
+
                 transfer.setConcept(Constants.TRANSACTION_CONCEPT_TRANSFER_CARD_TO_CARD);
                 transfer.setAmount(Float.valueOf(balance));
                 transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
                 transfer.setTotalAmount(Float.valueOf(balance));
                 entityManager.persist(transfer);
 
-                //Balance History del usuario que transfiere el saldo
                 BalanceHistory balanceUserSource = loadLastBalanceHistoryByAccount(userId, 3L);
                 BalanceHistory balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -2846,7 +2618,6 @@ public class APIOperations {
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
 
-                //Balance History del usuario que recibe la transferencia
                 BalanceHistory balanceUserDestination = loadLastBalanceHistoryByAccount(idUserDestination, 3L);
                 balanceHistory = new BalanceHistory();
                 balanceHistory.setId(null);
@@ -2866,9 +2637,6 @@ public class APIOperations {
                 balanceHistory.setDate(balanceHistoryDate);
                 entityManager.persist(balanceHistory);
 
-                ////////////////////////////////////////////////////////////
-                /// se incorpora para delvolver el saldo actual del cliente///
-                /////////////////////////////////////////////////////////////
                 try {
                     products = getProductsListByUserId(userId);
                     for (Product p : products) {
@@ -2897,24 +2665,15 @@ public class APIOperations {
 
                     return new TransferCardToCardResponses(ResponseCode.ERROR_INTERNO, "Error loading products");
                 }
-                ////////////////////////////////////////////////////////////
-                /// se incorpora para delvolver el saldo actual del cliente///
-                /////////////////////////////////////////////////////////////
-
-                //Envias notificaciones
-                //envias sms Y coreo
-                //correo a quien envia
                 SendMailTherad sendMailTherad = new SendMailTherad("ES", Float.valueOf(balance), conceptTransaction, responseUser.getDatosRespuesta().getNombre() + " " + responseUser.getDatosRespuesta().getApellido(), responseUser.getDatosRespuesta().getEmail(), Integer.valueOf("11"));
                 sendMailTherad.run();
-                //correo a quien recibe
+
                 SendMailTherad sendMailTherad1 = new SendMailTherad("ES", Float.valueOf(balance), conceptTransaction, userDestination.getDatosRespuesta().getNombre() + " " + userDestination.getDatosRespuesta().getApellido(), userDestination.getDatosRespuesta().getEmail(), Integer.valueOf("12"));
                 sendMailTherad1.run();
 
-                //Envia quien envia 
                 SendSmsThread sendSmsThread = new SendSmsThread(responseUser.getDatosRespuesta().getMovil(), Float.valueOf(balance), Integer.valueOf("30"), userId, entityManager);
                 sendSmsThread.run();
 
-                //Envia quien recibe
                 SendSmsThread sendSmsThread1 = new SendSmsThread(userDestination.getDatosRespuesta().getMovil(), Float.valueOf(balance), Integer.valueOf("31"), Long.valueOf(userDestination.getDatosRespuesta().getUsuarioID()), entityManager);
                 sendSmsThread1.run();
 
@@ -3037,9 +2796,6 @@ public class APIOperations {
 
     private void ignoreSSL() {
         try {
-            ////////////////////////////////////////////////////////////////
-            //SE COLOCAR PARA IGNORAR SSL
-            ///////////////////////////////////////////////////////////////
             XTrustProvider.install();
             final String TEST_URL = "https://10.70.10.71:8000/CASA_SRTMX_TarjetaService?wsdl";
             URL url = new URL(TEST_URL);
@@ -3054,11 +2810,8 @@ public class APIOperations {
             int nread = 0;
             byte[] buf = new byte[8192];
             while ((nread = is.read(buf)) != -1) {
-                //System.out.write(buf, 0, nread);
             }
-            ////////////////////////////////////////////////////////////////
-            //SE COLOCAR PARA IGNORAR SSL
-            ///////////////////////////////////////////////////////////////
+
         } catch (MalformedURLException ex) {
             ex.printStackTrace();
 
@@ -3109,17 +2862,6 @@ public class APIOperations {
         return new CardListResponse(ResponseCode.EXITO, "", cards);
     }
 
-//    public TopUpCountryListResponse getTopUpCountries() {
-//        List<TopUpCountry> topUpCountrys = null;
-//        try {
-//            topUpCountrys = entityManager.createNamedQuery("TopUpCountry.findAll", TopUpCountry.class).getResultList();
-//
-//        } catch (Exception e) {
-//            return new TopUpCountryListResponse(ResponseCode.ERROR_INTERNO, "Error loading countries");
-//        }
-//        return new TopUpCountryListResponse(ResponseCode.EXITO, "", topUpCountrys);
-//    }
-//    
     public ProductListResponse getProductsRemettenceByUserId(Long userId) {
         List<UserHasProduct> userHasProducts = new ArrayList<UserHasProduct>();
         List<Product> products = new ArrayList<Product>();

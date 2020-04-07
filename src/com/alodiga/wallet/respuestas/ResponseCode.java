@@ -153,23 +153,8 @@ public enum ResponseCode {
     EXCEED_PERMITTED_DAILY_TRANSACTIONS("193"),
     THE_CORPORATE_IS_NOT_ACTIVE("194"),
     ANSWER_NOT_FOUND("195"),
-    TIME_EXCEEDED_TO_PERFORM_CANCELLATION("196");
-
-
-
-
-    
-
-
-
-
-    
-
-
-
-
-
-
+    TIME_EXCEEDED_TO_PERFORM_CANCELLATION("196"),
+    CREDENTIALS_WS_INAVAILABLE("143");
    
 
     private String codigo; 
