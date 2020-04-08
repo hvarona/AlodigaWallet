@@ -46,6 +46,9 @@ public class CreditcardType implements Serializable {
     @Basic(optional = false)
     @Column(name = "enabled")
     private boolean enabled;
+    @Basic(optional = false)
+    @Column(name = "lengh")
+    private String lengh;
     @OneToMany(mappedBy = "creditCardTypeId")
     private Collection<PaymentInfo> paymentInfoCollection;
 
@@ -56,10 +59,11 @@ public class CreditcardType implements Serializable {
         this.id = id;
     }
 
-    public CreditcardType(Long id, String name, boolean enabled) {
+    public CreditcardType(Long id, String name, boolean enabled, String lengh) {
         this.id = id;
         this.name = name;
         this.enabled = enabled;
+        this.lengh = lengh;
     }
 
     public Long getId() {
@@ -86,6 +90,15 @@ public class CreditcardType implements Serializable {
         this.enabled = enabled;
     }
 
+    public String getLengh() {
+        return lengh;
+    }
+
+    public void setLengh(String lengh) {
+        this.lengh = lengh;
+    }
+
+    
     @XmlTransient
     public Collection<PaymentInfo> getPaymentInfoCollection() {
         return paymentInfoCollection;

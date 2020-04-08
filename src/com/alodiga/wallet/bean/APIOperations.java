@@ -53,6 +53,7 @@ import com.alodiga.wallet.model.Sms;
 import com.alodiga.wallet.model.State;
 import com.alodiga.wallet.model.TopUpCountry;
 import com.alodiga.wallet.model.UserHasCard;
+import com.alodiga.wallet.model.UserWS;
 import com.alodiga.wallet.model.ValidationCollection;
 import com.alodiga.wallet.response.generic.BankGeneric;
 import com.alodiga.wallet.respuestas.ActivateCardResponses;
@@ -90,6 +91,7 @@ import com.alodiga.wallet.respuestas.CumplimientResponse;
 import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
 import com.alodiga.wallet.respuestas.PaymentInfoListResponse;
+import com.alodiga.wallet.respuestas.PaymentInfoResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.RechargeAfinitasResponses;
 import com.alodiga.wallet.respuestas.RemittanceResponse;
@@ -3574,26 +3576,32 @@ public class APIOperations {
 //        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
     }
 
-    public PaymentInfoListResponse getPaymentInfo(Long userId) {
+    public PaymentInfoListResponse getPaymentInfo(String userApi, String passwordApi, Long userId) {
         List<PaymentInfo> paymentInfos = null;
         try {
-            paymentInfos = entityManager.createNamedQuery("PaymentInfo.findByUserId", PaymentInfo.class).setParameter("userId", userId).getResultList();
-            if (paymentInfos.size() <= 0) {
-                return new PaymentInfoListResponse(ResponseCode.ERROR_INTERNO, "Not associated payment info");
+            if (validateUser(userApi, passwordApi)) {
+                paymentInfos = entityManager.createNamedQuery("PaymentInfo.findByUserId", PaymentInfo.class).setParameter("userId", userId).getResultList();
+                if (paymentInfos.size() <= 0) {
+                    return new PaymentInfoListResponse(ResponseCode.ERROR_INTERNO, "Not associated payment info");
+                }
             } else {
-                return new PaymentInfoListResponse(ResponseCode.EXITO, "", paymentInfos);
+                return new PaymentInfoListResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
             }
 
         } catch (Exception e) {
             return new PaymentInfoListResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
         }
-
+        return new PaymentInfoListResponse(ResponseCode.EXITO, "", paymentInfos);
     }
 
-    public CreditCardListResponse getCreditCardType() {
+    public CreditCardListResponse getCreditCardType(String userApi, String passwordApi) {
         List<CreditcardType> creditcardTypes = null;
         try {
-            creditcardTypes = entityManager.createNamedQuery("CreditcardType.findByEnabledTrue", CreditcardType.class).getResultList();
+            if (validateUser(userApi, passwordApi)) {
+                creditcardTypes = entityManager.createNamedQuery("CreditcardType.findByEnabledTrue", CreditcardType.class).getResultList();
+            } else {
+                return new CreditCardListResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
+            }
 
         } catch (Exception e) {
             return new CreditCardListResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
@@ -3601,36 +3609,39 @@ public class APIOperations {
         return new CreditCardListResponse(ResponseCode.EXITO, "", creditcardTypes);
     }
 
-    public PaymentInfo savePaymentInfo(Long userId, String estado, String ciudad, String zipCode, String addres1, Long paymentPatnerId, Long paymentTypeId, Long creditCardTypeId, String creditCardName, String creditCardNumber, String creditCardCVV, String creditCardDate) throws RemoteException, Exception {
+    public PaymentInfoResponse savePaymentInfo(String userApi, String passwordApi, Long userId, String estado, String ciudad, String zipCode, String addres1, Long paymentPatnerId, Long paymentTypeId, Long creditCardTypeId, String creditCardName, String creditCardNumber, String creditCardCVV, String creditCardDate) throws RemoteException, Exception {
         APIRegistroUnificadoProxy proxy = new APIRegistroUnificadoProxy();
         RespuestaUsuario responseUser = null;
 
         try {
-            responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
-            userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
-            Address address = saveAddress(userId, estado, ciudad, zipCode, addres1);
-            PaymentInfo paymentInfo = new PaymentInfo();
-            paymentInfo.setBillingAddressId(address);
-            PaymentPatner paymentPatner = entityManager.find(PaymentPatner.class, paymentPatnerId);
-            paymentInfo.setPaymentPatnerId(paymentPatner);
-            PaymentType paymentType = entityManager.find(PaymentType.class, paymentTypeId);
-            paymentInfo.setPaymentTypeId(paymentType);
-            paymentInfo.setUserId(BigInteger.valueOf(userId));
-            CreditcardType creditcardType = entityManager.find(CreditcardType.class, creditCardTypeId);
-            paymentInfo.setCreditCardTypeId(creditcardType);
-            paymentInfo.setCreditCardName(creditCardName);
-            String example = creditCardNumber;
-            byte[] bytes = example.getBytes();
-            paymentInfo.setCreditCardNumber(bytes);
-            paymentInfo.setCreditCardCVV(creditCardCVV);
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-            Date ccdate = format.parse(creditCardDate);
-            paymentInfo.setCreditCardDate(ccdate);
-            paymentInfo.setBeginningDate(new Timestamp(new Date().getTime()));
-            paymentInfo.setEnabled(true);
-            entityManager.persist(paymentInfo);
-            return paymentInfo;
+            if (validateUser(userApi, passwordApi)) {
+                responseUser = proxy.getUsuarioporId("usuarioWS", "passwordWS", String.valueOf(userId));
+                userId = Long.valueOf(responseUser.getDatosRespuesta().getUsuarioID());
+                Address address = saveAddress(userId, estado, ciudad, zipCode, addres1);
+                PaymentInfo paymentInfo = new PaymentInfo();
+                paymentInfo.setBillingAddressId(address);
+                PaymentPatner paymentPatner = entityManager.find(PaymentPatner.class, paymentPatnerId);
+                paymentInfo.setPaymentPatnerId(paymentPatner);
+                PaymentType paymentType = entityManager.find(PaymentType.class, paymentTypeId);
+                paymentInfo.setPaymentTypeId(paymentType);
+                paymentInfo.setUserId(BigInteger.valueOf(userId));
+                CreditcardType creditcardType = entityManager.find(CreditcardType.class, creditCardTypeId);
+                paymentInfo.setCreditCardTypeId(creditcardType);
+                paymentInfo.setCreditCardName(creditCardName);
+                String example = creditCardNumber;
+                byte[] bytes = example.getBytes();
+                paymentInfo.setCreditCardNumber(bytes);
+                paymentInfo.setCreditCardCVV(creditCardCVV);
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                Date ccdate = format.parse(creditCardDate);
+                paymentInfo.setCreditCardDate(ccdate);
+                paymentInfo.setBeginningDate(new Timestamp(new Date().getTime()));
+                paymentInfo.setEnabled(true);
+                entityManager.persist(paymentInfo);
 
+            } else {
+                return new PaymentInfoResponse(ResponseCode.ERROR_INTERNO, "Error in process saving payment info");
+            }
         } catch (RemoteException ex) {
             ex.printStackTrace();
             throw new RemoteException(ex.getMessage());
@@ -3638,7 +3649,15 @@ public class APIOperations {
             ex.printStackTrace();
             throw new Exception(ex.getMessage());
         }
+        return new PaymentInfoResponse(ResponseCode.EXITO);
 
     }
 
+    private boolean validateUser(String user, String password) {
+        UserWS usuarioWS = entityManager
+                .createNamedQuery("UserWS.findByUserANDPassword",
+                        UserWS.class).setMaxResults(1).getSingleResult();
+        return (usuarioWS.getUsuario().equals(user) && usuarioWS
+                .getPassword().equals(password));
+    }
 }
