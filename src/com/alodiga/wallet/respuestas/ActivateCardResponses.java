@@ -13,7 +13,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-
 @XmlRootElement(name = "ActivateCardResponXm")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ActivateCardResponses extends Response implements Serializable {
@@ -21,29 +20,29 @@ public class ActivateCardResponses extends Response implements Serializable {
     private static final long serialVersionUID = -5826822375335798732L;
     public ChangeStatusCredentialCard credentialResponse;
     public List<Product> products;
-    
-    
+
     @Transient
     private String numberCard;
 
     public ActivateCardResponses() {
     }
 
-    
-    
+    public ActivateCardResponses(ChangeStatusCredentialCard credentialResponse) {
+        super(ResponseCode.EXITO);
+        this.credentialResponse = credentialResponse;
+    }
 
     public ActivateCardResponses(ChangeStatusCredentialCard credentialResponse, ResponseCode codigo, String mensajeRespuesta, ArrayList<Product> products) {
         super(new Date(), codigo.getCodigo(), mensajeRespuesta);
         this.credentialResponse = credentialResponse;
         this.products = products;
     }
-    
+
     public ActivateCardResponses(ResponseCode codigo,
-			String mensajeRespuesta) {
-	   super(new Date(), codigo.getCodigo(), mensajeRespuesta);	
+            String mensajeRespuesta) {
+        super(new Date(), codigo.getCodigo(), mensajeRespuesta);
     }
 
-    
     public ChangeStatusCredentialCard getCredentialResponse() {
         return credentialResponse;
     }
@@ -68,6 +67,4 @@ public class ActivateCardResponses extends Response implements Serializable {
         this.numberCard = numberCard;
     }
 
-
-        
 }

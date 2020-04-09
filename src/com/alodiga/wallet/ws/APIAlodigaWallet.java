@@ -1,15 +1,16 @@
 package com.alodiga.wallet.ws;
 
-
+import com.alodiga.wallet.bean.APICardOperations;
 import javax.ejb.EJB;
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.jws.WebService;
 import org.apache.log4j.Logger;
 import com.alodiga.wallet.bean.APIOperations;
+import com.alodiga.wallet.bean.APIRechargeOperations;
 import com.alodiga.wallet.model.Address;
-import com.alodiga.wallet.model.Code;
 import com.alodiga.wallet.model.Country;
+import com.alodiga.wallet.model.PaymentInfo;
 
 import com.alodiga.wallet.respuestas.ActivateCardResponses;
 import com.alodiga.wallet.respuestas.BalanceHistoryResponse;
@@ -20,43 +21,39 @@ import com.alodiga.wallet.respuestas.CheckStatusAccountResponses;
 import com.alodiga.wallet.respuestas.CheckStatusCardResponses;
 import com.alodiga.wallet.respuestas.CollectionListResponse;
 import com.alodiga.wallet.respuestas.CountryListResponse;
+import com.alodiga.wallet.respuestas.CreditCardListResponse;
 import com.alodiga.wallet.respuestas.CumplimientResponse;
 import com.alodiga.wallet.respuestas.DesactivateCardResponses;
 import com.alodiga.wallet.respuestas.LanguageListResponse;
+import com.alodiga.wallet.respuestas.PaymentInfoListResponse;
+import com.alodiga.wallet.respuestas.PaymentInfoResponse;
 import com.alodiga.wallet.respuestas.ProductListResponse;
 import com.alodiga.wallet.respuestas.ProductResponse;
 import com.alodiga.wallet.respuestas.RechargeAfinitasResponses;
+import com.alodiga.wallet.respuestas.RechargeValidationResponse;
 import com.alodiga.wallet.respuestas.RemittanceResponse;
-import com.alodiga.wallet.respuestas.Response;
 import com.alodiga.wallet.respuestas.TopUpCountryListResponse;
 import com.alodiga.wallet.respuestas.TopUpInfoListResponse;
 import com.alodiga.wallet.respuestas.UserHasProductResponse;
 import com.alodiga.wallet.respuestas.TransactionListResponse;
 import com.alodiga.wallet.respuestas.TransactionResponse;
 import com.alodiga.wallet.respuestas.TransferCardToCardResponses;
-import com.alodiga.wallet.utils.XTrustProvider;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.logging.Level;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
-import javax.persistence.EntityManager;
 
 @WebService
 public class APIAlodigaWallet {
 
-    
-    
     private static final Logger logger = Logger
             .getLogger(APIAlodigaWallet.class);
 
     @EJB
     private APIOperations operations;
 
-    //coment 6
+    @EJB
+    private APIRechargeOperations rechargeOperations;
+
+    @EJB
+    private APICardOperations cardOperations;
+
     @WebMethod
     public ProductResponse saveProduct(
             @WebParam(name = "enterprise") String enterpriseId,
@@ -74,8 +71,6 @@ public class APIAlodigaWallet {
         return operations.saveProduct(Long.valueOf(enterpriseId), Long.valueOf(categoryId), Long.valueOf(productIntegrationTypeId), name, taxInclude, status, referenceCode, rateUrl, accesNumberUrl, isFree, isAlocashproduct, symbol);
     }
 
-    //coment21
-    //cambio267810
     @WebMethod
     public UserHasProductResponse saveUserHasProduct(
             @WebParam(name = "userId") String userId,
@@ -203,7 +198,6 @@ public class APIAlodigaWallet {
         return operations.getCountriesHasBank(userId);
     }
 
-    //no esta 
     @WebMethod
     public ProductListResponse getProductsByBankId(
             @WebParam(name = "bankId") String bankId,
@@ -211,7 +205,6 @@ public class APIAlodigaWallet {
         return operations.getProductsByBankId(Long.valueOf(bankId), Long.valueOf(userId));
     }
 
-    //Desarrollado por Kerwin 2102019
     @WebMethod
     public BalanceHistoryResponse getBalanceHistoryByProductAndUser(
             @WebParam(name = "userId") Long userId,
@@ -275,23 +268,20 @@ public class APIAlodigaWallet {
             @WebParam(name = "userId") String userId) {
         return operations.getCumplimientStatus(Long.valueOf(userId));
     }
-    
-    
+
     @WebMethod
     public CollectionListResponse getValidateCollection(
             @WebParam(name = "userId") String userId,
             @WebParam(name = "language") String language) {
         return operations.getValidateCollection(Long.valueOf(userId), language);
     }
-    
- 
-    
+
     @WebMethod
     public Country getCountryCode(
             @WebParam(name = "strAni") String strAni) {
         return operations.getCountryCode(strAni);
     }
-    
+
     @WebMethod
     public Address saveAddress(
             @WebParam(name = "userId") Long userId,
@@ -299,10 +289,9 @@ public class APIAlodigaWallet {
             @WebParam(name = "ciudad") String ciudad,
             @WebParam(name = "zipCode") String zipCode,
             @WebParam(name = "addres1") String addres1) throws Exception {
-        return operations.saveAddress(Long.valueOf(userId), estado,ciudad,zipCode,addres1);
+        return operations.saveAddress(Long.valueOf(userId), estado, ciudad, zipCode, addres1);
     }
-    
-     
+
     @WebMethod
     public CollectionListResponse saveCumplimient(
             @WebParam(name = "userId") Long userId,
@@ -312,65 +301,61 @@ public class APIAlodigaWallet {
             @WebParam(name = "ciudad") String ciudad,
             @WebParam(name = "zipCode") String zipCode,
             @WebParam(name = "addres1") String addres1) {
-        return operations.saveCumplimient(Long.valueOf(userId),imgDocument, imgProfile, estado,ciudad,zipCode,addres1);
+        return operations.saveCumplimient(Long.valueOf(userId), imgDocument, imgProfile, estado, ciudad, zipCode, addres1);
     }
-    
-    
-    
+
     @WebMethod
     public ActivateCardResponses activateCard(
             @WebParam(name = "userId") Long userId,
             @WebParam(name = "card") String card,
             @WebParam(name = "timeZone") String timeZone,
             @WebParam(name = "status") String status) {
-        return operations.activateCard(userId, card,  timeZone, status);
+        return operations.activateCard(userId, card, timeZone, status);
     }
 
-    
     @WebMethod
     public DesactivateCardResponses desactivateCard(
             @WebParam(name = "userId") Long userId,
             @WebParam(name = "card") String card,
             @WebParam(name = "timeZone") String timeZone,
             @WebParam(name = "status") String status) {
-        return operations.desactivateCard(userId, card,  timeZone, status);
+        return operations.desactivateCard(userId, card, timeZone, status);
     }
-    
+
     @WebMethod
     public CheckStatusCardResponses checkStatusCard(
             @WebParam(name = "userId") Long userId,
             @WebParam(name = "card") String card,
             @WebParam(name = "timeZone") String timeZone) {
-        return operations.checkStatusCard(userId, card,  timeZone);
+        return operations.checkStatusCard(userId, card, timeZone);
     }
-    
+
     @WebMethod
     public CheckStatusAccountResponses checkStatusAccount(
             @WebParam(name = "userId") Long userId,
             @WebParam(name = "card") String card,
             @WebParam(name = "timeZone") String timeZone) {
-        return operations.checkStatusAccount(userId, card,  timeZone);
+        return operations.checkStatusAccount(userId, card, timeZone);
     }
-    
+
     @WebMethod
     public Boolean hasPrepayCardAsociated(
             @WebParam(name = "userId") Long userId) throws Exception {
         return operations.hasPrepayCardAsociated(userId);
     }
-    
+
     @WebMethod
     public Boolean hasPrepayCard(
             @WebParam(name = "userId") Long userId) throws Exception {
         return operations.hasPrepayCard(userId);
     }
-    
-    
-     @WebMethod
+
+    @WebMethod
     public CardResponse getCardByUserId(
             @WebParam(name = "userId") String userId) {
         return operations.getCardByUserId(Long.valueOf(userId));
     }
- 
+
     @WebMethod
     public TransferCardToCardResponses transferCardToCardAutorization(
             @WebParam(name = "userId") Long userId,
@@ -379,22 +364,21 @@ public class APIAlodigaWallet {
             @WebParam(name = "balance") String balance,
             @WebParam(name = "idUserDestination") Long idUserDestination,
             @WebParam(name = "conceptTransaction") String conceptTransaction) {
-        return operations.transferCardToCardAutorization(userId, numberCardOrigin,  numberCardDestinate, balance,idUserDestination,conceptTransaction);
+        return operations.transferCardToCardAutorization(userId, numberCardOrigin, numberCardDestinate, balance, idUserDestination, conceptTransaction);
     }
-    
+
     @WebMethod
     public CardListResponse getCardsListByUserId(
             @WebParam(name = "userId") String userId) throws Exception {
         return operations.getCardsListByUserId(Long.valueOf(userId));
     }
-    
+
     @WebMethod
     public ProductListResponse getProductsRemettenceByUserId(
             @WebParam(name = "userId") String userId) {
         return operations.getProductsRemettenceByUserId(Long.valueOf(userId));
     }
-    
-    
+
     @WebMethod
     public RemittanceResponse processRemettenceAccount(
             @WebParam(name = "userId") String userId,
@@ -405,7 +389,7 @@ public class APIAlodigaWallet {
             @WebParam(name = "ratePaymentNetworkId") String ratePaymentNetworkId,
             @WebParam(name = "originCurrentId") String originCurrentId,
             @WebParam(name = "destinyCurrentId") String destinyCurrentId,
-            @WebParam(name = "paymentNetworkId") String paymentNetworkId,            
+            @WebParam(name = "paymentNetworkId") String paymentNetworkId,
             @WebParam(name = "deliveryFormId") String deliveryFormId,
             @WebParam(name = "addressId") String addressId,
             @WebParam(name = "remittentCountryId") String remittentCountryId,/**/
@@ -421,7 +405,7 @@ public class APIAlodigaWallet {
             @WebParam(name = "receiverSecondSurname") String receiverSecondSurname,
             @WebParam(name = "receiverPhoneNumber") String receiverPhoneNumber,
             @WebParam(name = "receiverEmail") String receiverEmail,
-            @WebParam(name = "receiverCountryId") String receiverCountryId,/**/           
+            @WebParam(name = "receiverCountryId") String receiverCountryId,/**/
             @WebParam(name = "receiverCityId") String receiverCityId,/**/
             @WebParam(name = "receiverStateId") String receiverStateId,/**/
             @WebParam(name = "receiverStateName") String receiverStateName,
@@ -429,12 +413,11 @@ public class APIAlodigaWallet {
             @WebParam(name = "receiverAddress") String receiverAddress,
             @WebParam(name = "receiverZipCode") String receiverZipCode,
             @WebParam(name = "languageId") String languageId) {
-        
-         return operations.processRemettenceAccount(Long.valueOf(userId),amountOrigin, totalAmount, amountDestiny,exchangeRateId, ratePaymentNetworkId, originCurrentId, destinyCurrentId, paymentNetworkId, deliveryFormId, Long.valueOf(addressId),remittentCountryId, remittentStateName,remittentCityName,remittentAddress, remittentZipCode,remittentStateId,remittentCityId,receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber,receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName,receiverAddress, receiverZipCode, languageId);
-     
+
+        return operations.processRemettenceAccount(Long.valueOf(userId), amountOrigin, totalAmount, amountDestiny, exchangeRateId, ratePaymentNetworkId, originCurrentId, destinyCurrentId, paymentNetworkId, deliveryFormId, Long.valueOf(addressId), remittentCountryId, remittentStateName, remittentCityName, remittentAddress, remittentZipCode, remittentStateId, remittentCityId, receiverFirstName, receiverMiddleName, receiverLastName, receiverSecondSurname, receiverPhoneNumber, receiverEmail, receiverCountryId, receiverCityId, receiverStateId, receiverStateName, receiverCityName, receiverAddress, receiverZipCode, languageId);
+
     }
 
-   
     @WebMethod
     public RechargeAfinitasResponses saveRechargeAfinitas(
             @WebParam(name = "emailUser") String emailUser,
@@ -445,7 +428,101 @@ public class APIAlodigaWallet {
             @WebParam(name = "expirationMonth") String expirationMonth,
             @WebParam(name = "cvv") String cvv,
             @WebParam(name = "cardHolderName") String cardHolderName) {
-        return operations.saveRechargeAfinitas(emailUser,amountRecharge,currency,cardNumber,expirationYear,expirationMonth,cvv,cardHolderName);
+        return operations.saveRechargeAfinitas(emailUser, amountRecharge, currency, cardNumber, expirationYear, expirationMonth, cvv, cardHolderName);
+    }
+
+    @WebMethod(operationName = "validateRechargeProduct")
+    public RechargeValidationResponse validateRechargeProduct(
+            @WebParam(name = "userId") Long userId,
+            @WebParam(name = "productID") Long productID,
+            @WebParam(name = "amountToRecharge") Double amountToRecharge,
+            @WebParam(name = "includeFee") boolean includeFee) {
+        return rechargeOperations.getRechargeProductValidation(userId, productID,
+                amountToRecharge, includeFee);
+    }
+
+    @WebMethod(operationName = "rechargeWalletProduct")
+    public TransactionResponse rechargeWalletProduct(
+            @WebParam(name = "businessId") final Long businessId,
+            @WebParam(name = "userId") final Long userId,
+            @WebParam(name = "productId") Long productId,
+            @WebParam(name = "amountToRecharge") Double amountToRecharge,
+            @WebParam(name = "includeFee") boolean includeFee) {
+        return rechargeOperations.rechargeWallet(businessId, userId, productId,
+                amountToRecharge, includeFee);
+    }
+
+    @WebMethod(operationName = "validateRechargeCard")
+    public RechargeValidationResponse validateRechargeCard(
+            @WebParam(name = "rechargeAmount") Double rechargeAmount,
+            @WebParam(name = "includeFee") boolean includeFee) {
+        return rechargeOperations.getRechargeCardValidation(rechargeAmount, includeFee);
+    }
+
+    @WebMethod(operationName = "rechargeCard")
+    public TransactionResponse rechargeCard(
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "eCardNumber") String eCardNumber,
+            @WebParam(name = "rechargeAmount") Double rechargeAmount,
+            @WebParam(name = "includeFee") boolean includeFee) {
+        return rechargeOperations.rechargeCard(businessId, eCardNumber, rechargeAmount, includeFee);
+    }
+
+    @WebMethod(operationName = "activateCardbyBusiness")
+    public ActivateCardResponses activateCardbyBusiness(
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "card") String card,
+            @WebParam(name = "timeZone") String timeZone) {
+        return cardOperations.activateCardByBusiness(businessId, card, timeZone);
+    }
+
+    @WebMethod(operationName = "desactivateCardByBusiness")
+    public DesactivateCardResponses desactivateCardByBusiness(
+            @WebParam(name = "businessId") Long businessId,
+            @WebParam(name = "card") String card,
+            @WebParam(name = "timeZone") String timeZone) {
+        return cardOperations.deactivateCardByBusiness(businessId, card, timeZone);
+    }
+
+    @WebMethod(operationName = "checkStatusCardByBusiness")
+    public CheckStatusCardResponses checkStatusCardbyBusiness(
+            @WebParam(name = "card") String card,
+            @WebParam(name = "timeZone") String timeZone) {
+        return cardOperations.checkStatusCard(card, timeZone);
+    }
+
+    @WebMethod
+    public PaymentInfoListResponse getPaymentInfo(
+            @WebParam(name = "userApi") String userApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "userId") String userId) {
+        return operations.getPaymentInfo(userApi, passwordApi, Long.valueOf(userId));
+    }
+
+    @WebMethod
+    public CreditCardListResponse getCreditCardType(
+            @WebParam(name = "userApi") String userApi,
+            @WebParam(name = "passwordApi") String passwordApi) {
+        return operations.getCreditCardType(userApi, passwordApi);
+    }
+
+    @WebMethod
+    public PaymentInfoResponse savePaymentInfo(
+            @WebParam(name = "userApi") String userApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "userId") Long userId,
+            @WebParam(name = "estado") String estado,
+            @WebParam(name = "ciudad") String ciudad,
+            @WebParam(name = "zipCode") String zipCode,
+            @WebParam(name = "addres1") String addres1,
+            @WebParam(name = "paymentPatnerId") Long paymentPatnerId,
+            @WebParam(name = "paymentTypeId") Long paymentTypeId,
+            @WebParam(name = "creditCardTypeId") Long creditCardTypeId,
+            @WebParam(name = "creditCardName") String creditCardName,
+            @WebParam(name = "creditCardNumber") String creditCardNumber,
+            @WebParam(name = "creditCardCVV") String creditCardCVV,
+            @WebParam(name = "creditCardDate") String creditCardDate) throws Exception {
+        return operations.savePaymentInfo(userApi, passwordApi,Long.valueOf(userId), estado, ciudad, zipCode, addres1, paymentPatnerId, paymentTypeId, creditCardTypeId, creditCardName, creditCardNumber, creditCardCVV, creditCardDate);
     }
 
 }

@@ -217,4 +217,8 @@ public class Constants {
     //AFINITAS
     public static final Long PRODUCT_AFINITAS = 2L;
     
+    //PAYMENT INFO
+    public static final Long PAYMENT_PATNER = 2L;
+    public static final Long PAYMENT_TYPE = 2L;
+    
 }

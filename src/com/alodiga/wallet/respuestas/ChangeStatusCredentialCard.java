@@ -24,10 +24,6 @@ public class ChangeStatusCredentialCard extends Response implements Serializable
 
     public ChangeStatusCredentialCard() {
     }
-    
-    
-    
-    
 
     public ChangeStatusCredentialCard(String biginingAtention, String endingAtention, String timerAtention, String code, String description, String ticket) {
         this.biginingAtention = biginingAtention;
