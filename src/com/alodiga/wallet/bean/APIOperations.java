@@ -3632,7 +3632,7 @@ public class APIOperations {
                 byte[] bytes = example.getBytes();
                 paymentInfo.setCreditCardNumber(bytes);
                 paymentInfo.setCreditCardCVV(creditCardCVV);
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
                 Date ccdate = format.parse(creditCardDate);
                 paymentInfo.setCreditCardDate(ccdate);
                 paymentInfo.setBeginningDate(new Timestamp(new Date().getTime()));
@@ -3659,5 +3659,23 @@ public class APIOperations {
                         UserWS.class).setMaxResults(1).getSingleResult();
         return (usuarioWS.getUsuario().equals(user) && usuarioWS
                 .getPassword().equals(password));
+    }
+
+  public PaymentInfoResponse ChangeStatusPaymentInfo(String userApi, String passwordApi, Long userId, Long paymentInfoId, boolean  status) {
+       PaymentInfo paymentInfo = null;
+       
+        try {
+            if (validateUser(userApi, passwordApi)) {
+                paymentInfo = entityManager.createNamedQuery("PaymentInfo.findByUserIdById", PaymentInfo.class).setParameter("userId", userId).setParameter("id", paymentInfoId).getSingleResult();
+                paymentInfo.setEnabled(status);
+                entityManager.merge(paymentInfo);
+            } else {
+                return new PaymentInfoResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
+            }
+
+        } catch (Exception e) {
+            return new PaymentInfoResponse(ResponseCode.ERROR_INTERNO, "Error loading Payment Info");
+        }
+        return new PaymentInfoResponse(ResponseCode.EXITO, "", paymentInfo);
     }
 }
