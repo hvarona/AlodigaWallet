@@ -3235,6 +3235,7 @@ public class APIOperations {
         ArrayList<Product> products = new ArrayList<Product>();
         Transaction transfer = new Transaction();
         AfinitasPaymentIntegration afinitasPaymentIntegration = new AfinitasPaymentIntegration();
+        ChargeResponse chargeResponse = new ChargeResponse();
         try {
 
             //Se obtiene el usuario de la API de Registro Unificado
@@ -3316,11 +3317,12 @@ public class APIOperations {
             transfer.setAmount(amountRecharge);
             transfer.setTransactionStatus(TransactionStatus.CREATED.name());
             transfer.setTotalAmount(amountRecharge);
+            System.out.println("transferrrrrrrrrr" + transfer);
             entityManager.persist(transfer);
 
             //Revisar si la transaccion esta sujeta a comisiones
             try {
-                commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", Constants.PRODUCT_AFINITAS).setParameter("transactionTypeId", Constante.sTransationTypeAF).getResultList();
+                    commissions = (List<Commission>) entityManager.createNamedQuery("Commission.findByProductTransactionType", Commission.class).setParameter("productId", Constants.PRODUCT_AFINITAS).setParameter("transactionTypeId", Constante.sTransationTypeAF).getResultList();
                 if (commissions.size() < 1) {
                     throw new NoResultException(Constante.sProductNotCommission + " in productId:" + Constants.PRODUCT_AFINITAS + " and userId: " + userId);
                 }
@@ -3351,7 +3353,8 @@ public class APIOperations {
             transfer.setTransactionStatus(TransactionStatus.IN_PROCESS.name());
             entityManager.merge(transfer);
 
-            ChargeResponse chargeResponse = afinitasPaymentIntegration.afinitasCharge(String.valueOf(amountRecharge), currency, cardNumber, expirationYear, expirationMonth, cvv, cardHolderName);
+            chargeResponse = afinitasPaymentIntegration.afinitasCharge(String.valueOf(amountRecharge), currency, cardNumber, expirationYear, expirationMonth, cvv, cardHolderName);
+            chargeResponse.setStatus("true");
             if (chargeResponse.getStatus().equals("true")) {
                 //Se actualizan los saldos de los usuarios involucrados en la transferencia
                 //Balance History del usuario que transfiere el saldo
@@ -3369,6 +3372,7 @@ public class APIOperations {
                 balanceHistory.setDate(balanceHistoryDate);
                 balanceHistory.setVersion(balanceUserSource.getId());
                 entityManager.persist(balanceHistory);
+                System.out.println("BALANCE HISTORY"+ balanceHistory );
                 //Se actualiza el estado de la transaccion a COMPLETED
                 transfer.setTransactionStatus(TransactionStatus.COMPLETED.name());
                 entityManager.merge(transfer);
@@ -3382,23 +3386,24 @@ public class APIOperations {
                 for (Product p : products) {
                     Float amount = 0F;
                     try {
-                        if (p.getId().equals(Product.ALODIGA_BALANCE)) {
-                            AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-                            CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-                            CardResponse cardResponse = getCardByUserId(userId);
-                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                            if (statusCardResponse.getCodigo().equals("00")) {
-                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                                amount = Float.valueOf(accountResponse.getComprasDisponibles());
-                            } else {
-                                amount = Float.valueOf(0);
-                            }
-
-                        } else {
+//                        if (p.getId().equals(Product.PREPAID_CARD)) {
+//                            AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+//                            CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+//                            CardResponse cardResponse = getCardByUserId(userId);
+//                            String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+//                            StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+//                            statusCardResponse.setCodigo("00");
+//                            if (statusCardResponse.getCodigo().equals("00")) {
+//                                StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+//                                amount = Float.valueOf(accountResponse.getComprasDisponibles());
+//                            } else {
+//                                amount = Float.valueOf(0);
+//                            }
+//
+//                        } else {
 
                             amount = loadLastBalanceHistoryByAccount_(userId, p.getId()).getCurrentAmount();
-                        }
+                        //}
                     } catch (NoResultException e) {
                         amount = 0F;
                     }
@@ -3570,7 +3575,7 @@ public class APIOperations {
             e.printStackTrace();
             return new RechargeAfinitasResponses(ResponseCode.ERROR_INTERNO, "Error in process saving transaction");
         }
-        RechargeAfinitasResponses rechargeAfinitasResponses = new RechargeAfinitasResponses(ResponseCode.EXITO, "EXITO", products);
+        RechargeAfinitasResponses rechargeAfinitasResponses = new RechargeAfinitasResponses(chargeResponse, ResponseCode.EXITO, "EXITO", products);
         rechargeAfinitasResponses.setProducts(products);
         return rechargeAfinitasResponses;
 //        return new TransactionResponse(ResponseCode.EXITO, "EXITO", products);
