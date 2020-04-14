@@ -3363,7 +3363,7 @@ public class APIOperations {
                 balanceHistory.setId(null);
                 balanceHistory.setUserId(userId);
                 balanceHistory.setOldAmount(balanceUserSource.getCurrentAmount());
-                Float currentAmountUserSource = balanceUserSource.getCurrentAmount() - amountRecharge;
+                Float currentAmountUserSource = balanceUserSource.getCurrentAmount() + amountRecharge;
                 balanceHistory.setCurrentAmount(currentAmountUserSource);
                 balanceHistory.setProductId(product);
                 balanceHistory.setTransactionId(transfer);
