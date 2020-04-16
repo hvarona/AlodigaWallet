@@ -1754,22 +1754,24 @@ public class APIOperations {
         BalanceHistory balanceHistory = new BalanceHistory();
         try {
             balanceHistory = loadLastBalanceHistoryByAccount_(userId, productId);
-            if (productId.equals(Constants.PREPAY_CARD_CREDENTIAL)) {
-                AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
-                CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
-                CardResponse cardResponse = getCardByUserId(userId);
-                String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
-                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
-                if (statusCardResponse.getCodigo().equals("00")) {
-                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
-                    balanceHistory.setCurrentAmount(Float.valueOf(accountResponse.getComprasDisponibles()));
-                } else {
-                    balanceHistory.setCurrentAmount(0);
-                }
-
-            }
-        } catch (NoResultException e) {
-            return new BalanceHistoryResponse(ResponseCode.BALANCE_HISTORY_NOT_FOUND_EXCEPTION, "Error loading BalanceHistory");
+//            if (productId.equals(Constants.PREPAY_CARD_CREDENTIAL)) {
+//                AccountCredentialServiceClient accountCredentialServiceClient = new AccountCredentialServiceClient();
+//                CardCredentialServiceClient cardCredentialServiceClient = new CardCredentialServiceClient();
+//                CardResponse cardResponse = getCardByUserId(userId);
+//                String cardEncripter = Base64.encodeBase64String(encrypt(cardResponse.getNumberCard(), Constants.PUBLIC_KEY));
+//                StatusCardResponse statusCardResponse = cardCredentialServiceClient.StatusCard(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, cardEncripter);
+//                statusCardResponse.setCodigo("00");
+//                if (statusCardResponse.getCodigo().equals("00")) {
+//                    StatusAccountResponse accountResponse = accountCredentialServiceClient.statusAccount(Constants.CREDENTIAL_WEB_SERVICES_USER, Constants.CREDENTIAL_TIME_ZONE, statusCardResponse.getCuenta().toLowerCase().trim());
+//                    balanceHistory.setCurrentAmount(Float.valueOf(accountResponse.getComprasDisponibles()));
+//                } else {
+//                    balanceHistory.setCurrentAmount(0);
+//                }
+//
+//            }
+//            
+//        } catch (NoResultException e) {
+//            return new BalanceHistoryResponse(ResponseCode.BALANCE_HISTORY_NOT_FOUND_EXCEPTION, "Error loading BalanceHistory");
         } catch (Exception ex) {
             ex.printStackTrace();
             return new BalanceHistoryResponse(ResponseCode.ERROR_INTERNO, "Error loading BalanceHistory");
