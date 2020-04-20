@@ -535,4 +535,10 @@ public class APIAlodigaWallet {
         return operations.ChangeStatusPaymentInfo(userApi, passwordApi, Long.valueOf(userId), paymentInfoId, status);
     }
 
+    @WebMethod
+    public ProductListResponse getProductsRechargePaymentByUserId(
+            @WebParam(name = "userId") String userId) {
+        return operations.getProductsRechargePaymentByUserId(Long.valueOf(userId));
+    }
+    
 }

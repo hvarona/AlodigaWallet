@@ -100,6 +100,8 @@ public class Product implements Serializable {
     private boolean isExchangeProduct;
     @Column(name = "isRemettence")
     private boolean isRemettence;
+    @Column(name = "isPaymentInfo")
+    private boolean isPaymentInfo;
     @OneToMany(mappedBy = "productId")
     private Collection<Transaction> transactionCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "productId")
@@ -131,7 +133,7 @@ public class Product implements Serializable {
         this.id = id;
     }
 
-    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct,String symbol, boolean isPayTopUp, boolean isExchangeProduct,boolean isRemettence_ ) {
+    public Product(Long id, String name, boolean taxInclude, boolean enabled, String referenceCode, boolean isFree, boolean isAlocashProduct,String symbol, boolean isPayTopUp, boolean isExchangeProduct,boolean isRemettence_, boolean  isPaymentInfo) {
         this.id = id;
         this.name = name;
         this.taxInclude = taxInclude;
@@ -143,6 +145,7 @@ public class Product implements Serializable {
         this.isPayTopUp = isPayTopUp;
         this.isExchangeProduct = isExchangeProduct;
         this.isRemettence = isRemettence_;
+        this.isPaymentInfo = isPaymentInfo;
     }
 
     public Long getId() {
@@ -240,6 +243,14 @@ public class Product implements Serializable {
 
     public void setIsRemettence(boolean isRemettence) {
         this.isRemettence = isRemettence;
+    }
+
+    public boolean isIsPaymentInfo() {
+        return isPaymentInfo;
+    }
+
+    public void setIsPaymentInfo(boolean isPaymentInfo) {
+        this.isPaymentInfo = isPaymentInfo;
     }
     
     
