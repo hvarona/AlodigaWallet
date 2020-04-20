@@ -1,5 +1,6 @@
 package com.alodiga.wallet.respuestas;
 
+import com.alodiga.afinitas.json.charge.object.ChargeResponse;
 import com.alodiga.wallet.model.Card;
 import com.alodiga.wallet.model.Country;
 import com.alodiga.wallet.model.Product;
@@ -21,15 +22,16 @@ public class RechargeAfinitasResponses extends Response implements Serializable 
     private static final long serialVersionUID = -5826822375335798732L;
     public RechargeAfinitas rechargeAfinitas;
     public List<Product> products;
+    public ChargeResponse chargeResponse;
 
     public RechargeAfinitasResponses() {
     }
 
     
 
-    public RechargeAfinitasResponses(RechargeAfinitas rechargeAfinitas, ResponseCode codigo, String mensajeRespuesta, ArrayList<Product> products) {
+    public RechargeAfinitasResponses(ChargeResponse chargeResponse, ResponseCode codigo, String mensajeRespuesta, ArrayList<Product> products) {
         super(new Date(), codigo.getCodigo(), mensajeRespuesta);
-        this.rechargeAfinitas = rechargeAfinitas;
+        this.chargeResponse = chargeResponse;
         this.products = products;
     }
     
@@ -40,8 +42,9 @@ public class RechargeAfinitasResponses extends Response implements Serializable 
     }
     
     public RechargeAfinitasResponses(ResponseCode codigo,
-            String mensajeRespuesta, ArrayList<Product> products) {
+            String mensajeRespuesta, ArrayList<Product> products, RechargeAfinitas rechargeAfinitas) {
         super(new Date(), codigo.getCodigo(), mensajeRespuesta);
+        this.rechargeAfinitas = rechargeAfinitas;
         this.products = products;
     }
 

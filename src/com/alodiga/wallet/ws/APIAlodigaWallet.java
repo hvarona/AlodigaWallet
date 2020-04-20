@@ -522,7 +522,23 @@ public class APIAlodigaWallet {
             @WebParam(name = "creditCardNumber") String creditCardNumber,
             @WebParam(name = "creditCardCVV") String creditCardCVV,
             @WebParam(name = "creditCardDate") String creditCardDate) throws Exception {
-        return operations.savePaymentInfo(userApi, passwordApi,Long.valueOf(userId), estado, ciudad, zipCode, addres1, paymentPatnerId, paymentTypeId, creditCardTypeId, creditCardName, creditCardNumber, creditCardCVV, creditCardDate);
+        return operations.savePaymentInfo(userApi, passwordApi, Long.valueOf(userId), estado, ciudad, zipCode, addres1, paymentPatnerId, paymentTypeId, creditCardTypeId, creditCardName, creditCardNumber, creditCardCVV, creditCardDate);
     }
 
+    @WebMethod
+    public PaymentInfoResponse ChangeStatusPaymentInfo(
+            @WebParam(name = "userApi") String userApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "userId") String userId,
+            @WebParam(name = "paymentInfoId") Long paymentInfoId,
+            @WebParam(name = "status") boolean status) {
+        return operations.ChangeStatusPaymentInfo(userApi, passwordApi, Long.valueOf(userId), paymentInfoId, status);
+    }
+
+    @WebMethod
+    public ProductListResponse getProductsRechargePaymentByUserId(
+            @WebParam(name = "userId") String userId) {
+        return operations.getProductsRechargePaymentByUserId(Long.valueOf(userId));
+    }
+    
 }
